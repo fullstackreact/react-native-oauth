@@ -1,0 +1,30 @@
+{
+  "name": "react-native-oauth",
+  "version": "0.0.1",
+  "author": "Ari Lerner <ari@fullstack.io> (https://fullstackreact.com)",
+  "description": "An oauth manager for dealing with the complexities of oauth",
+  "main": "./react-native-oauth.js",
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "compile": "babel --presets es2015,stage-0 -d . src/",
+    "dev": "npm run compile -- --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fullstackreact/react-native-oauth-manager.git"
+  },
+  "license": "ISC",
+  "keywords": [
+    "react",
+    "react-native",
+    "react-native-firestack",
+    "firestack",
+    "firebase",
+    "oauth",
+    "twitter"
+  ],
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  }
+}

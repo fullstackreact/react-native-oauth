@@ -1,0 +1,4 @@
+node_modules
+.DS_Store
+ios/Pods
+npm-debug.log
