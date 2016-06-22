@@ -333,6 +333,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../../../React/**",
+					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = mh_dylib;
@@ -353,6 +354,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../../../React/**",
+					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = mh_dylib;
