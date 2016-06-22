@@ -338,7 +338,8 @@
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
-					"-ObjC",
+					"-undefined",
+					dynamic_lookup,
 				);
 				PRODUCT_NAME = OAuthManager;
 				SKIP_INSTALL = YES;
@@ -357,7 +358,8 @@
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
-					"-ObjC",
+					"-undefined",
+					dynamic_lookup,
 				);
 				PRODUCT_NAME = OAuthManager;
 				SKIP_INSTALL = YES;
