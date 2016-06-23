@@ -138,20 +138,17 @@ RCT_EXPORT_MODULE(OAuthManager);
     }
 }
 
-- (OAuthSwiftClient *) oauthSwiftClient:(NSString *)providerName
-                         andAccessToken:(NSString *)accessToken
-                   andAccessTokenSecret:(NSString *)accessTokenSecret
-{
-    if (self.providerProperties == nil) {
+- (OAuthSwiftClient *) oauthSwiftClient:(NSString *)providerName {
+    if (self.providerCredentials == nil) {
         return nil;
     }
 
     NSDictionary *clientCredentials = [self.providerCredentials objectForKey:providerName];
-    if (accessToken == nil) {
-        accessToken = [clientCredentials valueForKey:@"oauth_token"];
-    }
-    if (accessTokenSecret == nil) {
-        accessTokenSecret = [clientCredentials valueForKey:@"oauth_token_secret"];
+    NSString *accessToken = [clientCredentials valueForKey:@"oauth_token"];
+    NSString *accessTokenSecret = [clientCredentials valueForKey:@"oauth_token_secret"];
+
+    if ((accessToken == nil) || (accessTokenSecret == nil)) {
+      return nil;
     }
 
     NSDictionary *providerCfg = [self getProviderConfig:providerName];
@@ -162,12 +159,9 @@ RCT_EXPORT_MODULE(OAuthManager);
                                 initWithConsumerKey:consumerKey
                                 consumerSecret:consumerSecret];
 
-    if (accessToken != nil) {
-        client.credential.oauth_token = accessToken;
-    }
-    if (accessTokenSecret != nil) {
-        client.credential.oauth_token_secret = accessTokenSecret;
-    }
+    // Set the credentials
+    client.credential.oauth_token = accessToken;
+    client.credential.oauth_token_secret = accessTokenSecret;
 
     return client;
 }
@@ -234,14 +228,30 @@ RCT_EXPORT_METHOD(configureProvider:
     resolve(nil);
 }
 
+/**
+ * Hydrate credentials for a particular provider
+ */
 RCT_EXPORT_METHOD(setCredentialsForProvider:
                   (NSString *)providerName
                   credentials:(NSDictionary *)credentials
                   callback:(RCTResponseSenderBlock) callback)
 {
+  if (self.providerCredentials == nil) {
+    self.providerCredentials = [[NSMutableDictionary alloc] initWithCapacity:20];
+  }
 
+  [self.providerCredentials setValue:credentials forKey:providerName];
+  callback(@[[NSNull null]]);
 }
 
+/**
+ * Authorize against a provider with a callback url
+ * which is usually set to your App URI, i.e.:
+ * 		firestack-example://oauth-callback/{providerName}
+ *
+ * @param {string} provider - Provider name
+ * @param {string} url - The url we're making a request against
+ */
 RCT_EXPORT_METHOD(authorizeWithCallbackURL:
                   (NSString *)provider
                   url:(NSString *)strUrl
@@ -318,6 +328,15 @@ RCT_EXPORT_METHOD(authorizeWithCallbackURL:
     }
 }
 
+/**
+ * Make a signed request using the oauth token
+ * and secret stored by the OAuthManager instance
+ *
+ * @param {string} providerName - The provider to call the method against
+ * @param {string} url - The URL to make the request against
+ * @param {object} params - Any params to make the request
+ * @param {object} headers - headers to make the request
+ */
 RCT_EXPORT_METHOD(makeSignedRequest:(NSString *)providerName
                   method:(NSString *) methodName
                   url:(NSString *) url
@@ -325,21 +344,16 @@ RCT_EXPORT_METHOD(makeSignedRequest:(NSString *)providerName
                   headers:(NSDictionary *)headers
                   callback:(RCTResponseSenderBlock)callback)
 {
-    NSDictionary *clientCredentials = [self.providerCredentials objectForKey:providerName];
-
-    if (clientCredentials == nil) {
-        NSDictionary *errProps = @{
-                                   @"error": @{
-                                           @"name": @"Uknown error",
-                                           @"description": @"Provider has no credentials"
-                                           }
-                                   };
-        return callback(@[errProps]);
+    OAuthSwiftClient *client = [self oauthSwiftClient:providerName];
+    if (client == nil) {
+      NSDictionary *errProps = @{
+                                 @"error": @{
+                                         @"name": @"Uknown error",
+                                         @"description": @"Provider has no credentials"
+                                         }
+                                 };
+      return callback(@[errProps]);
     }
-
-    OAuthSwiftClient *client = [self oauthSwiftClient:providerName
-                                       andAccessToken:[clientCredentials valueForKey:@"oauth_token"]
-                                 andAccessTokenSecret:[clientCredentials valueForKey:@"oauth_token_secret"]];
     // Handlers
     void (^successHandler)(NSData *data, NSHTTPURLResponse *resp) = ^(NSData *data, NSHTTPURLResponse *resp) {
         NSMutableDictionary *responseProps = [[NSMutableDictionary alloc] initWithCapacity:5];
