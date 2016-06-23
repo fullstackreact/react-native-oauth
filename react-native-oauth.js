@@ -2,7 +2,9 @@
  * @providesModule OAuthManager
  * @flow
  */
-import {NativeModules, NativeAppEventEmitter} from 'react-native';
+import {
+  NativeModules
+} from 'react-native';
 const OAuthManagerBridge = NativeModules.OAuthManager;
 
 let configured = false;
@@ -32,6 +34,11 @@ export default class Manager {
   authorizeWithCallbackURL(provider, url, scope, state, params) {
     return OAuthManagerBridge
             .authorizeWithCallbackURL(provider, url, scope, state, params);
+  }
+
+  makeRequest(provider, method, url, parameters={}, headers={}) {
+    return promisify(OAuthManagerBridge.makeSignedRequest)(
+      provider, method, url, parameters, headers);
   }
 
   static providers() {

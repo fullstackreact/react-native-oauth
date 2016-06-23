@@ -15,5 +15,6 @@
     sourceApplication:(NSString *)sourceApplication annotation:(id)annotation;
 
 @property (nonatomic, strong) NSDictionary *providerProperties;
+@property (nonatomic, strong) NSDictionary *providerClients;
 
 @end

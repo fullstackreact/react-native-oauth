@@ -15,6 +15,11 @@ typedef void (^OAuthHandler)(OAuthSwiftCredential *, NSURLResponse *, NSDictiona
 typedef OAuthHandler (^OAuthSuccessHandler)(OAuthSwiftCredential *, NSURLResponse *, NSDictionary *);
 typedef void (^OAuthErrorHandler)(NSError *);
 
+//methodImp(client, httpMethod_selector, url, params, headers, successHandler, errorHandler);
+typedef void (^OAuthRequestSuccessHandler)(NSData *data, NSHTTPURLResponse *resp);
+typedef void (^OAuthRequestFailureHandler)(NSError *err);
+typedef void (*ExecRequest)(void*, SEL, NSString *, NSDictionary *, NSDictionary *, OAuthRequestSuccessHandler, OAuthRequestFailureHandler);
+
 @implementation OAuthManager
 
 RCT_EXPORT_MODULE(OAuthManager);
@@ -37,6 +42,7 @@ RCT_EXPORT_MODULE(OAuthManager);
 // TODO: Move below
 - (OAuthHandler) makeHandler:(CustomSuccessHandler)handler
                 providerName:(NSString *)providerName
+               oauthInstance:(id)oauthInstance
                     resolver:(RCTPromiseResolveBlock)resolve
                     rejector:(RCTPromiseRejectBlock)reject
 {
@@ -58,6 +64,12 @@ RCT_EXPORT_MODULE(OAuthManager);
             NSMutableDictionary *customProps = handler(cred, resp, params, props);
             [props addEntriesFromDictionary:customProps];
         }
+
+        if (self.providerCredentials == nil) {
+            self.providerCredentials = [[NSMutableDictionary alloc] init];
+        }
+
+        [self.providerCredentials setValue:props forKey:providerName];
 
         NSLog(@"Handling success with: %@", cred);
 
@@ -100,7 +112,6 @@ RCT_EXPORT_MODULE(OAuthManager);
 
 - (id) oauthInstance:(NSString *) providerName
 {
-    NSLog(@"oauthInstance for: %@ %@", providerName, self.providerProperties);
     if (self.providerProperties == nil) {
         return nil;
     }
@@ -125,6 +136,40 @@ RCT_EXPORT_MODULE(OAuthManager);
         NSLog(@"Provider (%@) not handled", providerName);
         return nil;
     }
+}
+
+- (OAuthSwiftClient *) oauthSwiftClient:(NSString *)providerName
+                         andAccessToken:(NSString *)accessToken
+                   andAccessTokenSecret:(NSString *)accessTokenSecret
+{
+    if (self.providerProperties == nil) {
+        return nil;
+    }
+
+    NSDictionary *clientCredentials = [self.providerCredentials objectForKey:providerName];
+    if (accessToken == nil) {
+        accessToken = [clientCredentials valueForKey:@"oauth_token"];
+    }
+    if (accessTokenSecret == nil) {
+        accessTokenSecret = [clientCredentials valueForKey:@"oauth_token_secret"];
+    }
+
+    NSDictionary *providerCfg = [self getProviderConfig:providerName];
+    NSString *consumerKey = [providerCfg valueForKey:@"consumerKey"];
+    NSString *consumerSecret = [providerCfg valueForKey:@"consumerSecret"];
+
+    OAuthSwiftClient *client = [[OAuthSwiftClient alloc]
+                                initWithConsumerKey:consumerKey
+                                consumerSecret:consumerSecret];
+
+    if (accessToken != nil) {
+        client.credential.oauth_token = accessToken;
+    }
+    if (accessTokenSecret != nil) {
+        client.credential.oauth_token_secret = accessTokenSecret;
+    }
+
+    return client;
 }
 
 RCT_EXPORT_METHOD(providers:(RCTResponseSenderBlock)callback)
@@ -169,11 +214,6 @@ RCT_EXPORT_METHOD(configureProvider:
     if (currentProviderConfig == nil) {
         currentProviderConfig = [[NSMutableDictionary alloc] init];
     }
-//    NSMutableDictionary *mutableCurrentConfig = [self.providerProperties mutableCopy];
-//    NSMutableDictionary *currentConfig = [mutableCurrentConfig objectForKey:providerName];
-//    if (currentConfig == nil) {
-//        currentConfig = [[NSMutableDictionary alloc] init];
-//    }
 
     NSMutableDictionary *combinedAttributes = [NSMutableDictionary dictionaryWithCapacity:20];
     [combinedAttributes addEntriesFromDictionary:defaultProviderConfig];
@@ -192,6 +232,14 @@ RCT_EXPORT_METHOD(configureProvider:
     self.providerProperties = globalCurrentConfig;
 
     resolve(nil);
+}
+
+RCT_EXPORT_METHOD(setCredentialsForProvider:
+                  (NSString *)providerName
+                  credentials:(NSDictionary *)credentials
+                  callback:(RCTResponseSenderBlock) callback)
+{
+
 }
 
 RCT_EXPORT_METHOD(authorizeWithCallbackURL:
@@ -233,9 +281,11 @@ RCT_EXPORT_METHOD(authorizeWithCallbackURL:
         };
         OAuthHandler successHandler = [self makeHandler:customSuccessHandler
                                            providerName:provider
+                                          oauthInstance:oauthInstance
                                                resolver:resolve
                                                rejector:reject];
 
+        NSLog(@"Calling with callbackURL: %@", url);
         [oauthInstance authorizeWithCallbackURL:url
                                         success:successHandler
                                         failure:errorHandler];
@@ -252,6 +302,7 @@ RCT_EXPORT_METHOD(authorizeWithCallbackURL:
 
         OAuthHandler successHandler = [self makeHandler:customSuccessHandler
                                            providerName:provider
+                                       oauthInstance:oauthInstance
                                                resolver:resolve
                                                rejector:reject];
 
@@ -264,6 +315,84 @@ RCT_EXPORT_METHOD(authorizeWithCallbackURL:
                                 params:params
                                success:successHandler
                                failure:errorHandler];
+    }
+}
+
+RCT_EXPORT_METHOD(makeSignedRequest:(NSString *)providerName
+                  method:(NSString *) methodName
+                  url:(NSString *) url
+                  params:(NSDictionary *)params
+                  headers:(NSDictionary *)headers
+                  callback:(RCTResponseSenderBlock)callback)
+{
+    NSDictionary *clientCredentials = [self.providerCredentials objectForKey:providerName];
+
+    if (clientCredentials == nil) {
+        NSDictionary *errProps = @{
+                                   @"error": @{
+                                           @"name": @"Uknown error",
+                                           @"description": @"Provider has no credentials"
+                                           }
+                                   };
+        return callback(@[errProps]);
+    }
+
+    OAuthSwiftClient *client = [self oauthSwiftClient:providerName
+                                       andAccessToken:[clientCredentials valueForKey:@"oauth_token"]
+                                 andAccessTokenSecret:[clientCredentials valueForKey:@"oauth_token_secret"]];
+    // Handlers
+    void (^successHandler)(NSData *data, NSHTTPURLResponse *resp) = ^(NSData *data, NSHTTPURLResponse *resp) {
+        NSMutableDictionary *responseProps = [[NSMutableDictionary alloc] initWithCapacity:5];
+
+        [responseProps setValue:@([resp statusCode]) forKey:@"statusCode"];
+        [responseProps setValue:[resp URL].absoluteString forKey:@"requestUrl"];
+        [responseProps setValue:[resp allHeaderFields] forKey:@"headers"];
+
+        NSString *dataStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+
+        callback(@[[NSNull null], @{
+                       @"response": responseProps,
+                       @"data": dataStr
+                       }]);
+    };
+
+    void (^errorHandler)(NSError*) = ^void(NSError *err) {
+        NSLog(@"An error occurred: %@", err);
+        NSDictionary *errProps = @{
+                                   @"error": @{
+                                           @"name": @"Uknown error",
+                                           @"description": [err localizedDescription]
+                                           }
+                                   };
+        return callback(@[errProps]);
+    };
+
+    NSString *httpMethodName = [methodName lowercaseString];
+
+    // this is such an ugly way of approaching this
+    if ([httpMethodName isEqualToString:@"get"]) {
+        [client get:url
+         parameters:params headers:headers success:successHandler failure:errorHandler];
+    } else if ([httpMethodName isEqualToString:@"post"]) {
+        [client post:url
+         parameters:params headers:headers success:successHandler failure:errorHandler];
+    } else if ([httpMethodName isEqualToString:@"put"]) {
+        [client put:url
+         parameters:params headers:headers success:successHandler failure:errorHandler];
+    } else if ([httpMethodName isEqualToString:@"delete"]) {
+        [client delete:url
+         parameters:params headers:headers success:successHandler failure:errorHandler];
+    } else if ([httpMethodName isEqualToString:@"patch"]) {
+        [client patch:url
+         parameters:params headers:headers success:successHandler failure:errorHandler];
+    } else {
+        NSLog(@"Method not implemented");
+        NSDictionary *errProps = @{
+                                   @"error": @{
+                                           @"name": @"HTTP Method not implemented"
+                                           }
+                                   };
+        return callback(@[errProps]);
     }
 }
 
