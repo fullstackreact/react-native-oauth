@@ -1,6 +1,5 @@
 //
 //  OAuthSwiftManager.h
-//  war
 //
 //  Created by Ari Lerner on 5/31/16.
 //  Copyright © 2016 Facebook. All rights reserved.
@@ -14,7 +13,7 @@
 
 + (BOOL)handleOpenUrl:(UIApplication *)application openURL:(NSURL *)url
     sourceApplication:(NSString *)sourceApplication annotation:(id)annotation;
-    
+
 @property (nonatomic, strong) NSDictionary *providerProperties;
 
 @end
