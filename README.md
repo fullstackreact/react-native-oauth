@@ -28,17 +28,119 @@ authManager.authorizeWithCallbackURL('twitter', appUrl)
 })
 ```
 
-## Installation
-
-
-
 ## Features
 
 * Isolates the OAuth experience to a few simple methods.
 * Stores OAuth token credentials away for safe-keeping (using React Native's [AsyncStorage](https://facebook.github.io/react-native/docs/asyncstorage.html)) so you don't have to deal with it at all.
 * Works with many providers and relatively simple to add a provider
 
+## Installation
+
+Install `react-native-oauth` in the usual manner using `npm`:
+
+```javascript
+npm install --save react-native-oauth
+```
+
+As we are integrating with react-native, we have a little more setup to integrating with our apps.
+
+### iOS setup
+
+#### Automatically with [rnpm](https://github.com/rnpm/rnpm)
+
+To automatically link our `react-native-oauth` client to our application, use the `rnpm` tool. [rnpm](https://github.com/rnpm/rnpm) is a React Native package manager which can help to automate the process of linking package environments.
+
+```bash
+rnpm link
+```
+
+#### Manually
+
+If you prefer not to use `rnpm`, we can manually link the package together with the following steps, after `npm install`:
+
+1. In XCode, right click on `Libraries` and find the `Add Files to [project name]`.
+
+![Add library to project](http://d.pr/i/2gEH.png)
+
+2. Add the `node_modules/react-native-oauth/ios/OAuthManager.xcodeproj`
+
+![OAuthManager.xcodeproj in Libraries listing](http://d.pr/i/19ktP.png)
+
+3. In the project's "Build Settings" tab in your app's target, add `libOAuthManager.a` to the list of `Link Binary with Libraries`
+
+![Linking binaries](http://d.pr/i/1cHgs.png)
+
+4. Ensure that the `Build Settings` of the `OAuthManager.xcodeproj` project is ticked to _All_ and it's `Header Search Paths` include both of the following paths _and_ are set to _recursive_:
+
+  1. `$(SRCROOT)/../../react-native/React`
+  2. `$(SRCROOT)/../node_modules/react-native/React`
+
+![Recursive paths](http://d.pr/i/1hAr1.png)
+
+### Android setup
+
+Coming soon (looking for contributors).
+
+## Handle deep linking loading
+
+**Required step**
+
+We'll need to handle app loading from a url with our app in order to handle authentication from other providers. That is, we'll need to make sure our app knows about the credentials we're authenticating our users against when the app loads _after_ a provider is authenticated against.
+
+### iOS setup
+
+We need to add a callback method in our `ios/AppDelegate.m` file and then call our OAuthManager helper method. Let's load the `ios/AppDelegate.m` file and add the following all the way at the bottom (but before the `@end`):
+
+```objectivec
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url
+  sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{
+  return [OAuthManager handleOpenUrl:application openURL:url sourceApplication:sourceApplication annotation:annotation];
+}
+```
+
+When our app loads up with a request that is coming back from OAuthManager _and_ matches the pattern of `[app-name]://oauth-callback/{providerName}`, the OAuthManager will take over and handle the rest and storing the credentials for later use.
+
+## Configuring our providers
+
+Providers, such as Facebook require some custom setup for each one. The following providers have been implemented and we're working on making more (and making it easier to add more, although the code is not impressively complex either, so it should be relatively simple to add more providers).
+
+In order to configure providers, the `react-native-oauth` library exports the `configureProvider()` method, which accepts _two_ parameters:
+
+1. The provider name, such as `twitter` and `facebook`
+2. The provider's individual credentials
+
+For instance, this might look like:
+
+```javascript
+const config =  {
+  twitter: {
+    consumer_key: 'SOME_CONSUMER_KEY',
+    consumer_secret: 'SOME_CONSUMER_SECRET'
+  }
+}
+authManager.configureProvider("twitter", config.twitter);
+```
+
+The `consumer_key` and `consumer_secret` values are _generally_ provided by the provider development program. In the case of [twitter](https://apps.twitter.com), we can create an app and generate these values through their [development dashboard](https://apps.twitter.com).
+
+### Implemented providers
+
+The following list are the providers we've implemented thus far in `react-native-oauth` and the _required_ keys to pass when configuring the provider:
+
+* Twitter
+  * consumer_key
+  * consumer_secret
+* Facebook (not fully implemented)
+  * consumer_key
+  * consumer_secret
+
+## API documentation
+
+
+
 ## TODOS:
 
 * Handle rerequesting tokens (automatically?)
 * Simplify method of adding providers
+* Add Android support
