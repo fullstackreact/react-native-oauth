@@ -22,8 +22,9 @@ export default class Manager {
     return OAuthManagerBridge.configureProvider(name, props);
   }
 
-  authorizeWithCallbackURL(provider, url) {
-    return OAuthManagerBridge.authorizeWithCallbackURL(provider, url);
+  authorizeWithCallbackURL(provider, url, scope, state, params) {
+    return OAuthManagerBridge
+            .authorizeWithCallbackURL(provider, url, scope, state, params);
   }
 
   static providers() {
