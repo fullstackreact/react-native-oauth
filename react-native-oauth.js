@@ -22,6 +22,13 @@ export default class Manager {
     return OAuthManagerBridge.configureProvider(name, props);
   }
 
+  configureProviders(providerConfigs) {
+    const promises = Object
+            .keys(providerConfigs)
+            .map(providerName => this.configureProvider(name, providerConfigs[name]));
+    return Promises.all(promises);
+  }
+
   authorizeWithCallbackURL(provider, url, scope, state, params) {
     return OAuthManagerBridge
             .authorizeWithCallbackURL(provider, url, scope, state, params);
