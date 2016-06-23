@@ -18,5 +18,27 @@ const appUrl = 'app-uri://oauth-callback/twitter'
 authManager.authorizeWithCallbackURL('twitter', appUrl)
 .then((resp) => {
   // We have a user with user credentials
+  authManager.makeRequest('twitter', 'get', 'https://api.twitter.com/1.1/statuses/mentions_timeline.json')
+    .then((stringResponse) => {
+      console.log('RESPONSE as a string: ', stringResponse);
+    })
+    .catch((err) => {
+      console.log('Error making request', err);
+    })
 })
 ```
+
+## Installation
+
+
+
+## Features
+
+* Isolates the OAuth experience to a few simple methods.
+* Stores OAuth token credentials away for safe-keeping (using React Native's [AsyncStorage](https://facebook.github.io/react-native/docs/asyncstorage.html)) so you don't have to deal with it at all.
+* Works with many providers and relatively simple to add a provider
+
+## TODOS:
+
+* Handle rerequesting tokens (automatically?)
+* Simplify method of adding providers

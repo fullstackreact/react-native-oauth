@@ -3,7 +3,8 @@
  * @flow
  */
 import {
-  NativeModules
+  NativeModules,
+  AsyncStorage
 } from 'react-native';
 const OAuthManagerBridge = NativeModules.OAuthManager;
 
@@ -19,18 +20,18 @@ const promisify = fn => (...args) => {
 };
 
 export default class Manager {
-  constructor() {
-    // Rehydrate credentials, if there are any
-  }
+  constructor() {}
 
   configureProvider(name, props) {
-    return OAuthManagerBridge.configureProvider(name, props);
+    return OAuthManagerBridge.configureProvider(name, props)
+      .then(() => this.setCredentialsForProvider(name));
   }
 
   configureProviders(providerConfigs) {
     const promises = Object
             .keys(providerConfigs)
-            .map(providerName => this.configureProvider(name, providerConfigs[name]));
+            .map(providerName =>
+              this.configureProvider(name, providerConfigs[name]));
     return Promises.all(promises);
   }
 
@@ -39,22 +40,23 @@ export default class Manager {
 
     if (!credentials) {
       return new Promise((resolve, reject) => {
-        AsyncStorage.getItem(this.makeStorageKey(providerName, (err, res) => {
+        const storageKey = this.makeStorageKey(providerName);
+        AsyncStorage.getItem(storageKey, (err, res) => {
           if (err) {
             return reject('No credentials passed or found in storage');
           } else {
             try {
               const json = JSON.parse(res);
-              const next = handleHydration(res);
+              const next = handleHydration(json);
               return resolve(next);
-            } catch (e) {
-              return reject(e);
+            } catch (err) {
+              return reject(err);
             }
           }
-        })
-      })
+        });
+      });
     } else {
-      handleHydration(credentials);
+      return handleHydration(credentials);
     }
   }
 
@@ -63,7 +65,9 @@ export default class Manager {
             .authorizeWithCallbackURL(provider, url, scope, state, params)
             .then((res) => {
               return new Promise((resolve, reject) => {
-                AsyncStorage.setItem(makeStorageKey(provider), JSON.stringify(res), (err) => {
+                const json = JSON.stringify(res);
+                AsyncStorage.setItem(this.makeStorageKey(provider), json, (err) => {
+                  console.log('setItem for storageKey -->', this.makeStorageKey(provider), JSON.stringify(res));
                   if (err) {
                     return reject(err);
                   } else {
