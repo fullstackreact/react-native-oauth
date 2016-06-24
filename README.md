@@ -194,8 +194,6 @@ authManager.deauthorize('twitter');
 
 This is _open-source_ software and we can make it rock for everyone through contributions.
 
-## Contributing
-
 ```shell
 git clone https://github.com/fullstackreact/react-native-oauth.git
 cd react-native-oauth
