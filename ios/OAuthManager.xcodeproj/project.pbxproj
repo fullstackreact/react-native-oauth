@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		13BE3DEE1AC21097009241FE /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 13BE3DED1AC21097009241FE /* OAuthManager.m */; };
+		252162DE67427523272C170D /* Pods_OAuthManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E231954F0906492EED21005A /* Pods_OAuthManager.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +49,7 @@
 		D991AABB1D1A75DA00DE9E58 /* libReact.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libReact.a; path = "../../../React/build/Debug-iphoneos/libReact.a"; sourceTree = "<group>"; };
 		D991AB581D1B22F600DE9E58 /* OAuthManager-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OAuthManager-Bridging-Header.h"; sourceTree = "<group>"; };
 		D991AB771D1B237400DE9E58 /* Pods.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Pods.xcodeproj; path = Pods/Pods.xcodeproj; sourceTree = "<group>"; };
+		E231954F0906492EED21005A /* Pods_OAuthManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_OAuthManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				252162DE67427523272C170D /* Pods_OAuthManager.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -86,6 +89,7 @@
 			children = (
 				D991AB771D1B237400DE9E58 /* Pods.xcodeproj */,
 				D991AABB1D1A75DA00DE9E58 /* libReact.a */,
+				E231954F0906492EED21005A /* Pods_OAuthManager.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
