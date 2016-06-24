@@ -197,8 +197,8 @@ This is _open-source_ software and we can make it rock for everyone through cont
 ## Contributing
 
 ```shell
-git clone https://github.com/fullstackreact/react-native-oauth-manager.git
-cd react-native-oauth-manager
+git clone https://github.com/fullstackreact/react-native-oauth.git
+cd react-native-oauth
 npm install
 ```
 ___

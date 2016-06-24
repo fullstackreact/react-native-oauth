@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/fullstackreact/react-native-oauth-manager.git"
+    "url": "https://github.com/fullstackreact/react-native-oauth.git"
   },
   "license": "ISC",
   "keywords": [
