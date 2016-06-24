@@ -105,7 +105,7 @@ When our app loads up with a request that is coming back from OAuthManager _and_
 
 Providers, such as Facebook require some custom setup for each one. The following providers have been implemented and we're working on making more (and making it easier to add more, although the code is not impressively complex either, so it should be relatively simple to add more providers).
 
-In order to configure providers, the `react-native-oauth` library exports the `configureProvider()` method, which accepts _two_ parameters:
+In order to configure providers, the `react-native-oauth` library exports the `configureProvider()` method, which accepts _two_ parameters and returns a promise:
 
 1. The provider name, such as `twitter` and `facebook`
 2. The provider's individual credentials
@@ -135,12 +135,79 @@ The following list are the providers we've implemented thus far in `react-native
   * consumer_key
   * consumer_secret
 
-## API documentation
+## Authenticating against our providers
 
+In order to make any authenticated calls against a provider, we need to authenticate against it. The `react-native-oauth` library passes through an easy method for dealing with authentication with the `authorizeWithCallbackURL()` method.
 
+Using the app uri we previous setup, we can call the `authorizeWithCallbackURL()` method to ask iOS to redirect our user to a browser where they can log in to our app in the usual flow. When the user authorizes the login request, the promise returned by the `authorizeWithCallbackURL()` is resolved. If they reject the login request for any reason, the promise is rejected along with an error, if there are any.
+
+```javascript
+authManager.authorizeWithCallbackURL('twitter', 'firebase-example://oauth-callback/twitter')
+.then((oauthResponse) => {
+  // the oauthResponse object is the response returned by the request
+  // which is later stored by react-native-oauth using AsyncStorage
+})
+.catch((err) => {
+  // err is an error object that contains the reason the user
+  // error rejected authentication.
+})
+```
+
+When the response is returned, `react-native-oauth` will store the resulting credentials using the `AsyncStorage` object provided natively by React Native. All of this happens behinds the scenes _automatically_. When the credentials are successfully rerequested, `AsyncStorage` is updated behind the scenes automatically. All you have to do is take care of authenticating the user using the `authorizeWithCallbackURL()` method.
+
+## Calling a provider's API
+
+Lastly, we can use our new oauth token to make requests to the api to make authenticated, signed requests. For instance, to get a list of the mentions on twitter, we can make a request at the endpoint: `'https://api.twitter.com/1.1/statuses/user_timeline.json'`. Provided our user has been authorized (or previously authorized), we can make a request using these credentials using the `makeRequest()` method. The `makeRequest()` method accepts between three and five parameters and returns a promise:
+
+1. The provider our user is making a request (twitter, facebook, etc)
+2. The HTTP method to use to make the request, for instance `get` or `post`
+3. The URL to make the request
+4. (optional) parameters to pass through directly to the request
+5. (optional) headers are any headers associated with the request
+
+```javascript
+const userTimelineUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+authManager.makeRequest('twitter', 'get', userTimelineUrl)
+  .then(resp => {
+    // resp is an object that includes both a `response` object containing
+    // details of the returned response as well as a `data` object which is
+    // a STRING of the returned data. OAuthManager makes zero assumptions of
+    // the data type when returned and instead passes through the string response
+  })
+  .catch(err => {
+    // err is an object that contains the error called when the promise
+    // is rejected
+  })
+```
+
+## deauthorize()
+
+We can `deauthorize()` our user's from using the provider by calling the `deauthorize()` method. It accepts a single parameter:
+
+1. The `provider` we want to remove from our user credentials.
+
+```javascript
+authManager.deauthorize('twitter');
+```
+
+## Contributing
+
+This is _open-source_ software and we can make it rock for everyone through contributions.
+
+## Contributing
+
+```shell
+git clone https://github.com/fullstackreact/react-native-oauth-manager.git
+cd react-native-oauth-manager
+npm install
+```
+___
 
 ## TODOS:
 
-* Handle rerequesting tokens (automatically?)
-* Simplify method of adding providers
-* Add Android support
+[] Handle rerequesting tokens (automatically?)
+[] Simplify method of adding providers
+  [] Complete [facebook](https://developers.facebook.com/docs/facebook-login) support
+  [] Add [github](https://developer.github.com/v3/oauth/) support
+  [] Add [Google]() support
+[] Add Android support

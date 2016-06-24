@@ -83,11 +83,19 @@ export default class Manager {
       provider, method, url, parameters, headers);
   }
 
+  deauthorize(providerName) {
+    return new Promise((resolve, reject) => {
+      AsyncStorage.removeItem(this.makeStorageKey(providerName), (err) => {
+        return err ? reject(err) : resolve();
+      })
+    });
+  }
+
   static providers() {
     return promisify(OAuthManagerBridge.providers)();
   }
 
-  makeStorageKey(path) {
-    return `${STORAGE_KEY}/${path}`
+  makeStorageKey(path, prefix='credentials') {
+    return `${STORAGE_KEY}/${prefix}/${path}`.toLowerCase();
   }
 }
