@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		13BE3DEE1AC21097009241FE /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 13BE3DED1AC21097009241FE /* OAuthManager.m */; };
 		252162DE67427523272C170D /* Pods_OAuthManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E231954F0906492EED21005A /* Pods_OAuthManager.framework */; };
+		D90285E61D1CFF94006B2E5B /* OAuthSwift.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = D991AB7D1D1B237400DE9E58 /* OAuthSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,13 +30,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		58B511D91A9E6C8500147676 /* CopyFiles */ = {
+		58B511D91A9E6C8500147676 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "include/$(PRODUCT_NAME)";
-			dstSubfolderSpec = 16;
+			dstPath = "";
+			dstSubfolderSpec = 10;
 			files = (
+				D90285E61D1CFF94006B2E5B /* OAuthSwift.framework in Copy Files */,
 			);
+			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -122,7 +125,7 @@
 				260D731B810635CCC5A1CECC /* [CP] Check Pods Manifest.lock */,
 				58B511D71A9E6C8500147676 /* Sources */,
 				58B511D81A9E6C8500147676 /* Frameworks */,
-				58B511D91A9E6C8500147676 /* CopyFiles */,
+				58B511D91A9E6C8500147676 /* Copy Files */,
 				EB72A852C578F8D024FEC67D /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
