@@ -13,6 +13,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		D902863D1D1D0106006B2E5B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D991AB771D1B237400DE9E58 /* Pods.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 45935B91DF0442390E2CA6DEEF68AE99;
+			remoteInfo = OAuthSwift;
+		};
 		D991AB7C1D1B237400DE9E58 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D991AB771D1B237400DE9E58 /* Pods.xcodeproj */;
@@ -131,6 +138,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				D902863E1D1D0106006B2E5B /* PBXTargetDependency */,
 			);
 			name = OAuthManager;
 			productName = RCTDataManager;
@@ -234,6 +242,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D902863E1D1D0106006B2E5B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = OAuthSwift;
+			targetProxy = D902863D1D1D0106006B2E5B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		58B511ED1A9E6C8500147676 /* Debug */ = {
