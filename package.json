@@ -1,6 +1,6 @@
 {
   "name": "react-native-oauth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Ari Lerner <ari@fullstack.io> (https://fullstackreact.com)",
   "description": "An oauth manager for dealing with the complexities of oauth",
   "main": "./react-native-oauth.js",
