@@ -49,7 +49,7 @@ RCT_EXPORT_MODULE(OAuthManager);
     return ^(OAuthSwiftCredential *cred, NSURLResponse *resp, NSDictionary *params) {
         NSMutableDictionary *props = [[NSMutableDictionary alloc] initWithCapacity:20];
 
-        [props setValue:providerName forKey:@"providerName"];
+        [props setValue:providerName forKey:@"provider"];
         [props setValue:cred.oauth_token forKey:@"oauth_token"];
         [props setValue:cred.oauth_token_secret forKey:@"oauth_token_secret"];
 
@@ -71,7 +71,7 @@ RCT_EXPORT_MODULE(OAuthManager);
 
         [self.providerCredentials setValue:props forKey:providerName];
 
-        NSLog(@"Handling success with: %@", cred);
+        NSLog(@"Handling success with: %@", props);
 
         resolve(props);
     };

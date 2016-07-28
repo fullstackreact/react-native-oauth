@@ -34,6 +34,7 @@ export default class Manager {
   }
 
   configureProviders(providerConfigs) {
+    providerConfigs = providerConfigs || this._options;
     const promises = Object
             .keys(providerConfigs)
             .map(name =>
@@ -54,7 +55,7 @@ export default class Manager {
             try {
               const json = JSON.parse(res);
               const next = handleHydration(json);
-              return resolve(next);
+              return resolve(json);
             } catch (err) {
               return reject(err);
             }
@@ -62,26 +63,27 @@ export default class Manager {
         });
       });
     } else {
-      return handleHydration(credentials);
+      let creds = typeof credentials === 'string' ?
+                    JSON.parse(credentials) : credentials;
+      return handleHydration(creds);
     }
   }
 
   authorizeWithCallbackURL(provider, url, scope, state, params) {
     return OAuthManagerBridge
-            .authorizeWithCallbackURL(provider, url, scope, state, params)
-            .then((res) => {
-              return new Promise((resolve, reject) => {
-                const json = JSON.stringify(res);
-                AsyncStorage.setItem(this.makeStorageKey(provider), json, (err) => {
-                  console.log('setItem for storageKey -->', this.makeStorageKey(provider), JSON.stringify(res));
-                  if (err) {
-                    return reject(err);
-                  } else {
-                    return resolve(res);
-                  }
-                })
-              });
-            })
+      .authorizeWithCallbackURL(provider, url, scope, state, params)
+      .then((res) => {
+        return new Promise((resolve, reject) => {
+          const json = JSON.stringify(res);
+          AsyncStorage.setItem(this.makeStorageKey(provider), json, (err) => {
+            if (err) {
+              return reject(err);
+            } else {
+              return resolve(res);
+            }
+          })
+        });
+      })
   }
 
   makeRequest(provider, method, url, parameters={}, headers={}) {
