@@ -20,7 +20,13 @@ const promisify = fn => (...args) => {
 };
 
 export default class Manager {
-  constructor() {}
+  constructor(opts={}) {
+    this._options = opts;
+
+    if (opts) {
+      this.configureProviders(opts);
+    }
+  }
 
   configureProvider(name, props) {
     return OAuthManagerBridge.configureProvider(name, props)
@@ -30,9 +36,9 @@ export default class Manager {
   configureProviders(providerConfigs) {
     const promises = Object
             .keys(providerConfigs)
-            .map(providerName =>
+            .map(name =>
               this.configureProvider(name, providerConfigs[name]));
-    return Promises.all(promises);
+    return Promise.all(promises);
   }
 
   setCredentialsForProvider(providerName, credentials) {
@@ -88,7 +94,7 @@ export default class Manager {
       AsyncStorage.removeItem(this.makeStorageKey(providerName), (err) => {
         return err ? reject(err) : resolve();
       })
-    });
+    })
   }
 
   static providers() {
