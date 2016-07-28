@@ -4,18 +4,19 @@ platform :ios, '8.0'
 target 'OAuthManager' do
   # Uncomment this line if you're using Swift or would like to use dynamic frameworks
   use_frameworks!
+  podspec :path => "./OAuthManager.podspec"
 
   # Pods for OauthManager
-  pod 'OAuthSwift', '~> 0.5.0'
-
-
-  post_install do |installer|
-    installer.pods_project.targets.each do |target|
-      target.build_configurations.each do |config|
-        cflags = config.build_settings['OTHER_CFLAGS'] || ['$(inherited)']
-        cflags << '-fembed-bitcode'
-        config.build_settings['OTHER_CFLAGS'] = cflags
-      end
-    end
-  end
+  # pod 'OAuthSwift', '~> 0.5.0'
+  #
+  #
+  # post_install do |installer|
+  #   installer.pods_project.targets.each do |target|
+  #     target.build_configurations.each do |config|
+  #       cflags = config.build_settings['OTHER_CFLAGS'] || ['$(inherited)']
+  #       # cflags << '-fembed-bitcode'
+  #       config.build_settings['OTHER_CFLAGS'] = cflags
+  #     end
+  #   end
+  # end
 end
