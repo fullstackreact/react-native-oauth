@@ -65,6 +65,7 @@
 		D3353820DF4005D16A481F41 /* Pods-OAuthManager.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OAuthManager.debug.xcconfig"; path = "Pods/Target Support Files/Pods-OAuthManager/Pods-OAuthManager.debug.xcconfig"; sourceTree = "<group>"; };
 		D991AB581D1B22F600DE9E58 /* OAuthManager-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OAuthManager-Bridging-Header.h"; sourceTree = "<group>"; };
 		D991AB771D1B237400DE9E58 /* Pods.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Pods.xcodeproj; path = Pods/Pods.xcodeproj; sourceTree = "<group>"; };
+		D99D32F51D4ADAEA00214DA9 /* Build-Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Build-Debug.xcconfig"; sourceTree = "<group>"; };
 		E231954F0906492EED21005A /* Pods_OAuthManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_OAuthManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -91,6 +92,7 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				D99D32F51D4ADAEA00214DA9 /* Build-Debug.xcconfig */,
 				D991AB581D1B22F600DE9E58 /* OAuthManager-Bridging-Header.h */,
 				13BE3DEC1AC21097009241FE /* OAuthManager.h */,
 				13BE3DED1AC21097009241FE /* OAuthManager.m */,
@@ -282,6 +284,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -334,6 +337,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
 				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -362,9 +366,9 @@
 		};
 		58B511F01A9E6C8500147676 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D3353820DF4005D16A481F41 /* Pods-OAuthManager.debug.xcconfig */;
+			baseConfigurationReference = D99D32F51D4ADAEA00214DA9 /* Build-Debug.xcconfig */;
 			buildSettings = {
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				DYLIB_INSTALL_NAME_BASE = "";
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -373,7 +377,7 @@
 					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS/**",
 					"$(SRCROOT)/Libraries/**",
 				);
-				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
+				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = (
@@ -390,7 +394,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 98908608E773A354AA4AE920 /* Pods-OAuthManager.release.xcconfig */;
 			buildSettings = {
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				DYLIB_INSTALL_NAME_BASE = "";
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -399,7 +403,7 @@
 					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS/**",
 					"$(SRCROOT)/Libraries/**",
 				);
-				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
+				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = (

@@ -22,10 +22,6 @@ const promisify = fn => (...args) => {
 export default class Manager {
   constructor(opts={}) {
     this._options = opts;
-
-    if (opts) {
-      this.configureProviders(opts);
-    }
   }
 
   configureProvider(name, props) {

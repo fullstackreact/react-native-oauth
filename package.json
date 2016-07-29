@@ -26,5 +26,13 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
+  },
+  "rnpm": {
+    "ios": {
+      "sharedLibraries": [
+        "StoreKit.framework"
+      ],
+      "project": "ios/OAuthManager.xcodeproj"
+    }
   }
 }
