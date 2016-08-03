@@ -6,9 +6,10 @@
 //  Copyright © 2016 Facebook. All rights reserved.
 //
 
+#import "OAuthSwift-Swift.h"
 #import "OAuthManager.h"
 
-//@import OAuthSwift;
+@import OAuthSwift;
 
 typedef NSMutableDictionary *(^CustomSuccessHandler)(OAuthSwiftCredential *, NSURLResponse *, NSDictionary *, NSMutableDictionary*);
 typedef void (^OAuthHandler)(OAuthSwiftCredential *, NSURLResponse *, NSDictionary *);

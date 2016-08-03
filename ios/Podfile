@@ -1,21 +1,23 @@
-# Uncomment this line to define a global platform for your project
 platform :ios, '8.0'
 use_frameworks!
 
 target 'OAuthManager' do
-  # podspec :path => "./OAuthManager.podspec"
-
   # Pods for OauthManager
   pod 'OAuthSwift', '~> 0.5.2'
-  #
-  #
-  # post_install do |installer|
-  #   installer.pods_project.targets.each do |target|
-  #     target.build_configurations.each do |config|
-  #       cflags = config.build_settings['OTHER_CFLAGS'] || ['$(inherited)']
-  #       # cflags << '-fembed-bitcode'
-  #       config.build_settings['OTHER_CFLAGS'] = cflags
-  #     end
-  #   end
-  # end
+
+  post_install do |installer|
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |configuration|
+        target.build_settings(configuration.name)['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        # target.build_settings(configuration.name)['FRAMEWORK_SEARCH_PATHS'] = flat_frameworks
+        target.build_settings(configuration.name)['USER_HEADER_SEARCH_PATHS'] = "$(BUILT_PRODUCTS_DIR)"
+        target.build_settings(configuration.name)['HEADER_SEARCH_PATHS'] = [
+          "$(inherited)", "${PODS_ROOT}/Headers/**",
+          "$(SRCROOT)/../../../React/**",
+          "$(SRCROOT)/../../../react-native/React/**"
+        ].join(' ')
+        target.build_settings(configuration.name)['OTHER_LDFLAGS'] = "$(inherited) -undefined dynamic_lookup"
+      end
+    end
+  end
 end

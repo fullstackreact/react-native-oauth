@@ -7,9 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		13BE3DEE1AC21097009241FE /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 13BE3DED1AC21097009241FE /* OAuthManager.m */; };
-		252162DE67427523272C170D /* Pods_OAuthManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E231954F0906492EED21005A /* Pods_OAuthManager.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		77A0D446E94AED73302D360E /* Pods_OAuthManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E623702E9777DB3EE760209 /* Pods_OAuthManager.framework */; };
 		D90285E61D1CFF94006B2E5B /* OAuthSwift.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = D991AB7D1D1B237400DE9E58 /* OAuthSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D935004C1D513CF700C7BA47 /* OAuthManager.m */; };
+		D99D33651D4B29D800214DA9 /* Pods_OAuthManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D991AB7F1D1B237400DE9E58 /* Pods_OAuthManager.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,8 +48,8 @@
 		58B511D91A9E6C8500147676 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
-			dstPath = "@loader_path/..";
-			dstSubfolderSpec = 11;
+			dstPath = "";
+			dstSubfolderSpec = 10;
 			files = (
 				D90285E61D1CFF94006B2E5B /* OAuthSwift.framework in Copy Files */,
 			);
@@ -58,15 +59,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0700FAA689C187FECECA6056 /* Pods-OAuthManager.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OAuthManager.debug.xcconfig"; path = "Pods/Target Support Files/Pods-OAuthManager/Pods-OAuthManager.debug.xcconfig"; sourceTree = "<group>"; };
 		134814201AA4EA6300B7C361 /* libOAuthManager.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOAuthManager.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		13BE3DEC1AC21097009241FE /* OAuthManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAuthManager.h; sourceTree = "<group>"; };
-		13BE3DED1AC21097009241FE /* OAuthManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OAuthManager.m; sourceTree = "<group>"; };
-		98908608E773A354AA4AE920 /* Pods-OAuthManager.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OAuthManager.release.xcconfig"; path = "Pods/Target Support Files/Pods-OAuthManager/Pods-OAuthManager.release.xcconfig"; sourceTree = "<group>"; };
-		D3353820DF4005D16A481F41 /* Pods-OAuthManager.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OAuthManager.debug.xcconfig"; path = "Pods/Target Support Files/Pods-OAuthManager/Pods-OAuthManager.debug.xcconfig"; sourceTree = "<group>"; };
+		3E623702E9777DB3EE760209 /* Pods_OAuthManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_OAuthManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D215CDC31F4E30597C4E0769 /* Pods-OAuthManager.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OAuthManager.release.xcconfig"; path = "Pods/Target Support Files/Pods-OAuthManager/Pods-OAuthManager.release.xcconfig"; sourceTree = "<group>"; };
+		D935004B1D513CF700C7BA47 /* OAuthManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuthManager.h; path = OAuthManager/OAuthManager.h; sourceTree = "<group>"; };
+		D935004C1D513CF700C7BA47 /* OAuthManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuthManager.m; path = OAuthManager/OAuthManager.m; sourceTree = "<group>"; };
 		D991AB581D1B22F600DE9E58 /* OAuthManager-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OAuthManager-Bridging-Header.h"; sourceTree = "<group>"; };
 		D991AB771D1B237400DE9E58 /* Pods.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Pods.xcodeproj; path = Pods/Pods.xcodeproj; sourceTree = "<group>"; };
-		D99D32F51D4ADAEA00214DA9 /* Build-Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Build-Debug.xcconfig"; sourceTree = "<group>"; };
-		E231954F0906492EED21005A /* Pods_OAuthManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_OAuthManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9C9A1131D4FF5B8000E28EB /* buildScript.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = buildScript.sh; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,7 +75,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				252162DE67427523272C170D /* Pods_OAuthManager.framework in Frameworks */,
+				D99D33651D4B29D800214DA9 /* Pods_OAuthManager.framework in Frameworks */,
+				77A0D446E94AED73302D360E /* Pods_OAuthManager.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -92,13 +94,13 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				D99D32F51D4ADAEA00214DA9 /* Build-Debug.xcconfig */,
+				D935004B1D513CF700C7BA47 /* OAuthManager.h */,
+				D935004C1D513CF700C7BA47 /* OAuthManager.m */,
+				D9C9A1131D4FF5B8000E28EB /* buildScript.sh */,
 				D991AB581D1B22F600DE9E58 /* OAuthManager-Bridging-Header.h */,
-				13BE3DEC1AC21097009241FE /* OAuthManager.h */,
-				13BE3DED1AC21097009241FE /* OAuthManager.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
-				65F8B1AA93F9A614A6765B15 /* Pods */,
 				5C09677432A19AC1FB642CAC /* Frameworks */,
+				D319B6E297D13D8F82E619BA /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -106,16 +108,16 @@
 			isa = PBXGroup;
 			children = (
 				D991AB771D1B237400DE9E58 /* Pods.xcodeproj */,
-				E231954F0906492EED21005A /* Pods_OAuthManager.framework */,
+				3E623702E9777DB3EE760209 /* Pods_OAuthManager.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		65F8B1AA93F9A614A6765B15 /* Pods */ = {
+		D319B6E297D13D8F82E619BA /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				D3353820DF4005D16A481F41 /* Pods-OAuthManager.debug.xcconfig */,
-				98908608E773A354AA4AE920 /* Pods-OAuthManager.release.xcconfig */,
+				0700FAA689C187FECECA6056 /* Pods-OAuthManager.debug.xcconfig */,
+				D215CDC31F4E30597C4E0769 /* Pods-OAuthManager.release.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -141,6 +143,7 @@
 				58B511D81A9E6C8500147676 /* Frameworks */,
 				58B511D91A9E6C8500147676 /* Copy Files */,
 				EB72A852C578F8D024FEC67D /* [CP] Copy Pods Resources */,
+				D9C9A1161D4FF62E000E28EB /* Copy frameworks */,
 			);
 			buildRules = (
 			);
@@ -223,6 +226,20 @@
 			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
+		D9C9A1161D4FF62E000E28EB /* Copy frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = ./buildScript.sh;
+		};
 		EB72A852C578F8D024FEC67D /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -245,7 +262,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				13BE3DEE1AC21097009241FE /* OAuthManager.m in Sources */,
+				D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -306,7 +323,7 @@
 					"$(SRCROOT)/../../node_modules/react-native/React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
@@ -352,7 +369,7 @@
 					"$(SRCROOT)/../../node_modules/react-native/React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -366,7 +383,7 @@
 		};
 		58B511F01A9E6C8500147676 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D99D32F51D4ADAEA00214DA9 /* Build-Debug.xcconfig */;
+			baseConfigurationReference = 0700FAA689C187FECECA6056 /* Pods-OAuthManager.debug.xcconfig */;
 			buildSettings = {
 				DYLIB_INSTALL_NAME_BASE = "";
 				ENABLE_BITCODE = NO;
@@ -392,7 +409,7 @@
 		};
 		58B511F11A9E6C8500147676 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 98908608E773A354AA4AE920 /* Pods-OAuthManager.release.xcconfig */;
+			baseConfigurationReference = D215CDC31F4E30597C4E0769 /* Pods-OAuthManager.release.xcconfig */;
 			buildSettings = {
 				DYLIB_INSTALL_NAME_BASE = "";
 				ENABLE_BITCODE = NO;
