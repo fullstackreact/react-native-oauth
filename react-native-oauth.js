@@ -10,20 +10,19 @@ const OAuthManagerBridge = NativeModules.OAuthManager;
 
 let configured = false;
 const STORAGE_KEY = 'ReactNativeOAuth';
+import promisify from './lib/promisify'
 
-const promisify = fn => (...args) => {
-  return new Promise((resolve, reject) => {
-    const handler = (err, resp) => err ? reject(err) : resolve(resp);
-    args.push(handler);
-    fn.call(OAuthManagerBridge, ...args);
-  });
-};
-
-export default class Manager {
+/**
+ * Manager is the OAuth layer
+ **/
+export default class OAuthManager {
   constructor(opts={}) {
     this._options = opts;
   }
 
+  /**
+   * Configure a single provider
+   **/
   configureProvider(name, props) {
     return OAuthManagerBridge.configureProvider(name, props)
       .then(() => this.setCredentialsForProvider(name));

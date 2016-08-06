@@ -7,10 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		77A0D446E94AED73302D360E /* Pods_OAuthManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E623702E9777DB3EE760209 /* Pods_OAuthManager.framework */; };
+		77A0D446E94AED73302D360E /* Pods_OAuthManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E623702E9777DB3EE760209 /* Pods_OAuthManager.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		D90285E61D1CFF94006B2E5B /* OAuthSwift.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = D991AB7D1D1B237400DE9E58 /* OAuthSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D935004C1D513CF700C7BA47 /* OAuthManager.m */; };
-		D99D33651D4B29D800214DA9 /* Pods_OAuthManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D991AB7F1D1B237400DE9E58 /* Pods_OAuthManager.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,7 +74,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D99D33651D4B29D800214DA9 /* Pods_OAuthManager.framework in Frameworks */,
 				77A0D446E94AED73302D360E /* Pods_OAuthManager.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -143,7 +141,6 @@
 				58B511D81A9E6C8500147676 /* Frameworks */,
 				58B511D91A9E6C8500147676 /* Copy Files */,
 				EB72A852C578F8D024FEC67D /* [CP] Copy Pods Resources */,
-				D9C9A1161D4FF62E000E28EB /* Copy frameworks */,
 			);
 			buildRules = (
 			);
@@ -225,20 +222,6 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
-		};
-		D9C9A1161D4FF62E000E28EB /* Copy frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = ./buildScript.sh;
 		};
 		EB72A852C578F8D024FEC67D /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
