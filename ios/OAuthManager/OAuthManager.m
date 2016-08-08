@@ -1,7 +1,5 @@
 //
 //  OAuthSwiftManager.m
-//  war
-//
 //  Created by Ari Lerner on 5/31/16.
 //  Copyright © 2016 Facebook. All rights reserved.
 //
@@ -9,7 +7,7 @@
 #import "OAuthSwift-Swift.h"
 #import "OAuthManager.h"
 
-// @import OAuthSwift;
+@import OAuthSwift;
 
 typedef NSMutableDictionary *(^CustomSuccessHandler)(OAuthSwiftCredential *, NSURLResponse *, NSDictionary *, NSMutableDictionary*);
 typedef void (^OAuthHandler)(OAuthSwiftCredential *, NSURLResponse *, NSDictionary *);
@@ -190,43 +188,48 @@ RCT_EXPORT_METHOD(providers:(RCTResponseSenderBlock)callback)
 RCT_EXPORT_METHOD(configureProvider:
                   (NSString *)providerName
                   props:(NSDictionary *)props
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejector:(RCTPromiseRejectBlock)reject)
+                  callback:(RCTResponseSenderBlock)callback)
 {
     if (self.providerProperties == nil) {
         self.providerProperties = [[NSDictionary alloc] init];
     }
-
+    
     NSDictionary *defaultProviderConfig = [self getDefaultProviderConfig:providerName];
-
+    
     if (defaultProviderConfig == nil) {
-        return reject(@"Provider not handled", [NSString stringWithFormat:@"%@ not handled yet", providerName], nil);
+        NSDictionary *errProps = @{
+                                   @"error": @{
+                                           @"name": @"Configuration error",
+                                           @"description": [NSString stringWithFormat:@"%@ not handled yet", providerName]
+                                           }
+                                   };
+        return callback(@[errProps]);
     }
-
+    
     NSMutableDictionary *globalCurrentConfig = [self.providerProperties mutableCopy];
     NSMutableDictionary *currentProviderConfig = [globalCurrentConfig objectForKey:providerName];
-
+    
     if (currentProviderConfig == nil) {
         currentProviderConfig = [[NSMutableDictionary alloc] init];
     }
-
+    
     NSMutableDictionary *combinedAttributes = [NSMutableDictionary dictionaryWithCapacity:20];
     [combinedAttributes addEntriesFromDictionary:defaultProviderConfig];
     [combinedAttributes addEntriesFromDictionary:currentProviderConfig];
-
-    NSString *consumerKey = [props valueForKey:@"consumer_key"];
-    NSString *consumerSecret = [props valueForKey:@"consumer_secret"];
-
+    
+    NSString *consumerKey = @"KEY"; //[props valueForKey:@"consumer_key"];
+    NSString *consumerSecret = @"SECRET"; //[props valueForKey:@"consumer_secret"];
+    
     NSDictionary *providerProps = @{
-                                    @"consumerKey": consumerKey,
-                                    @"consumerSecret": consumerSecret
+                                    @"consumerKey": [consumerKey copy],
+                                    @"consumerSecret": [consumerSecret copy]
                                     };
     [combinedAttributes addEntriesFromDictionary:providerProps];
-
+    
     [globalCurrentConfig setObject:combinedAttributes forKey:providerName];
-    self.providerProperties = globalCurrentConfig;
-
-    resolve(nil);
+    self.providerProperties = [globalCurrentConfig copy];
+    
+    return callback(@[[NSNull null], globalCurrentConfig]);
 }
 
 /**

@@ -24,7 +24,7 @@ export default class OAuthManager {
    * Configure a single provider
    **/
   configureProvider(name, props) {
-    return OAuthManagerBridge.configureProvider(name, props)
+    return promisify('configureProvider')(name, props)
       .then(() => this.setCredentialsForProvider(name));
   }
 

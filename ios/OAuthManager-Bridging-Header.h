@@ -9,8 +9,6 @@
 #ifndef OAuthManager_Bridging_Header_h
 #define OAuthManager_Bridging_Header_h
 
-#import "OAuthSwift-Swift.h"
-
 #import "RCTBridgeModule.h"
 #import "RCTLinkingManager.h"
 
