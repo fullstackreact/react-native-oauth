@@ -37,6 +37,10 @@ export default class OAuthManager {
     return Promise.all(promises);
   }
 
+  configure(providerConfigs) {
+    return this.configureProviders(providerConfigs)
+  }
+
   setCredentialsForProvider(providerName, credentials) {
     const handleHydration = (creds) => promisify(OAuthManagerBridge.setCredentialsForProvider)(providerName, creds);
 

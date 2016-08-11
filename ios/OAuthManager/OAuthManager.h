@@ -6,7 +6,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "OAuthSwift-Swift.h"
 
 #import "RCTBridgeModule.h"
 #import "RCTLinkingManager.h"

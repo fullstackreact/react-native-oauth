@@ -4,7 +4,6 @@
 //  Copyright © 2016 Facebook. All rights reserved.
 //
 
-#import "OAuthSwift-Swift.h"
 #import "OAuthManager.h"
 
 @import OAuthSwift;
@@ -30,7 +29,6 @@ RCT_EXPORT_MODULE(OAuthManager);
     sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
 {
     if ([url.host isEqualToString:@"oauth-callback"]) {
-        NSLog(@"Open from url: %@", url);
         [OAuthSwift handleOpenURL:url];
     }
 
@@ -217,8 +215,8 @@ RCT_EXPORT_METHOD(configureProvider:
     [combinedAttributes addEntriesFromDictionary:defaultProviderConfig];
     [combinedAttributes addEntriesFromDictionary:currentProviderConfig];
     
-    NSString *consumerKey = @"KEY"; //[props valueForKey:@"consumer_key"];
-    NSString *consumerSecret = @"SECRET"; //[props valueForKey:@"consumer_secret"];
+    NSString *consumerKey = [props valueForKey:@"consumer_key"];
+    NSString *consumerSecret = [props valueForKey:@"consumer_secret"];
     
     NSDictionary *providerProps = @{
                                     @"consumerKey": [consumerKey copy],
@@ -299,7 +297,6 @@ RCT_EXPORT_METHOD(authorizeWithCallbackURL:
                                                resolver:resolve
                                                rejector:reject];
 
-        NSLog(@"Calling with callbackURL: %@", url);
         [oauthInstance authorizeWithCallbackURL:url
                                         success:successHandler
                                         failure:errorHandler];
@@ -320,9 +317,7 @@ RCT_EXPORT_METHOD(authorizeWithCallbackURL:
                                                resolver:resolve
                                                rejector:reject];
 
-        NSLog(@"Facebook authorize called: %@, %@, %@, %@, %@, %@", url, scope, state, params, successHandler, errorHandler);
         OAuth2Swift *inst = oauthInstance;
-        NSLog(@"inst: %@", inst);
         [inst authorizeWithCallbackURL:url
                                  scope:scope
                                  state:state

@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		77A0D446E94AED73302D360E /* Pods_OAuthManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E623702E9777DB3EE760209 /* Pods_OAuthManager.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		D90285E61D1CFF94006B2E5B /* OAuthSwift.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = D991AB7D1D1B237400DE9E58 /* OAuthSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D935004C1D513CF700C7BA47 /* OAuthManager.m */; };
+		D9A3F6DB1D5D46E0008B5013 /* OAuthSwift.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = D991AB7D1D1B237400DE9E58 /* OAuthSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,7 +50,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				D90285E61D1CFF94006B2E5B /* OAuthSwift.framework in Copy Files */,
+				D9A3F6DB1D5D46E0008B5013 /* OAuthSwift.framework in Copy Files */,
 			);
 			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -139,8 +139,8 @@
 				260D731B810635CCC5A1CECC /* [CP] Check Pods Manifest.lock */,
 				58B511D71A9E6C8500147676 /* Sources */,
 				58B511D81A9E6C8500147676 /* Frameworks */,
-				58B511D91A9E6C8500147676 /* Copy Files */,
 				EB72A852C578F8D024FEC67D /* [CP] Copy Pods Resources */,
+				58B511D91A9E6C8500147676 /* Copy Files */,
 			);
 			buildRules = (
 			);
@@ -369,18 +369,27 @@
 			baseConfigurationReference = 0700FAA689C187FECECA6056 /* Pods-OAuthManager.debug.xcconfig */;
 			buildSettings = {
 				DYLIB_INSTALL_NAME_BASE = "";
-				EMBEDDED_CONTENT_CONTAINS_SWIFT = NO;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = "$(inherited)";
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$PODS_CONFIGURATION_BUILD_DIR/OAuthSwift\"",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS/**",
-					"$(SRCROOT)/Libraries/**",
+					"$(SRCROOT)/../react-native/Libraries/LinkingIOS",
 				);
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-iquote",
+					"\"$PODS_CONFIGURATION_BUILD_DIR/OAuthSwift.framework/Headers\"",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-undefined",
@@ -396,18 +405,27 @@
 			baseConfigurationReference = D215CDC31F4E30597C4E0769 /* Pods-OAuthManager.release.xcconfig */;
 			buildSettings = {
 				DYLIB_INSTALL_NAME_BASE = "";
-				EMBEDDED_CONTENT_CONTAINS_SWIFT = NO;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = "$(inherited)";
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$PODS_CONFIGURATION_BUILD_DIR/OAuthSwift\"",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS/**",
-					"$(SRCROOT)/Libraries/**",
+					"$(SRCROOT)/../react-native/Libraries/LinkingIOS",
 				);
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-iquote",
+					"\"$PODS_CONFIGURATION_BUILD_DIR/OAuthSwift.framework/Headers\"",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-undefined",
