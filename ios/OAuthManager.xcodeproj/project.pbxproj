@@ -369,6 +369,7 @@
 			baseConfigurationReference = 0700FAA689C187FECECA6056 /* Pods-OAuthManager.debug.xcconfig */;
 			buildSettings = {
 				DYLIB_INSTALL_NAME_BASE = "";
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = NO;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -395,6 +396,7 @@
 			baseConfigurationReference = D215CDC31F4E30597C4E0769 /* Pods-OAuthManager.release.xcconfig */;
 			buildSettings = {
 				DYLIB_INSTALL_NAME_BASE = "";
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = NO;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",

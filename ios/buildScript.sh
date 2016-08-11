@@ -1,13 +1,10 @@
-#!/bin/sh
+#!/bin/sh -ex
 
-frameworks="OAuthSwift"
-
-source "${SRCROOT}/Pods/Target Support Files/Pods-OAuthManager/Pods-OAuthManager-frameworks.sh"
-FRAMEWORKS_FOLDER_PATH=""
+frameworks="libswiftCore libswiftCoreGraphics libswiftCoreImage libswiftDarwin libswiftDispatch libswiftFoundation libswiftObjectiveC libswiftUIKit libswiftContacts"
 
 for framework in $frameworks
 do
 
-install_framework "${SRCROOT}/Pods/$framework"
+install_name_tool -change "@rpath/${framework}.dylib" "@loader_path/Frameworks/${framework}.dylib" ${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}
 
 done

@@ -47,7 +47,7 @@ export default class OAuthManager {
           if (err) {
             return reject('No credentials passed or found in storage');
           } else {
-            try {
+            try {  
               const json = JSON.parse(res);
               const next = handleHydration(json);
               return resolve(json);
