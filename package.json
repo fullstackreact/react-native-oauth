@@ -6,8 +6,11 @@
   "main": "./react-native-oauth.js",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
-    "compile": "babel --presets es2015,stage-0 -d . src/",
-    "dev": "npm run compile -- --watch"
+    "build": "./node_modules/.bin/babel --source-maps=true --out-dir=dist .",
+    "dev": "npm run compile -- --watch",
+    "lint": "eslint ./src",
+    "publish_pages": "gh-pages -d public/",
+    "test": "./node_modules/.bin/mocha"
   },
   "repository": {
     "type": "git",
@@ -28,11 +31,15 @@
     "react-native": "*"
   },
   "rnpm": {
+    "commands": {
+      "prelink": "node_modules/react-native-oauth/bin/prepare.sh",
+      "postlink": "node_modules/react-native-oauth/bin/cocoapods.sh"
+    },
     "ios": {
-      "sharedLibraries": [
-        "StoreKit.framework"
-      ],
       "project": "ios/OAuthManager.xcodeproj"
+    },
+    "android": {
+      "packageInstance": "new OAuthManagerPackage(getApplicationContext())"
     }
-  }
+  },
 }

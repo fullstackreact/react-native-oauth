@@ -368,12 +368,14 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0700FAA689C187FECECA6056 /* Pods-OAuthManager.debug.xcconfig */;
 			buildSettings = {
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				DYLIB_INSTALL_NAME_BASE = "";
 				EMBEDDED_CONTENT_CONTAINS_SWIFT = "$(inherited)";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$PODS_CONFIGURATION_BUILD_DIR/OAuthSwift\"",
+					"${PROJECT_DIR}/../../../ios/Pods/**",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -381,10 +383,11 @@
 					"$(SRCROOT)/../../react-native/React/**",
 					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS/**",
 					"$(SRCROOT)/../react-native/Libraries/LinkingIOS",
+					"$(SRCROOT)/../../node_modules/react-native/React/**",
 				);
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACH_O_TYPE = mh_dylib;
+				MACH_O_TYPE = staticlib;
 				OTHER_CFLAGS = (
 					"$(inherited)",
 					"-iquote",
@@ -392,8 +395,8 @@
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
-					"-undefined",
-					dynamic_lookup,
+					"-lReact",
+					"-lRCTLinking",
 				);
 				PRODUCT_NAME = OAuthManager;
 				SKIP_INSTALL = YES;
@@ -404,12 +407,14 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D215CDC31F4E30597C4E0769 /* Pods-OAuthManager.release.xcconfig */;
 			buildSettings = {
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				DYLIB_INSTALL_NAME_BASE = "";
 				EMBEDDED_CONTENT_CONTAINS_SWIFT = "$(inherited)";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$PODS_CONFIGURATION_BUILD_DIR/OAuthSwift\"",
+					"${PROJECT_DIR}/../../../ios/Pods/**",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -417,10 +422,11 @@
 					"$(SRCROOT)/../../react-native/React/**",
 					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS/**",
 					"$(SRCROOT)/../react-native/Libraries/LinkingIOS",
+					"$(SRCROOT)/../../node_modules/react-native/React/**",
 				);
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACH_O_TYPE = mh_dylib;
+				MACH_O_TYPE = staticlib;
 				OTHER_CFLAGS = (
 					"$(inherited)",
 					"-iquote",
@@ -428,8 +434,8 @@
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
-					"-undefined",
-					dynamic_lookup,
+					"-lReact",
+					"-lRCTLinking",
 				);
 				PRODUCT_NAME = OAuthManager;
 				SKIP_INSTALL = YES;
