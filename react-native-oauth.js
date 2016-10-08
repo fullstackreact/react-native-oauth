@@ -47,6 +47,10 @@ export default class OAuthManager {
     })
   }
 
+  providers() {
+    return OAuthManager.providers();
+  }
+
   static providers() {
     return Object.keys(authProviders);
   }
@@ -67,18 +71,16 @@ export default class OAuthManager {
     invariant(OAuthManager.isSupported(name), `The provider ${name} is not supported yet`);
 
     const providerCfg = authProviders[name];
-    let { isValid } = providerCfg;
-    if (!isValid) {
-      isValid = () => true;
+    let { validate } = providerCfg;
+    if (!validate) {
+      validate = () => true;
+    } else {
+      delete providerCfg.validate;
     }
-    const { consumer_key, consumer_secret } = props;
 
-    const config = Object.assign({}, 
-                    providerCfg.defaults,
-                    {consumer_key, consumer_secret});
+    const config = Object.assign({}, providerCfg, props);
 
-    const valid = isValid(config);
-    console.log('valid ->', valid);
+    validate(config);
     return promisify('configureProvider')(name, config);
   }
 
