@@ -10,6 +10,8 @@
 #import "RCTBridgeModule.h"
 #import "RCTLinkingManager.h"
 
+@class OAuthClient;
+
 static NSString *kAuthConfig = @"OAuthManager";
 
 @interface OAuthManager : NSObject <RCTBridgeModule, UIWebViewDelegate>
@@ -21,9 +23,9 @@ static NSString *kAuthConfig = @"OAuthManager";
     sourceApplication:(NSString *)sourceApplication annotation:(id)annotation;
 
 - (BOOL) _configureProvider:(NSString *) name andConfig:(NSDictionary *) config;
-
 - (NSDictionary *) getConfigForProvider:(NSString *)name;
 
 @property (nonatomic, strong) NSDictionary *providerConfig;
+@property (nonatomic, strong) NSArray *callbackUrls;
 
 @end

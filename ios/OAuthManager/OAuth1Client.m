@@ -30,6 +30,8 @@ static NSString *TAG = @"OAuth1Client";
     account.callbackURL = [NSURL URLWithString:url];
     
     [account authenticateWithHandler:^(NSArray *responses, NSError *error) {
+        [self clearPendingAccount];
+        
         if (error != nil) {
             onError(error);
             return;
@@ -73,7 +75,7 @@ static NSString *TAG = @"OAuth1Client";
         parameterTransmission = DCTOAuth1ParameterTransmissionURLQuery;
     }
     
-    return [[DCTOAuth1Account alloc] initWithType:providerName
+    DCTOAuth1Account *account = [[DCTOAuth1Account alloc] initWithType:providerName
                                      requestTokenURL:request_token_url
                                         authorizeURL:authorize_url
                                       accessTokenURL:access_token_url
@@ -81,6 +83,9 @@ static NSString *TAG = @"OAuth1Client";
                                       consumerSecret:secret
                                        signatureType:signatureType
                                parameterTransmission:parameterTransmission];
+
+    [self savePendingAccount:account];
+    return account;
 }
 
 @end

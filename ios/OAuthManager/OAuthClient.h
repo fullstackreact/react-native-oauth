@@ -8,7 +8,14 @@
 
 #import <Foundation/Foundation.h>
 #import "OAuthClientProtocol.h"
+#import "DCTAuth.h"
 
 @interface OAuthClient : NSObject <OAuthClientProtocol>
+
+- (void) cancelAuthentication;
+- (void) savePendingAccount:(DCTAuthAccount *) account;
+- (void) clearPendingAccount;
+
+@property (nonatomic, strong) DCTAuthAccount *account;
 
 @end

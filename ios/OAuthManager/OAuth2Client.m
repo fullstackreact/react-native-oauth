@@ -28,8 +28,11 @@ static NSString *TAG = @"OAuth2Client";
     
     DCTOAuth2Account *account = [self getAccount:providerName cfg:cfg];
     account.callbackURL = [NSURL URLWithString:url];
+
+    NSLog(@"authorize ----> %@ %@", cfg, account);
     
     [account authenticateWithHandler:^(NSArray *responses, NSError *error) {
+        [self clearPendingAccount];
         if (error != nil) {
             onError(error);
             return;
@@ -102,6 +105,8 @@ static NSString *TAG = @"OAuth2Client";
                                                 password:password
                                                   scopes:scopes];
     }
+
+    [super savePendingAccount:account];
     
     return account;
 }

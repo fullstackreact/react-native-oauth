@@ -27,7 +27,25 @@
     NSLog(@"Not implemented in here. Wrong class!");
 }
 
+- (void) cancelAuthentication
+{
+  NSLog(@"Not implemented yet");
+  if (_account != nil) {
+    [_account cancelAuthentication];
+  }
+}
+
 #pragma mark - Helpers
+
+- (void) savePendingAccount:(DCTAuthAccount *) account
+{
+  _account = account;
+}
+
+- (void) clearPendingAccount
+{
+  _account = nil;
+}
 
 - (void (^)(DCTAuthResponse *response, NSError *error)) getHandler:(DCTAuthAccount *) account
                                                          onSuccess:(AuthManagerCompletionBlock) onSuccess

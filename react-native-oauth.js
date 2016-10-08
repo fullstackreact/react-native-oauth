@@ -70,19 +70,31 @@ export default class OAuthManager {
   // Private
   /**
    * Configure a single provider
+   * 
+   * 
+   * @param {string} name of the provider
+   * @param {object} additional configuration
+   * 
    **/
   configureProvider(name, props) {
     invariant(OAuthManager.isSupported(name), `The provider ${name} is not supported yet`);
 
     const providerCfg = Object.assign({}, authProviders[name]);
-    let { validate = identity } = providerCfg;
-    let { transform = identity } = providerCfg;
+    let { validate = identity, transform = identity, callback_url } = providerCfg;
     delete providerCfg.transform;
     delete providerCfg.validate;
 
-    const config = transform(Object.assign({}, {
-      app_name: this.appName
-    }, providerCfg, props));
+    let config = Object.assign({}, {
+      app_name: this.appName,
+      callback_url
+    }, providerCfg, props);
+
+    config = Object.keys(config)
+      .reduce((sum, key) => ({
+        ...sum,
+        [key]: typeof config[key] === 'function' ? config[key](config) : config[key]
+      }), {})
+
     validate(config);
     return promisify('configureProvider')(name, config);
   }

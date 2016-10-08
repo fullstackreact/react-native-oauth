@@ -7,12 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D92A80BC1DA9030C00EFDC2C /* OAuthManager.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F6DCAD1DA8EFB400D10561 /* OAuthManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D935004C1D513CF700C7BA47 /* OAuthManager.m */; };
-		D9F6DCB01DA8EFB400D10561 /* OAuth1Client.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F6DCA71DA8EFB400D10561 /* OAuth1Client.m */; };
-		D9F6DCB11DA8EFB400D10561 /* OAuth2Client.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F6DCA91DA8EFB400D10561 /* OAuth2Client.m */; };
-		D9F6DCB21DA8EFB400D10561 /* OAuthClient.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F6DCAB1DA8EFB400D10561 /* OAuthClient.m */; };
-		D9F6DCB31DA8EFB400D10561 /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F6DCAE1DA8EFB400D10561 /* OAuthManager.m */; };
+		D9F2EAD31DA9A9650000BD52 /* OAuthClient.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F2EAD11DA9A9650000BD52 /* OAuthClient.h */; };
+		D9F2EAD41DA9A9650000BD52 /* OAuthClient.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F2EAD21DA9A9650000BD52 /* OAuthClient.m */; };
+		D9F2EAD91DA9A9730000BD52 /* OAuth1Client.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F2EAD51DA9A9730000BD52 /* OAuth1Client.h */; };
+		D9F2EADA1DA9A9730000BD52 /* OAuth1Client.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F2EAD61DA9A9730000BD52 /* OAuth1Client.m */; };
+		D9F2EADB1DA9A9730000BD52 /* OAuth2Client.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F2EAD71DA9A9730000BD52 /* OAuth2Client.h */; };
+		D9F2EADC1DA9A9730000BD52 /* OAuth2Client.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F2EAD81DA9A9730000BD52 /* OAuth2Client.m */; };
+		D9F2EADE1DA9A9840000BD52 /* OAuthClientProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F2EADD1DA9A9840000BD52 /* OAuthClientProtocol.h */; };
+		D9F2EAE21DA9A9930000BD52 /* OAuthManager.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F2EADF1DA9A9930000BD52 /* OAuthManager.h */; };
+		D9F2EAE31DA9A9930000BD52 /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F2EAE01DA9A9930000BD52 /* OAuthManager.m */; };
+		D9F2EAE41DA9A9930000BD52 /* OAuthManagerConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F2EAE11DA9A9930000BD52 /* OAuthManagerConstants.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,16 +68,16 @@
 		D91353961DA7849100AABC96 /* libOAuthManager.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOAuthManager.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		D935004C1D513CF700C7BA47 /* OAuthManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuthManager.m; path = OAuthManager/OAuthManager.m; sourceTree = "<group>"; };
 		D991AB771D1B237400DE9E58 /* Pods.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Pods.xcodeproj; path = Pods/Pods.xcodeproj; sourceTree = "<group>"; };
-		D9F6DCA61DA8EFB400D10561 /* OAuth1Client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAuth1Client.h; sourceTree = "<group>"; };
-		D9F6DCA71DA8EFB400D10561 /* OAuth1Client.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OAuth1Client.m; sourceTree = "<group>"; };
-		D9F6DCA81DA8EFB400D10561 /* OAuth2Client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAuth2Client.h; sourceTree = "<group>"; };
-		D9F6DCA91DA8EFB400D10561 /* OAuth2Client.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OAuth2Client.m; sourceTree = "<group>"; };
-		D9F6DCAA1DA8EFB400D10561 /* OAuthClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAuthClient.h; sourceTree = "<group>"; };
-		D9F6DCAB1DA8EFB400D10561 /* OAuthClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OAuthClient.m; sourceTree = "<group>"; };
-		D9F6DCAC1DA8EFB400D10561 /* OAuthClientProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAuthClientProtocol.h; sourceTree = "<group>"; };
-		D9F6DCAD1DA8EFB400D10561 /* OAuthManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAuthManager.h; sourceTree = "<group>"; };
-		D9F6DCAE1DA8EFB400D10561 /* OAuthManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OAuthManager.m; sourceTree = "<group>"; };
-		D9F6DCAF1DA8EFB400D10561 /* OAuthManagerConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAuthManagerConstants.h; sourceTree = "<group>"; };
+		D9F2EAD11DA9A9650000BD52 /* OAuthClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuthClient.h; path = OAuthManager/OAuthClient.h; sourceTree = SOURCE_ROOT; };
+		D9F2EAD21DA9A9650000BD52 /* OAuthClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuthClient.m; path = OAuthManager/OAuthClient.m; sourceTree = SOURCE_ROOT; };
+		D9F2EAD51DA9A9730000BD52 /* OAuth1Client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuth1Client.h; path = OAuthManager/OAuth1Client.h; sourceTree = SOURCE_ROOT; };
+		D9F2EAD61DA9A9730000BD52 /* OAuth1Client.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuth1Client.m; path = OAuthManager/OAuth1Client.m; sourceTree = SOURCE_ROOT; };
+		D9F2EAD71DA9A9730000BD52 /* OAuth2Client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuth2Client.h; path = OAuthManager/OAuth2Client.h; sourceTree = SOURCE_ROOT; };
+		D9F2EAD81DA9A9730000BD52 /* OAuth2Client.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuth2Client.m; path = OAuthManager/OAuth2Client.m; sourceTree = SOURCE_ROOT; };
+		D9F2EADD1DA9A9840000BD52 /* OAuthClientProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuthClientProtocol.h; path = OAuthManager/OAuthClientProtocol.h; sourceTree = SOURCE_ROOT; };
+		D9F2EADF1DA9A9930000BD52 /* OAuthManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuthManager.h; path = OAuthManager/OAuthManager.h; sourceTree = SOURCE_ROOT; };
+		D9F2EAE01DA9A9930000BD52 /* OAuthManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuthManager.m; path = OAuthManager/OAuthManager.m; sourceTree = SOURCE_ROOT; };
+		D9F2EAE11DA9A9930000BD52 /* OAuthManagerConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuthManagerConstants.h; path = OAuthManager/OAuthManagerConstants.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,13 +94,13 @@
 		D93EF9941DA77CBB00EC55A0 /* /Users/auser/Development/react-native/mine/OAuthManager/ios/OAuthManager.xcodeproj */ = {
 			isa = PBXGroup;
 			children = (
+				D9F2EADF1DA9A9930000BD52 /* OAuthManager.h */,
+				D9F2EAE01DA9A9930000BD52 /* OAuthManager.m */,
+				D9F2EAE11DA9A9930000BD52 /* OAuthManagerConstants.h */,
+				D9F2EAD11DA9A9650000BD52 /* OAuthClient.h */,
+				D9F2EAD21DA9A9650000BD52 /* OAuthClient.m */,
 				D9F6DCB41DA8EFBC00D10561 /* Clients */,
-				D9F6DCAA1DA8EFB400D10561 /* OAuthClient.h */,
-				D9F6DCAB1DA8EFB400D10561 /* OAuthClient.m */,
 				D9F6DCB51DA8EFC300D10561 /* Protocols */,
-				D9F6DCAD1DA8EFB400D10561 /* OAuthManager.h */,
-				D9F6DCAE1DA8EFB400D10561 /* OAuthManager.m */,
-				D9F6DCAF1DA8EFB400D10561 /* OAuthManagerConstants.h */,
 				D91353961DA7849100AABC96 /* libOAuthManager.a */,
 			);
 			path = "/Users/auser/Development/react-native/mine/OAuthManager/ios/OAuthManager.xcodeproj";
@@ -113,10 +118,10 @@
 		D9F6DCB41DA8EFBC00D10561 /* Clients */ = {
 			isa = PBXGroup;
 			children = (
-				D9F6DCA61DA8EFB400D10561 /* OAuth1Client.h */,
-				D9F6DCA71DA8EFB400D10561 /* OAuth1Client.m */,
-				D9F6DCA81DA8EFB400D10561 /* OAuth2Client.h */,
-				D9F6DCA91DA8EFB400D10561 /* OAuth2Client.m */,
+				D9F2EAD51DA9A9730000BD52 /* OAuth1Client.h */,
+				D9F2EAD61DA9A9730000BD52 /* OAuth1Client.m */,
+				D9F2EAD71DA9A9730000BD52 /* OAuth2Client.h */,
+				D9F2EAD81DA9A9730000BD52 /* OAuth2Client.m */,
 			);
 			name = Clients;
 			sourceTree = "<group>";
@@ -124,7 +129,7 @@
 		D9F6DCB51DA8EFC300D10561 /* Protocols */ = {
 			isa = PBXGroup;
 			children = (
-				D9F6DCAC1DA8EFB400D10561 /* OAuthClientProtocol.h */,
+				D9F2EADD1DA9A9840000BD52 /* OAuthClientProtocol.h */,
 			);
 			name = Protocols;
 			sourceTree = "<group>";
@@ -136,7 +141,12 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D92A80BC1DA9030C00EFDC2C /* OAuthManager.h in Headers */,
+				D9F2EAD91DA9A9730000BD52 /* OAuth1Client.h in Headers */,
+				D9F2EADE1DA9A9840000BD52 /* OAuthClientProtocol.h in Headers */,
+				D9F2EADB1DA9A9730000BD52 /* OAuth2Client.h in Headers */,
+				D9F2EAD31DA9A9650000BD52 /* OAuthClient.h in Headers */,
+				D9F2EAE41DA9A9930000BD52 /* OAuthManagerConstants.h in Headers */,
+				D9F2EAE21DA9A9930000BD52 /* OAuthManager.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -222,11 +232,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9F6DCB21DA8EFB400D10561 /* OAuthClient.m in Sources */,
-				D9F6DCB11DA8EFB400D10561 /* OAuth2Client.m in Sources */,
-				D9F6DCB01DA8EFB400D10561 /* OAuth1Client.m in Sources */,
+				D9F2EADC1DA9A9730000BD52 /* OAuth2Client.m in Sources */,
 				D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */,
-				D9F6DCB31DA8EFB400D10561 /* OAuthManager.m in Sources */,
+				D9F2EAD41DA9A9650000BD52 /* OAuthClient.m in Sources */,
+				D9F2EADA1DA9A9730000BD52 /* OAuth1Client.m in Sources */,
+				D9F2EAE31DA9A9930000BD52 /* OAuthManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -357,7 +367,7 @@
 					"$(SRCROOT)/../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS",
-					"$(SRCROOT)/../../../ios/Pods/DCTAuth/**",
+					"$(SRCROOT)/../../../ios/Pods/DCTAuth/DCTAuth",
 				);
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
@@ -384,7 +394,7 @@
 					"$(SRCROOT)/../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS",
-					"$(SRCROOT)/../../../ios/Pods/DCTAuth/**",
+					"$(SRCROOT)/../../../ios/Pods/DCTAuth/DCTAuth",
 				);
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
