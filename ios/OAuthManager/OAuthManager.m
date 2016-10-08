@@ -14,6 +14,8 @@
 #import "OAuth1Client.h"
 #import "OAuth2Client.h"
 
+static NSString *TAG = @"OAuthManager";
+
 @implementation OAuthManager
 
 RCT_EXPORT_MODULE(OAuthManager);
@@ -31,8 +33,6 @@ RCT_EXPORT_MODULE(OAuthManager);
  Call this from your AppDelegate.h
  */
 + (BOOL)setupOAuthHandler:(UIApplication *)application
-              andDelegate:(UIResponder *)delegate
-                     view:(UIView *)rootView
 {
     OAuthManager *sharedManager = [OAuthManager sharedManager];
     DCTAuthPlatform *authPlatform = [DCTAuthPlatform sharedPlatform];
@@ -62,7 +62,12 @@ RCT_EXPORT_MODULE(OAuthManager);
 + (BOOL)handleOpenUrl:(UIApplication *)application openURL:(NSURL *)url
     sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
 {
-    if ([url.host isEqualToString:@"oauth-response"]) {
+    NSLog(@"url: %@", url.host);
+    if (
+        ([url.host isEqualToString:@"oauth-response"]) ||
+        ([url.host isEqualToString:@"authorize"] &&
+         [url.scheme rangeOfString:@"fb"].location == 0))
+    {
         return [DCTAuth handleURL:url];
     }
     
@@ -182,7 +187,10 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                          cfg:cfg
      
                    onSuccess:^(DCTAuthAccount *account) {
-                       NSDictionary *accountResponse = [self getAccountResponse:account cfg:cfg];
+                       // DCTAuthAccountStore *store = [manager getStore];
+                       // [store saveAccount:account];
+
+                       NSDictionary *accountResponse = [manager getAccountResponse:account cfg:cfg];
                        callback(@[[NSNull null], @{
                                       @"status": @"ok",
                                       @"response": accountResponse
@@ -198,13 +206,18 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
 
 #pragma mark - private
 
+- (DCTAuthAccountStore *) getStore
+{
+  return [DCTAuthAccountStore accountStoreWithName:TAG];
+}
+
 - (NSDictionary *) getAccountResponse:(DCTAuthAccount *) account
                                   cfg:(NSDictionary *)cfg
 {
     NSString *version = [cfg valueForKey:@"auth_version"];
     NSMutableDictionary *accountResponse = [@{
                                               @"authorized": @(account.authorized),
-                                              @"uuid": account.identifier
+                                              @"uuid": account.identifier,
                                               } mutableCopy];
     
     if ([version isEqualToString:@"1.0"]) {
@@ -213,15 +226,17 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                                @"oauth_token": credential.oauthToken,
                                @"oauth_secret": credential.oauthTokenSecret
                                };
-        [accountResponse addEntriesFromDictionary:@{@"credentials": cred}];
+        [accountResponse setObject:cred forKey:@"credentials"];
     } else if ([version isEqualToString:@"2.0"]) {
         DCTOAuth2Credential *credential = account.credential;
-        NSDictionary *cred = @{
+        NSMutableDictionary *cred = [@{
                                @"access_token": credential.accessToken,
-                               @"refresh_token": credential.refreshToken,
                                @"type": @(credential.type)
-                               };
-        [accountResponse addEntriesFromDictionary:@{@"credentials": cred}];
+                               } mutableCopy];
+        if (credential.refreshToken != nil) {
+          [cred setValue:credential.refreshToken forKey:@"refresh_token"];
+        }
+       [accountResponse setObject:cred forKey:@"credentials"];
     }
     return accountResponse;
 }

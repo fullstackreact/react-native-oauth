@@ -80,7 +80,9 @@ export default class OAuthManager {
     delete providerCfg.transform;
     delete providerCfg.validate;
 
-    const config = transform(Object.assign({}, providerCfg, props));
+    const config = transform(Object.assign({}, {
+      app_name: this.appName
+    }, providerCfg, props));
     validate(config);
     return promisify('configureProvider')(name, config);
   }

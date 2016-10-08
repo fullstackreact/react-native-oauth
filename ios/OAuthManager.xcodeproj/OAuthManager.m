@@ -9,6 +9,7 @@
 
 #import "OAuthManager.h"
 #import "DCTAuth.h"
+#import "DCTAuthAccountStore.h"
 
 #import "OAuthClient.h"
 #import "OAuth1Client.h"
@@ -185,7 +186,8 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                          cfg:cfg
      
                    onSuccess:^(DCTAuthAccount *account) {
-                       NSDictionary *accountResponse = [self getAccountResponse:account cfg:cfg];
+                       NSLog(@"success!: %@", account);
+                       NSDictionary *accountResponse = [manager getAccountResponse:account cfg:cfg];
                        callback(@[[NSNull null], @{
                                       @"status": @"ok",
                                       @"response": accountResponse
@@ -216,15 +218,17 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                                @"oauth_token": credential.oauthToken,
                                @"oauth_secret": credential.oauthTokenSecret
                                };
-        [accountResponse addEntriesFromDictionary:@{@"credentials": cred}];
+        [accountResponse setObject:cred forKey:@"credentials"];
     } else if ([version isEqualToString:@"2.0"]) {
         DCTOAuth2Credential *credential = account.credential;
-        NSDictionary *cred = @{
-                               @"access_token": credential.accessToken,
-                               @"refresh_token": credential.refreshToken,
-                               @"type": @(credential.type)
-                               };
-        [accountResponse addEntriesFromDictionary:@{@"credentials": cred}];
+        NSMutableDictionary *cred = [@{
+                                       @"access_token": credential.accessToken,
+                                       @"type": @(credential.type)
+                                       } mutableCopy];
+        if (credential.refreshToken != nil) {
+            [cred setValue:credential.refreshToken forKey:@"refresh_token"];
+        }
+        [accountResponse setObject:cred forKey:@"credentials"];
     }
     return accountResponse;
 }

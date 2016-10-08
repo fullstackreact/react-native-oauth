@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D92A80BC1DA9030C00EFDC2C /* OAuthManager.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F6DCAD1DA8EFB400D10561 /* OAuthManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D935004C1D513CF700C7BA47 /* OAuthManager.m */; };
 		D9F6DCB01DA8EFB400D10561 /* OAuth1Client.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F6DCA71DA8EFB400D10561 /* OAuth1Client.m */; };
 		D9F6DCB11DA8EFB400D10561 /* OAuth2Client.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F6DCA91DA8EFB400D10561 /* OAuth2Client.m */; };
@@ -130,6 +131,17 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		D92A80BB1DA9030200EFDC2C /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D92A80BC1DA9030C00EFDC2C /* OAuthManager.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
 		58B511DA1A9E6C8500147676 /* OAuthManager */ = {
 			isa = PBXNativeTarget;
@@ -138,6 +150,7 @@
 				58B511D71A9E6C8500147676 /* Sources */,
 				58B511D81A9E6C8500147676 /* Frameworks */,
 				58B511D91A9E6C8500147676 /* Copy Files */,
+				D92A80BB1DA9030200EFDC2C /* Headers */,
 			);
 			buildRules = (
 			);
