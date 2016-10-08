@@ -31,8 +31,6 @@ RCT_EXPORT_MODULE(OAuthManager);
  Call this from your AppDelegate.h
  */
 + (BOOL)setupOAuthHandler:(UIApplication *)application
-              andDelegate:(UIResponder *)delegate
-                     view:(UIView *)rootView
 {
     OAuthManager *sharedManager = [OAuthManager sharedManager];
     DCTAuthPlatform *authPlatform = [DCTAuthPlatform sharedPlatform];
@@ -62,7 +60,12 @@ RCT_EXPORT_MODULE(OAuthManager);
 + (BOOL)handleOpenUrl:(UIApplication *)application openURL:(NSURL *)url
     sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
 {
-    if ([url.host isEqualToString:@"oauth-response"]) {
+    NSLog(@"url: %@", url.host);
+    if (
+        ([url.host isEqualToString:@"oauth-response"]) ||
+        ([url.host isEqualToString:@"authorize"] &&
+         [url.scheme rangeOfString:@"fb"].location == 0))
+    {
         return [DCTAuth handleURL:url];
     }
     
@@ -138,18 +141,26 @@ RCT_EXPORT_METHOD(configureProvider:
  * authorize with url
  * provider, url, scope, state, params
  **/
-RCT_EXPORT_METHOD(authorizeWithAppName:(NSString *)providerName
-                  appName:(NSString *) appName
+RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                   opts:(NSDictionary *) opts
                   callback:(RCTResponseSenderBlock)callback)
 {
     OAuthManager *manager = [OAuthManager sharedManager];
     NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
     
-    NSString *callbackUrl = [NSString
-                             stringWithFormat:@"%@://oauth-response/%@",
-                             appName,
-                             providerName];
+    NSString *appName = [cfg valueForKey:@"app_name"];
+    
+    NSString *callbackUrl;
+    NSURL *storedCallbackUrl = [cfg objectForKey:@"callback_url"];
+    
+    if (storedCallbackUrl != nil) {
+        callbackUrl = [storedCallbackUrl absoluteString];
+    } else {
+        callbackUrl = [NSString
+                       stringWithFormat:@"%@://oauth-response/%@",
+                       appName,
+                       providerName];
+    }
     
     NSString *version = [cfg valueForKey:@"auth_version"];
     [cfg addEntriesFromDictionary:opts];
@@ -162,6 +173,7 @@ RCT_EXPORT_METHOD(authorizeWithAppName:(NSString *)providerName
     } else if ([version isEqualToString:@"2.0"]) {
         client = (OAuthClient *)[[OAuth2Client alloc] init];
     } else {
+        NSLog(@"Provider number: %@", version);
         return callback(@[@{
                               @"status": @"error",
                               @"msg": @"Unknown provider"
@@ -194,9 +206,9 @@ RCT_EXPORT_METHOD(authorizeWithAppName:(NSString *)providerName
 {
     NSString *version = [cfg valueForKey:@"auth_version"];
     NSMutableDictionary *accountResponse = [@{
-                                      @"authorized": @(account.authorized),
-                                      @"uuid": account.identifier
-                                    } mutableCopy];
+                                              @"authorized": @(account.authorized),
+                                              @"uuid": account.identifier
+                                              } mutableCopy];
     
     if ([version isEqualToString:@"1.0"]) {
         DCTOAuth1Credential *credential = account.credential;

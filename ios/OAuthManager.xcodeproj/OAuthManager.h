@@ -15,9 +15,7 @@ static NSString *kAuthConfig = @"OAuthManager";
 @interface OAuthManager : NSObject <RCTBridgeModule, UIWebViewDelegate>
 
 + (instancetype) sharedManager;
-+ (BOOL)setupOAuthHandler:(UIApplication *)application
-              andDelegate:(UIResponder *)delegate
-                     view:(UIView *)rootView;
++ (BOOL)setupOAuthHandler:(UIApplication *)application;
 
 + (BOOL)handleOpenUrl:(UIApplication *)application openURL:(NSURL *)url
     sourceApplication:(NSString *)sourceApplication annotation:(id)annotation;

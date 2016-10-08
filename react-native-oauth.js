@@ -15,6 +15,7 @@ const STORAGE_KEY = 'ReactNativeOAuth';
 import promisify from './lib/promisify'
 import authProviders from './lib/authProviders';
 
+const identity = (props) => props;
 /**
  * Manager is the OAuth layer
  **/
@@ -31,7 +32,10 @@ export default class OAuthManager {
   }
 
   authorize(provider, opts={}) {
-    return promisify('authorizeWithAppName')(provider, this.appName, opts);
+    const options = Object.assign({}, this._options, opts, {
+      app_name: this.appName
+    })
+    return promisify('authorize')(provider, options);
   }
 
   makeRequest(provider, method, url, parameters={}, headers={}) {
@@ -70,16 +74,13 @@ export default class OAuthManager {
   configureProvider(name, props) {
     invariant(OAuthManager.isSupported(name), `The provider ${name} is not supported yet`);
 
-    const providerCfg = authProviders[name];
-    let { validate } = providerCfg;
-    if (!validate) {
-      validate = () => true;
-    } else {
-      delete providerCfg.validate;
-    }
+    const providerCfg = Object.assign({}, authProviders[name]);
+    let { validate = identity } = providerCfg;
+    let { transform = identity } = providerCfg;
+    delete providerCfg.transform;
+    delete providerCfg.validate;
 
-    const config = Object.assign({}, providerCfg, props);
-
+    const config = transform(Object.assign({}, providerCfg, props));
     validate(config);
     return promisify('configureProvider')(name, config);
   }

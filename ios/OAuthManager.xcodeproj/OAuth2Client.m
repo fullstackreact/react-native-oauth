@@ -41,6 +41,8 @@ static NSString *TAG = @"OAuth2Client";
             return;
         }
         
+        NSLog(@"Authenticate with ahndler: %@", account);
+        
         onSuccess(account);
     }];
 }
