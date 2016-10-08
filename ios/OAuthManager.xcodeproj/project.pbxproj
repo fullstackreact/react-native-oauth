@@ -7,9 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		77A0D446E94AED73302D360E /* Pods_OAuthManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E623702E9777DB3EE760209 /* Pods_OAuthManager.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		D90AE2CF1DA8A882001FE176 /* OAuth2Client.m in Sources */ = {isa = PBXBuildFile; fileRef = D90AE2CE1DA8A882001FE176 /* OAuth2Client.m */; };
 		D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D935004C1D513CF700C7BA47 /* OAuthManager.m */; };
-		D9A3F6DB1D5D46E0008B5013 /* OAuthSwift.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = D991AB7D1D1B237400DE9E58 /* OAuthSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D99D24391DA791F4004C9CF4 /* OAuth1Client.m in Sources */ = {isa = PBXBuildFile; fileRef = D99D24381DA791F4004C9CF4 /* OAuth1Client.m */; };
+		D99D24411DA792B0004C9CF4 /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D99D24401DA792B0004C9CF4 /* OAuthManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,7 +51,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				D9A3F6DB1D5D46E0008B5013 /* OAuthSwift.framework in Copy Files */,
 			);
 			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -58,15 +58,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0700FAA689C187FECECA6056 /* Pods-OAuthManager.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OAuthManager.debug.xcconfig"; path = "Pods/Target Support Files/Pods-OAuthManager/Pods-OAuthManager.debug.xcconfig"; sourceTree = "<group>"; };
-		134814201AA4EA6300B7C361 /* libOAuthManager.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOAuthManager.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		3E623702E9777DB3EE760209 /* Pods_OAuthManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_OAuthManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		D215CDC31F4E30597C4E0769 /* Pods-OAuthManager.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OAuthManager.release.xcconfig"; path = "Pods/Target Support Files/Pods-OAuthManager/Pods-OAuthManager.release.xcconfig"; sourceTree = "<group>"; };
-		D935004B1D513CF700C7BA47 /* OAuthManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuthManager.h; path = OAuthManager/OAuthManager.h; sourceTree = "<group>"; };
+		D90AE2CD1DA8A882001FE176 /* OAuth2Client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuth2Client.h; path = OAuthManager/OAuth2Client.h; sourceTree = SOURCE_ROOT; };
+		D90AE2CE1DA8A882001FE176 /* OAuth2Client.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuth2Client.m; path = OAuthManager/OAuth2Client.m; sourceTree = SOURCE_ROOT; };
+		D91353961DA7849100AABC96 /* libOAuthManager.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOAuthManager.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		D935004C1D513CF700C7BA47 /* OAuthManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuthManager.m; path = OAuthManager/OAuthManager.m; sourceTree = "<group>"; };
-		D991AB581D1B22F600DE9E58 /* OAuthManager-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OAuthManager-Bridging-Header.h"; sourceTree = "<group>"; };
 		D991AB771D1B237400DE9E58 /* Pods.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Pods.xcodeproj; path = Pods/Pods.xcodeproj; sourceTree = "<group>"; };
-		D9C9A1131D4FF5B8000E28EB /* buildScript.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = buildScript.sh; sourceTree = "<group>"; };
+		D99D24371DA791F4004C9CF4 /* OAuth1Client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuth1Client.h; path = OAuthManager/OAuth1Client.h; sourceTree = SOURCE_ROOT; };
+		D99D24381DA791F4004C9CF4 /* OAuth1Client.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuth1Client.m; path = OAuthManager/OAuth1Client.m; sourceTree = SOURCE_ROOT; };
+		D99D243D1DA79212004C9CF4 /* OAuthClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuthClient.h; path = OAuthManager/OAuthClient.h; sourceTree = SOURCE_ROOT; };
+		D99D243F1DA792B0004C9CF4 /* OAuthManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuthManager.h; path = ../OAuthManager/OAuthManager.h; sourceTree = "<group>"; };
+		D99D24401DA792B0004C9CF4 /* OAuthManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuthManager.m; path = ../OAuthManager/OAuthManager.m; sourceTree = "<group>"; };
+		D99D24441DA7962E004C9CF4 /* OAuthManagerConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OAuthManagerConstants.h; path = OAuthManager/OAuthManagerConstants.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,51 +76,23 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				77A0D446E94AED73302D360E /* Pods_OAuthManager.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		134814211AA4EA7D00B7C361 /* Products */ = {
+		D93EF9941DA77CBB00EC55A0 /* /Users/auser/Development/react-native/mine/OAuthManager/ios/OAuthManager.xcodeproj */ = {
 			isa = PBXGroup;
 			children = (
-				134814201AA4EA6300B7C361 /* libOAuthManager.a */,
+				D99D24441DA7962E004C9CF4 /* OAuthManagerConstants.h */,
+				D99D243F1DA792B0004C9CF4 /* OAuthManager.h */,
+				D99D24401DA792B0004C9CF4 /* OAuthManager.m */,
+				D99D243B1DA791FA004C9CF4 /* Clients */,
+				D91353961DA7849100AABC96 /* libOAuthManager.a */,
 			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		58B511D21A9E6C8500147676 = {
-			isa = PBXGroup;
-			children = (
-				D935004B1D513CF700C7BA47 /* OAuthManager.h */,
-				D935004C1D513CF700C7BA47 /* OAuthManager.m */,
-				D9C9A1131D4FF5B8000E28EB /* buildScript.sh */,
-				D991AB581D1B22F600DE9E58 /* OAuthManager-Bridging-Header.h */,
-				134814211AA4EA7D00B7C361 /* Products */,
-				5C09677432A19AC1FB642CAC /* Frameworks */,
-				D319B6E297D13D8F82E619BA /* Pods */,
-			);
-			sourceTree = "<group>";
-		};
-		5C09677432A19AC1FB642CAC /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				D991AB771D1B237400DE9E58 /* Pods.xcodeproj */,
-				3E623702E9777DB3EE760209 /* Pods_OAuthManager.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		D319B6E297D13D8F82E619BA /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				0700FAA689C187FECECA6056 /* Pods-OAuthManager.debug.xcconfig */,
-				D215CDC31F4E30597C4E0769 /* Pods-OAuthManager.release.xcconfig */,
-			);
-			name = Pods;
-			sourceTree = "<group>";
+			path = "/Users/auser/Development/react-native/mine/OAuthManager/ios/OAuthManager.xcodeproj";
+			sourceTree = "<absolute>";
 		};
 		D991AB781D1B237400DE9E58 /* Products */ = {
 			isa = PBXGroup;
@@ -129,6 +103,18 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		D99D243B1DA791FA004C9CF4 /* Clients */ = {
+			isa = PBXGroup;
+			children = (
+				D99D24371DA791F4004C9CF4 /* OAuth1Client.h */,
+				D99D24381DA791F4004C9CF4 /* OAuth1Client.m */,
+				D99D243D1DA79212004C9CF4 /* OAuthClient.h */,
+				D90AE2CD1DA8A882001FE176 /* OAuth2Client.h */,
+				D90AE2CE1DA8A882001FE176 /* OAuth2Client.m */,
+			);
+			name = Clients;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -136,10 +122,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "OAuthManager" */;
 			buildPhases = (
-				260D731B810635CCC5A1CECC /* [CP] Check Pods Manifest.lock */,
 				58B511D71A9E6C8500147676 /* Sources */,
 				58B511D81A9E6C8500147676 /* Frameworks */,
-				EB72A852C578F8D024FEC67D /* [CP] Copy Pods Resources */,
 				58B511D91A9E6C8500147676 /* Copy Files */,
 			);
 			buildRules = (
@@ -150,7 +134,7 @@
 			);
 			name = OAuthManager;
 			productName = RCTDataManager;
-			productReference = 134814201AA4EA6300B7C361 /* libOAuthManager.a */;
+			productReference = D91353961DA7849100AABC96 /* libOAuthManager.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -174,8 +158,8 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = 58B511D21A9E6C8500147676;
-			productRefGroup = 58B511D21A9E6C8500147676;
+			mainGroup = D93EF9941DA77CBB00EC55A0 /* /Users/auser/Development/react-native/mine/OAuthManager/ios/OAuthManager.xcodeproj */;
+			productRefGroup = D93EF9941DA77CBB00EC55A0 /* /Users/auser/Development/react-native/mine/OAuthManager/ios/OAuthManager.xcodeproj */;
 			projectDirPath = "";
 			projectReferences = (
 				{
@@ -207,45 +191,15 @@
 		};
 /* End PBXReferenceProxy section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		260D731B810635CCC5A1CECC /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		EB72A852C578F8D024FEC67D /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-OAuthManager/Pods-OAuthManager-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		58B511D71A9E6C8500147676 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D99D24411DA792B0004C9CF4 /* OAuthManager.m in Sources */,
+				D99D24391DA791F4004C9CF4 /* OAuth1Client.m in Sources */,
 				D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */,
+				D90AE2CF1DA8A882001FE176 /* OAuth2Client.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -283,7 +237,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -336,7 +290,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
-				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -366,33 +320,21 @@
 		};
 		58B511F01A9E6C8500147676 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0700FAA689C187FECECA6056 /* Pods-OAuthManager.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				DYLIB_INSTALL_NAME_BASE = "";
-				EMBEDDED_CONTENT_CONTAINS_SWIFT = "$(inherited)";
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = NO;
 				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$PODS_CONFIGURATION_BUILD_DIR/OAuthSwift\"",
-					"${PROJECT_DIR}/../../../ios/Pods/**",
-				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
-					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS/**",
-					"$(SRCROOT)/../react-native/Libraries/LinkingIOS",
-					"$(SRCROOT)/../../node_modules/react-native/React/**",
+					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS",
+					"$(SRCROOT)/../../../ios/Pods/DCTAuth/**",
 				);
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = staticlib;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					"-iquote",
-					"\"$PODS_CONFIGURATION_BUILD_DIR/OAuthSwift.framework/Headers\"",
-				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lReact",
@@ -405,33 +347,21 @@
 		};
 		58B511F11A9E6C8500147676 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D215CDC31F4E30597C4E0769 /* Pods-OAuthManager.release.xcconfig */;
 			buildSettings = {
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				DYLIB_INSTALL_NAME_BASE = "";
-				EMBEDDED_CONTENT_CONTAINS_SWIFT = "$(inherited)";
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = NO;
 				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$PODS_CONFIGURATION_BUILD_DIR/OAuthSwift\"",
-					"${PROJECT_DIR}/../../../ios/Pods/**",
-				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
-					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS/**",
-					"$(SRCROOT)/../react-native/Libraries/LinkingIOS",
-					"$(SRCROOT)/../../node_modules/react-native/React/**",
+					"$(SRCROOT)/../../react-native/Libraries/LinkingIOS",
+					"$(SRCROOT)/../../../ios/Pods/DCTAuth/**",
 				);
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = staticlib;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					"-iquote",
-					"\"$PODS_CONFIGURATION_BUILD_DIR/OAuthSwift.framework/Headers\"",
-				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lReact",

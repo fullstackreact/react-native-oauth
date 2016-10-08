@@ -1,180 +1,111 @@
 //
-//  OAuthSwiftManager.m
+//  OAuthManager.m
 //  Created by Ari Lerner on 5/31/16.
 //  Copyright © 2016 Facebook. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
 #import "OAuthManager.h"
+#import "DCTAuth.h"
 
-@import OAuthSwift;
-
-typedef NSMutableDictionary *(^CustomSuccessHandler)(OAuthSwiftCredential *, NSURLResponse *, NSDictionary *, NSMutableDictionary*);
-typedef void (^OAuthHandler)(OAuthSwiftCredential *, NSURLResponse *, NSDictionary *);
-typedef OAuthHandler (^OAuthSuccessHandler)(OAuthSwiftCredential *, NSURLResponse *, NSDictionary *);
-typedef void (^OAuthErrorHandler)(NSError *);
-
-//methodImp(client, httpMethod_selector, url, params, headers, successHandler, errorHandler);
-typedef void (^OAuthRequestSuccessHandler)(NSData *data, NSHTTPURLResponse *resp);
-typedef void (^OAuthRequestFailureHandler)(NSError *err);
-typedef void (*ExecRequest)(void*, SEL, NSString *, NSDictionary *, NSDictionary *, OAuthRequestSuccessHandler, OAuthRequestFailureHandler);
+#import "OAuthClient.h"
+#import "OAuth1Client.h"
+#import "OAuth2Client.h"
 
 @implementation OAuthManager
 
 RCT_EXPORT_MODULE(OAuthManager);
 
++ (instancetype)sharedManager {
+    static OAuthManager *manager;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        manager = [self new];
+    });
+    return manager;
+}
+
 /*
  Call this from your AppDelegate.h
  */
++ (BOOL)setupOAuthHandler:(UIApplication *)application
+              andDelegate:(UIResponder *)delegate
+                     view:(UIView *)rootView
+{
+    OAuthManager *sharedManager = [OAuthManager sharedManager];
+    DCTAuthPlatform *authPlatform = [DCTAuthPlatform sharedPlatform];
+    
+    authPlatform.URLOpener = ^void(NSURL *URL, DCTAuthPlatformCompletion completion) {
+        [application openURL:URL];
+        completion(YES);
+    };
+    
+    
+    // Check for plist file
+    NSString *path = [[NSBundle mainBundle] pathForResource:kAuthConfig ofType:@"plist"];
+    if (path != nil) {
+        // plist exists
+        NSDictionary *initialConfig = [NSDictionary dictionaryWithContentsOfFile:path];
+        for (NSString *name in [initialConfig allKeys]) {
+            NSDictionary *cfg = [initialConfig objectForKey:name];
+            [sharedManager _configureProvider:name andConfig:cfg];
+        }
+    } else {
+        [sharedManager setProviderConfig:[NSDictionary dictionary]];
+    }
+    
+    return YES;
+}
+
 + (BOOL)handleOpenUrl:(UIApplication *)application openURL:(NSURL *)url
     sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
 {
-    if ([url.host isEqualToString:@"oauth-callback"]) {
-        [OAuthSwift handleOpenURL:url];
+    if ([url.host isEqualToString:@"oauth-response"]) {
+        return [DCTAuth handleURL:url];
     }
-
+    
     return [RCTLinkingManager application:application openURL:url
                         sourceApplication:sourceApplication annotation:annotation];
 }
 
-// TODO: Move below
-- (OAuthHandler) makeHandler:(CustomSuccessHandler)handler
-                providerName:(NSString *)providerName
-               oauthInstance:(id)oauthInstance
-                    resolver:(RCTPromiseResolveBlock)resolve
-                    rejector:(RCTPromiseRejectBlock)reject
+- (BOOL) _configureProvider:(NSString *)providerName andConfig:(NSDictionary *)config
 {
-    return ^(OAuthSwiftCredential *cred, NSURLResponse *resp, NSDictionary *params) {
-        NSMutableDictionary *props = [[NSMutableDictionary alloc] initWithCapacity:20];
-
-        [props setValue:providerName forKey:@"provider"];
-        [props setValue:cred.oauth_token forKey:@"oauth_token"];
-        [props setValue:cred.oauth_token_secret forKey:@"oauth_token_secret"];
-
-        if (cred.oauth_token_expires_at != nil) {
-            [props setValue:cred.oauth_token_expires_at forKey:@"oauth_token_expires_at"];
+    if (self.providerConfig == nil) {
+        self.providerConfig = [[NSDictionary alloc] init];
+    }
+    
+    NSMutableDictionary *providerCfgs = [self.providerConfig mutableCopy];
+    
+    NSMutableDictionary *objectProps = [[NSMutableDictionary alloc] init];
+    
+    // Convert objects of url type
+    for (NSString *name in [config allKeys]) {
+        if ([name rangeOfString:@"url"].location != NSNotFound) {
+            // This is a URL representation
+            NSString *urlStr = [config valueForKey:name];
+            NSURL *url = [NSURL URLWithString:[urlStr
+                                               stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+            [objectProps setObject:url forKey:name];
+        } else {
+            NSString *str = [NSString stringWithString:[config valueForKey:name]];
+            NSString *escapedStr = [str
+                                    stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]];
+            [objectProps setValue:[escapedStr copy] forKey:name];
         }
-        if (cred.oauth_refresh_token != nil) {
-            [props setValue:cred.oauth_refresh_token forKey:@"oauth_refresh_token"];
-        }
-
-        if (handler) {
-            NSMutableDictionary *customProps = handler(cred, resp, params, props);
-            [props addEntriesFromDictionary:customProps];
-        }
-
-        if (self.providerCredentials == nil) {
-            self.providerCredentials = [[NSMutableDictionary alloc] init];
-        }
-
-        [self.providerCredentials setValue:props forKey:providerName];
-
-        NSLog(@"Handling success with: %@", props);
-
-        resolve(props);
-    };
+    }
+    
+    [providerCfgs setObject:objectProps forKey:providerName];
+    
+    self.providerConfig = providerCfgs;
+    
+    return YES;
 }
 
-- (NSDictionary *) defaultProviderConfiguration
+- (NSDictionary *) getConfigForProvider:(NSString *)name
 {
-    return @{
-             @"twitter":
-                 @{
-                     @"requestTokenUrl": @"https://api.twitter.com/oauth/request_token",
-                     @"authorizeUrl":    @"https://api.twitter.com/oauth/authorize",
-                     @"accessTokenUrl":  @"https://api.twitter.com/oauth/access_token"
-                     },
-             @"facebook":
-                 @{
-                     @"authorizeUrl":   @"https://www.facebook.com/dialog/oauth",
-                     @"accessTokenUrl": @"https://graph.facebook.com/oauth/access_token",
-                     @"responseType":   @"token"
-                     }
-             };
-}
-
-- (NSDictionary *) getDefaultProviderConfig:(NSString *) providerName
-{
-    return [[self defaultProviderConfiguration] objectForKey:providerName];
-}
-
-- (NSDictionary *) getProviderConfig:(NSString *)providerName
-{
-    if (self.providerProperties == nil) {
-        return nil;
-    }
-    NSDictionary *providerCfg = [self.providerProperties objectForKey:providerName];
-
-    return providerCfg;
-}
-
-- (id) oauthInstance:(NSString *) providerName
-{
-    if (self.providerProperties == nil) {
-        return nil;
-    }
-
-    NSDictionary *providerCfg = [self getProviderConfig:providerName];
-    NSString *consumerKey = [providerCfg valueForKey:@"consumerKey"];
-    NSString *consumerSecret = [providerCfg valueForKey:@"consumerSecret"];
-
-    if ([providerName isEqualToString:@"twitter"]) {
-        return [[OAuth1Swift alloc] initWithConsumerKey:consumerKey
-                                         consumerSecret:consumerSecret
-                                        requestTokenUrl:[providerCfg valueForKey:@"requestTokenUrl"]
-                                           authorizeUrl:[providerCfg valueForKey:@"authorizeUrl"]
-                                         accessTokenUrl:[providerCfg valueForKey:@"accessTokenUrl"]];
-    } else if ([providerName isEqualToString:@"facebook"]) {
-        return [[OAuth2Swift alloc] initWithConsumerKey:consumerKey
-                                         consumerSecret:consumerSecret
-                                           authorizeUrl:[providerCfg valueForKey:@"authorizeUrl"]
-                                         accessTokenUrl:[providerCfg valueForKey:@"accessTokenUrl"]
-                                           responseType:[providerCfg valueForKey:@"responseType"]];
-    } else {
-        NSLog(@"Provider (%@) not handled", providerName);
-        return nil;
-    }
-}
-
-- (OAuthSwiftClient *) oauthSwiftClient:(NSString *)providerName {
-    if (self.providerCredentials == nil) {
-        return nil;
-    }
-
-    NSDictionary *clientCredentials = [self.providerCredentials objectForKey:providerName];
-    NSString *accessToken = [clientCredentials valueForKey:@"oauth_token"];
-    NSString *accessTokenSecret = [clientCredentials valueForKey:@"oauth_token_secret"];
-
-    if ((accessToken == nil) || (accessTokenSecret == nil)) {
-      return nil;
-    }
-
-    NSDictionary *providerCfg = [self getProviderConfig:providerName];
-    NSString *consumerKey = [providerCfg valueForKey:@"consumerKey"];
-    NSString *consumerSecret = [providerCfg valueForKey:@"consumerSecret"];
-
-    OAuthSwiftClient *client = [[OAuthSwiftClient alloc]
-                                initWithConsumerKey:consumerKey
-                                consumerSecret:consumerSecret];
-
-    // Set the credentials
-    client.credential.oauth_token = accessToken;
-    client.credential.oauth_token_secret = accessTokenSecret;
-
-    return client;
-}
-
-RCT_EXPORT_METHOD(providers:(RCTResponseSenderBlock)callback)
-{
-
-    NSDictionary *props = [self defaultProviderConfiguration];
-    if (props != nil) {
-        callback(@[[NSNull null], props]);
-    } else {
-        NSDictionary *err = @{
-                              @"providers": @"There was a major problem. We're investigating"
-                              };
-        callback(@[err]);
-    }
+    return [self.providerConfig objectForKey:name];
 }
 
 /**
@@ -188,225 +119,76 @@ RCT_EXPORT_METHOD(configureProvider:
                   props:(NSDictionary *)props
                   callback:(RCTResponseSenderBlock)callback)
 {
-    if (self.providerProperties == nil) {
-        self.providerProperties = [[NSDictionary alloc] init];
-    }
+    OAuthManager *sharedManager = [OAuthManager sharedManager];
     
-    NSDictionary *defaultProviderConfig = [self getDefaultProviderConfig:providerName];
-    
-    if (defaultProviderConfig == nil) {
-        NSDictionary *errProps = @{
-                                   @"error": @{
-                                           @"name": @"Configuration error",
-                                           @"description": [NSString stringWithFormat:@"%@ not handled yet", providerName]
-                                           }
-                                   };
-        return callback(@[errProps]);
-    }
-    
-    NSMutableDictionary *globalCurrentConfig = [self.providerProperties mutableCopy];
-    NSMutableDictionary *currentProviderConfig = [globalCurrentConfig objectForKey:providerName];
-    
-    if (currentProviderConfig == nil) {
-        currentProviderConfig = [[NSMutableDictionary alloc] init];
-    }
-    
-    NSMutableDictionary *combinedAttributes = [NSMutableDictionary dictionaryWithCapacity:20];
-    [combinedAttributes addEntriesFromDictionary:defaultProviderConfig];
-    [combinedAttributes addEntriesFromDictionary:currentProviderConfig];
-    
-    NSString *consumerKey = [props valueForKey:@"consumer_key"];
-    NSString *consumerSecret = [props valueForKey:@"consumer_secret"];
-    
-    NSDictionary *providerProps = @{
-                                    @"consumerKey": [consumerKey copy],
-                                    @"consumerSecret": [consumerSecret copy]
-                                    };
-    [combinedAttributes addEntriesFromDictionary:providerProps];
-    
-    [globalCurrentConfig setObject:combinedAttributes forKey:providerName];
-    self.providerProperties = [globalCurrentConfig copy];
-    
-    return callback(@[[NSNull null], globalCurrentConfig]);
-}
-
-/**
- * Hydrate credentials for a particular provider
- */
-RCT_EXPORT_METHOD(setCredentialsForProvider:
-                  (NSString *)providerName
-                  credentials:(NSDictionary *)credentials
-                  callback:(RCTResponseSenderBlock) callback)
-{
-  if (self.providerCredentials == nil) {
-    self.providerCredentials = [[NSMutableDictionary alloc] initWithCapacity:20];
-  }
-
-  [self.providerCredentials setValue:credentials forKey:providerName];
-  callback(@[[NSNull null]]);
-}
-
-/**
- * Authorize against a provider with a callback url
- * which is usually set to your App URI, i.e.:
- * 		firestack-example://oauth-callback/{providerName}
- *
- * @param {string} provider - Provider name
- * @param {string} url - The url we're making a request against
- */
-RCT_EXPORT_METHOD(authorizeWithCallbackURL:
-                  (NSString *)provider
-                  url:(NSString *)strUrl
-                  scope:(NSString *)scope
-                  state:(NSString *)state
-                  params:(NSDictionary *)params
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejector:(RCTPromiseRejectBlock)reject)
-{
-    NSURL *url = [NSURL URLWithString:strUrl];
-
-    if (url == nil) {
-        return reject(@"No url",
-                      [NSString stringWithFormat:@"Url %@ not passed", strUrl],
-                      nil);
-    }
-
-    // Handle OAuth
-    id oauthInstance = [self oauthInstance:provider];
-    if (oauthInstance == nil) {
-        return reject(@"No provider",
-                      [NSString stringWithFormat:@"Provider %@ not configured", provider],
-                      nil);
-    }
-
-    CustomSuccessHandler customSuccessHandler;
-    OAuthErrorHandler errorHandler = ^(NSError *err) {
-        NSLog(@"failure: %@", err);
-        reject(@"Error", @"There was an error handling callback", err);
-    };
-
-    // OAuth 1.0
-    if ([provider isEqualToString:@"twitter"])
-    {
-        customSuccessHandler = ^(OAuthSwiftCredential *cred, NSURLResponse *resp, NSDictionary *params, NSMutableDictionary *dict) {
-            return dict;
-        };
-        OAuthHandler successHandler = [self makeHandler:customSuccessHandler
-                                           providerName:provider
-                                          oauthInstance:oauthInstance
-                                               resolver:resolve
-                                               rejector:reject];
-
-        [oauthInstance authorizeWithCallbackURL:url
-                                        success:successHandler
-                                        failure:errorHandler];
-
-    } else if ([provider isEqualToString:@"facebook"])
-    {
-        customSuccessHandler = ^(OAuthSwiftCredential *cred, NSURLResponse *resp, NSDictionary *parms, NSMutableDictionary *dict) {
-            NSLog(@"Success handler called in facebook: %@, %@", cred, resp);
-            return dict;
-        };
-        if ([state isEqualToString:@""]) {
-            state = provider;
-        }
-
-        OAuthHandler successHandler = [self makeHandler:customSuccessHandler
-                                           providerName:provider
-                                       oauthInstance:oauthInstance
-                                               resolver:resolve
-                                               rejector:reject];
-
-        OAuth2Swift *inst = oauthInstance;
-        [inst authorizeWithCallbackURL:url
-                                 scope:scope
-                                 state:state
-                                params:params
-                               success:successHandler
-                               failure:errorHandler];
+    if ([sharedManager _configureProvider:providerName andConfig:props]) {
+        callback(@[[NSNull null], @{
+                       @"status": @"ok"
+                       }]);
+    } else {
+        // Error?
+        callback(@[@{
+                       @"status": @"error"
+                       }]);
     }
 }
 
+#pragma mark OAuth1.0
 /**
- * Make a signed request using the oauth token
- * and secret stored by the OAuthManager instance
- *
- * @param {string} providerName - The provider to call the method against
- * @param {string} url - The URL to make the request against
- * @param {object} params - Any params to make the request
- * @param {object} headers - headers to make the request
- */
-RCT_EXPORT_METHOD(makeSignedRequest:(NSString *)providerName
-                  method:(NSString *) methodName
-                  url:(NSString *) url
-                  params:(NSDictionary *)params
-                  headers:(NSDictionary *)headers
+ * authorize with url
+ * provider, url, scope, state, params
+ **/
+RCT_EXPORT_METHOD(authorizeWithAppName:(NSString *)providerName
+                  appName:(NSString *) appName
+                  opts:(NSDictionary *) opts
                   callback:(RCTResponseSenderBlock)callback)
 {
-    OAuthSwiftClient *client = [self oauthSwiftClient:providerName];
-    if (client == nil) {
-      NSDictionary *errProps = @{
-                                 @"error": @{
-                                         @"name": @"Uknown error",
-                                         @"description": @"Provider has no credentials"
-                                         }
-                                 };
-      return callback(@[errProps]);
+    OAuthManager *manager = [OAuthManager sharedManager];
+    NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
+    
+    NSString *callbackUrl = [NSString
+                             stringWithFormat:@"%@://oauth-response/%@",
+                             appName,
+                             providerName];
+    
+    NSString *version = [cfg valueForKey:@"auth_version"];
+    [cfg addEntriesFromDictionary:opts];
+    
+    OAuthClient *client;
+    
+    if ([version isEqualToString:@"1.0"]) {
+        // OAuth 1
+        client = (OAuthClient *)[[OAuth1Client alloc] init];
+    } else if ([version isEqualToString:@"2.0"]) {
+        client = (OAuthClient *)[[OAuth2Client alloc] init];
     }
-    // Handlers
-    void (^successHandler)(NSData *data, NSHTTPURLResponse *resp) = ^(NSData *data, NSHTTPURLResponse *resp) {
-        NSMutableDictionary *responseProps = [[NSMutableDictionary alloc] initWithCapacity:5];
-
-        [responseProps setValue:@([resp statusCode]) forKey:@"statusCode"];
-        [responseProps setValue:[resp URL].absoluteString forKey:@"requestUrl"];
-        [responseProps setValue:[resp allHeaderFields] forKey:@"headers"];
-
-        NSString *dataStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-
-        callback(@[[NSNull null], @{
-                       @"response": responseProps,
-                       @"data": dataStr
-                       }]);
-    };
-
-    void (^errorHandler)(NSError*) = ^void(NSError *err) {
-        NSLog(@"An error occurred: %@", err);
-        NSDictionary *errProps = @{
-                                   @"error": @{
-                                           @"name": @"Uknown error",
-                                           @"description": [err localizedDescription]
-                                           }
-                                   };
-        return callback(@[errProps]);
-    };
-
-    NSString *httpMethodName = [methodName lowercaseString];
-
-    // this is such an ugly way of approaching this
-    if ([httpMethodName isEqualToString:@"get"]) {
-        [client get:url
-         parameters:params headers:headers success:successHandler failure:errorHandler];
-    } else if ([httpMethodName isEqualToString:@"post"]) {
-        [client post:url
-         parameters:params headers:headers success:successHandler failure:errorHandler];
-    } else if ([httpMethodName isEqualToString:@"put"]) {
-        [client put:url
-         parameters:params headers:headers success:successHandler failure:errorHandler];
-    } else if ([httpMethodName isEqualToString:@"delete"]) {
-        [client delete:url
-         parameters:params headers:headers success:successHandler failure:errorHandler];
-    } else if ([httpMethodName isEqualToString:@"patch"]) {
-        [client patch:url
-         parameters:params headers:headers success:successHandler failure:errorHandler];
-    } else {
-        NSLog(@"Method not implemented");
-        NSDictionary *errProps = @{
-                                   @"error": @{
-                                           @"name": @"HTTP Method not implemented"
-                                           }
-                                   };
-        return callback(@[errProps]);
-    }
+    
+    [client authorizeWithUrl:providerName
+                         url:callbackUrl
+                         cfg:cfg
+     
+                   onSuccess:^(DCTAuthAccount *account) {
+                       DCTOAuth1Credential *credential = account.credential;
+                       
+                       NSDictionary *accountResponse = @{
+                                                         @"authorized": @(account.authorized),
+                                                         @"uuid": account.identifier,
+                                                         @"credential": @{
+                                                                 @"oauth_token": credential.oauthToken,
+                                                                 @"oauth_secret": credential.oauthTokenSecret
+                                                                 }
+                                                         };
+                       callback(@[[NSNull null], @{
+                                      @"status": @"ok",
+                                      @"response": accountResponse
+                                      }]);
+                   } onError:^(NSError *error) {
+                       NSLog(@"Error in authorizeWithUrl: %@", error);
+                       callback(@[@{
+                                      @"status": @"error",
+                                      @"msg": [error localizedDescription]
+                                      }]);
+                   }];
 }
 
 @end

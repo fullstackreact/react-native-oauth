@@ -6,83 +6,32 @@ import {
   NativeModules,
   AsyncStorage
 } from 'react-native';
+import invariant from 'invariant';
+
 const OAuthManagerBridge = NativeModules.OAuthManager;
 
 let configured = false;
 const STORAGE_KEY = 'ReactNativeOAuth';
 import promisify from './lib/promisify'
+import authProviders from './lib/authProviders';
 
 /**
  * Manager is the OAuth layer
  **/
 export default class OAuthManager {
-  constructor(opts={}) {
+  constructor(appName, opts={}) {
+    invariant(appName && appName != '', `You must provide an appName to the OAuthManager`);
+
+    this.appName = appName;
     this._options = opts;
-  }
-
-  /**
-   * Configure a single provider
-   **/
-  configureProvider(name, props) {
-    return promisify('configureProvider')(name, props)
-      .then(() => this.setCredentialsForProvider(name));
-  }
-
-  configureProviders(providerConfigs) {
-    providerConfigs = providerConfigs || this._options;
-    const promises = Object
-            .keys(providerConfigs)
-            .map(name =>
-              this.configureProvider(name, providerConfigs[name]));
-    return Promise.all(promises);
   }
 
   configure(providerConfigs) {
     return this.configureProviders(providerConfigs)
   }
 
-  setCredentialsForProvider(providerName, credentials) {
-    const handleHydration = (creds) => promisify(OAuthManagerBridge.setCredentialsForProvider)(providerName, creds);
-
-    if (!credentials) {
-      return new Promise((resolve, reject) => {
-        const storageKey = this.makeStorageKey(providerName);
-        AsyncStorage.getItem(storageKey, (err, res) => {
-          if (err) {
-            return reject('No credentials passed or found in storage');
-          } else {
-            try {  
-              const json = JSON.parse(res);
-              const next = handleHydration(json);
-              return resolve(json);
-            } catch (err) {
-              return reject(err);
-            }
-          }
-        });
-      });
-    } else {
-      let creds = typeof credentials === 'string' ?
-                    JSON.parse(credentials) : credentials;
-      return handleHydration(creds);
-    }
-  }
-
-  authorizeWithCallbackURL(provider, url, scope, state, params) {
-    return OAuthManagerBridge
-      .authorizeWithCallbackURL(provider, url, scope, state, params)
-      .then((res) => {
-        return new Promise((resolve, reject) => {
-          const json = JSON.stringify(res);
-          AsyncStorage.setItem(this.makeStorageKey(provider), json, (err) => {
-            if (err) {
-              return reject(err);
-            } else {
-              return resolve(res);
-            }
-          })
-        });
-      })
+  authorize(provider, opts={}) {
+    return promisify('authorizeWithAppName')(provider, this.appName, opts);
   }
 
   makeRequest(provider, method, url, parameters={}, headers={}) {
@@ -99,10 +48,47 @@ export default class OAuthManager {
   }
 
   static providers() {
-    return promisify(OAuthManagerBridge.providers)();
+    return Object.keys(authProviders);
+  }
+
+  static isSupported(name) {
+    return OAuthManager.providers().indexOf(name) >= 0;
   }
 
   makeStorageKey(path, prefix='credentials') {
     return `${STORAGE_KEY}/${prefix}/${path}`.toLowerCase();
+  }
+
+  // Private
+  /**
+   * Configure a single provider
+   **/
+  configureProvider(name, props) {
+    invariant(OAuthManager.isSupported(name), `The provider ${name} is not supported yet`);
+
+    const providerCfg = authProviders[name];
+    let { isValid } = providerCfg;
+    if (!isValid) {
+      isValid = () => true;
+    }
+    const { consumer_key, consumer_secret } = props;
+
+    const config = Object.assign({}, 
+                    providerCfg.defaults,
+                    {consumer_key, consumer_secret});
+
+    const valid = isValid(config);
+    console.log('valid ->', valid);
+    return promisify('configureProvider')(name, config);
+  }
+
+  configureProviders(providerConfigs) {
+    providerConfigs = providerConfigs || this._options;
+    const promises = Object
+            .keys(providerConfigs)
+            .map(name =>
+              this.configureProvider(name, providerConfigs[name]));
+    return Promise.all(promises)
+      .then(() => this);
   }
 }

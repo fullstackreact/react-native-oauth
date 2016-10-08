@@ -1,5 +1,5 @@
 //
-//  OAuthSwiftManager.h
+//  OAuthManager.h
 //
 //  Created by Ari Lerner on 5/31/16.
 //  Copyright © 2016 Facebook. All rights reserved.
@@ -10,12 +10,22 @@
 #import "RCTBridgeModule.h"
 #import "RCTLinkingManager.h"
 
-@interface OAuthManager : NSObject <RCTBridgeModule>
+static NSString *kAuthConfig = @"OAuthManager";
+
+@interface OAuthManager : NSObject <RCTBridgeModule, UIWebViewDelegate>
+
++ (instancetype) sharedManager;
++ (BOOL)setupOAuthHandler:(UIApplication *)application
+              andDelegate:(UIResponder *)delegate
+                     view:(UIView *)rootView;
 
 + (BOOL)handleOpenUrl:(UIApplication *)application openURL:(NSURL *)url
     sourceApplication:(NSString *)sourceApplication annotation:(id)annotation;
 
-@property (nonatomic, strong) NSDictionary *providerProperties;
-@property (nonatomic, strong) NSDictionary *providerCredentials;
+- (BOOL) _configureProvider:(NSString *) name andConfig:(NSDictionary *) config;
+
+- (NSDictionary *) getConfigForProvider:(NSString *)name;
+
+@property (nonatomic, strong) NSDictionary *providerConfig;
 
 @end

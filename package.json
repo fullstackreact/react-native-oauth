@@ -42,4 +42,8 @@
       "packageInstance": "new OAuthManagerPackage(getApplicationContext())"
     }
   },
+  "dependencies": {
+    "invariant": "^2.2.1",
+    "valib": "^2.0.0"
+  }
 }
