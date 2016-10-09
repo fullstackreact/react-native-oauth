@@ -16,7 +16,7 @@
 #import "OAuth2Client.h"
 
 @interface OAuthManager()
-  @property (nonatomic, strong) id urlOpenerInstance;
+  @property (nonatomic, strong) OAuthClient *pendingClient;
   @property BOOL pendingAuthentication;
 @end
 
@@ -39,8 +39,28 @@ RCT_EXPORT_MODULE(OAuthManager);
     self = [super init];
     if (self != nil) {
         _callbackUrls = [[NSArray alloc] init];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(didBecomeActive:)
+                                                     name:UIApplicationDidBecomeActiveNotification
+                                                   object:nil];
+
     }
     return self;
+}
+
+- (void) dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void) didBecomeActive:(NSNotification *)notification
+{
+    NSLog(@"Application reopened: %@", @(self.pendingAuthentication));
+    if (self.pendingAuthentication) {
+        [self.pendingClient cancelAuthentication];
+        [self clearPending];
+    }
 }
 
 /*
@@ -51,7 +71,8 @@ RCT_EXPORT_MODULE(OAuthManager);
     OAuthManager *sharedManager = [OAuthManager sharedManager];
     DCTAuthPlatform *authPlatform = [DCTAuthPlatform sharedPlatform];
     
-    _urlOpenerInstance = [authPlatform setURLOpener: ^void(NSURL *URL, DCTAuthPlatformCompletion completion) {
+    [authPlatform setURLOpener: ^void(NSURL *URL, DCTAuthPlatformCompletion completion) {
+        [sharedManager setPendingAuthentication:YES];
         [application openURL:URL];
         completion(YES);
     }];
@@ -76,14 +97,20 @@ RCT_EXPORT_MODULE(OAuthManager);
     sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
 {
     OAuthManager *manager = [OAuthManager sharedManager];
-    NSString *strUrl = [url absoluteString];
+    NSString *strUrl = [manager stringHost:url];
+    
     if ([manager.callbackUrls indexOfObject:strUrl] != NSNotFound) {
+        if (manager.pendingAuthentication) {
+            [manager clearPending];
+        }
+        NSLog(@"manager.pendingAuthentication: %@ %@", manager.pendingClient, @(manager.pendingAuthentication));
         return [DCTAuth handleURL:url];
     }
+    
 
     if (manager.pendingAuthentication) {
-      [[DCTAuthPlatform sharedPlatform] cancelOpenURL:manager.urlOpenerInstance];
-      manager.pendingAuthentication = NO;
+        [manager.pendingClient cancelAuthentication];
+        [manager clearPending];
     }
     
     return [RCTLinkingManager application:application openURL:url
@@ -102,8 +129,10 @@ RCT_EXPORT_MODULE(OAuthManager);
     
     // Save the callback url for checking later
     NSMutableArray *arr = [_callbackUrls mutableCopy];
-    NSString *callbackUrl = [config valueForKey:@"callback_url"];
-    [arr addObject:callbackUrl];
+    NSString *callbackUrlStr = [config valueForKey:@"callback_url"];
+    NSURL *callbackUrl = [NSURL URLWithString:callbackUrlStr];
+    NSString *saveCallbackUrl = [self stringHost:callbackUrl];
+    [arr addObject:saveCallbackUrl];
     _callbackUrls = [arr copy];
     
     // Convert objects of url type
@@ -196,28 +225,32 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
     } else if ([version isEqualToString:@"2.0"]) {
         client = (OAuthClient *)[[OAuth2Client alloc] init];
     } else {
-      // Store pending client
-      _pendingAuthentication = YES;
         NSLog(@"Provider number: %@", version);
         return callback(@[@{
                               @"status": @"error",
                               @"msg": @"Unknown provider"
                               }]);
     }
+
+    // Store pending client
+      _pendingClient = client;
+      _pendingAuthentication = YES;
     
     [client authorizeWithUrl:providerName
                          url:callbackUrl
                          cfg:cfg
      
                    onSuccess:^(DCTAuthAccount *account) {
-                       NSLog(@"success!: %@", account);
+                    NSLog(@"authorizeWithUrl: %@", account);
                        NSDictionary *accountResponse = [manager getAccountResponse:account cfg:cfg];
+                       _pendingAuthentication = NO;
                        callback(@[[NSNull null], @{
                                       @"status": @"ok",
                                       @"response": accountResponse
                                       }]);
                    } onError:^(NSError *error) {
                        NSLog(@"Error in authorizeWithUrl: %@", error);
+                       _pendingAuthentication = NO;
                        callback(@[@{
                                       @"status": @"error",
                                       @"msg": [error localizedDescription]
@@ -255,6 +288,24 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
         [accountResponse setObject:cred forKey:@"credentials"];
     }
     return accountResponse;
+}
+
+- (void) clearPending
+{
+    OAuthManager *manager = [OAuthManager sharedManager];
+    manager.pendingAuthentication = NO;
+    manager.pendingClient = nil;
+}
+
+- (NSString *) stringHost:(NSURL *)url
+{
+    NSString *str = [NSString stringWithFormat:@"%@://%@%@", url.scheme, url.host, url.path];
+    
+    if ([str hasSuffix:@"/"]) {
+        str = [str substringToIndex:str.length - 1];
+    }
+    
+    return str;
 }
 
 @end

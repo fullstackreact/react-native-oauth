@@ -28,22 +28,28 @@ static NSString *TAG = @"OAuth2Client";
     
     DCTOAuth2Account *account = [self getAccount:providerName cfg:cfg];
     account.callbackURL = [NSURL URLWithString:url];
-
-    NSLog(@"authorize ----> %@ %@", cfg, account);
     
+    __weak OAuth2Client *client = self;
+    NSLog(@"authorize ----> %@ %@", cfg, account);
+    // authorizeWithClientID
     [account authenticateWithHandler:^(NSArray *responses, NSError *error) {
-        [self clearPendingAccount];
+        NSLog(@"authenticateWithHandler: %@", responses);
+        [client clearPendingAccount];
+        
         if (error != nil) {
+            NSLog(@"Some error: %@", error);
             onError(error);
             return;
         }
         
         if (!account.authorized) {
             NSError *err = QUICK_ERROR(E_ACCOUNT_NOT_AUTHORIZED, @"account not authorized");
+            NSLog(@"Account not authorized: %@", account);
             onError(err);
             return;
         }
         
+        NSLog(@"Success!: %@", account);
         onSuccess(account);
     }];
 }
@@ -106,7 +112,7 @@ static NSString *TAG = @"OAuth2Client";
                                                   scopes:scopes];
     }
 
-    [super savePendingAccount:account];
+    [self savePendingAccount:account];
     
     return account;
 }

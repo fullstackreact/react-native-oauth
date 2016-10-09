@@ -29,9 +29,10 @@ static NSString *TAG = @"OAuth1Client";
     DCTOAuth1Account *account = [self getAccount:providerName cfg:cfg];
     account.callbackURL = [NSURL URLWithString:url];
     
+    __weak id client = self;
     [account authenticateWithHandler:^(NSArray *responses, NSError *error) {
-        [self clearPendingAccount];
-        
+        [client clearPendingAccount];
+
         if (error != nil) {
             onError(error);
             return;

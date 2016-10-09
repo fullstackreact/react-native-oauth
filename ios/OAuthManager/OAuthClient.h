@@ -16,6 +16,6 @@
 - (void) savePendingAccount:(DCTAuthAccount *) account;
 - (void) clearPendingAccount;
 
-@property (nonatomic, strong) DCTAuthAccount *account;
+@property (nonatomic, weak) DCTAuthAccount *account;
 
 @end

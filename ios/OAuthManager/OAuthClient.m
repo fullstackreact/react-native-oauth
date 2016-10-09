@@ -29,7 +29,6 @@
 
 - (void) cancelAuthentication
 {
-  NSLog(@"Not implemented yet");
   if (_account != nil) {
     [_account cancelAuthentication];
   }
