@@ -16,7 +16,7 @@
 #import "OAuth2Client.h"
 
 @interface OAuthManager()
-  @property (nonatomic, strong) OAuthClient *pendingClient;
+  @property (nonatomic) NSArray *pendingClients;
   @property BOOL pendingAuthentication;
 @end
 
@@ -39,6 +39,7 @@ RCT_EXPORT_MODULE(OAuthManager);
     self = [super init];
     if (self != nil) {
         _callbackUrls = [[NSArray alloc] init];
+        _pendingClients = [[NSArray alloc] init];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(didBecomeActive:)
@@ -57,9 +58,8 @@ RCT_EXPORT_MODULE(OAuthManager);
 - (void) didBecomeActive:(NSNotification *)notification
 {
     NSLog(@"Application reopened: %@", @(self.pendingAuthentication));
-    if (self.pendingAuthentication) {
-        [self.pendingClient cancelAuthentication];
-        [self clearPending];
+    for (OAuthClient *client in _pendingClients) {
+        [self removePending:client];
     }
 }
 
@@ -98,20 +98,15 @@ RCT_EXPORT_MODULE(OAuthManager);
 {
     OAuthManager *manager = [OAuthManager sharedManager];
     NSString *strUrl = [manager stringHost:url];
+
+    NSLog(@"Handling handleOpenUrl: %@", strUrl);
     
     if ([manager.callbackUrls indexOfObject:strUrl] != NSNotFound) {
-        if (manager.pendingAuthentication) {
-            [manager clearPending];
-        }
-        NSLog(@"manager.pendingAuthentication: %@ %@", manager.pendingClient, @(manager.pendingAuthentication));
         return [DCTAuth handleURL:url];
     }
     
 
-    if (manager.pendingAuthentication) {
-        [manager.pendingClient cancelAuthentication];
-        [manager clearPending];
-    }
+    [manager clearPending];
     
     return [RCTLinkingManager application:application openURL:url
                         sourceApplication:sourceApplication annotation:annotation];
@@ -233,7 +228,8 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
     }
 
     // Store pending client
-      _pendingClient = client;
+    
+    [self addPending:client];
       _pendingAuthentication = YES;
     
     [client authorizeWithUrl:providerName
@@ -244,6 +240,7 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                     NSLog(@"authorizeWithUrl: %@", account);
                        NSDictionary *accountResponse = [manager getAccountResponse:account cfg:cfg];
                        _pendingAuthentication = NO;
+                       [manager removePending:client];
                        callback(@[[NSNull null], @{
                                       @"status": @"ok",
                                       @"response": accountResponse
@@ -251,6 +248,7 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                    } onError:^(NSError *error) {
                        NSLog(@"Error in authorizeWithUrl: %@", error);
                        _pendingAuthentication = NO;
+                       [manager removePending:client];
                        callback(@[@{
                                       @"status": @"error",
                                       @"msg": [error localizedDescription]
@@ -293,8 +291,28 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
 - (void) clearPending
 {
     OAuthManager *manager = [OAuthManager sharedManager];
-    manager.pendingAuthentication = NO;
-    manager.pendingClient = nil;
+    for (OAuthClient *client in manager.pendingClients) {
+        [manager removePending:client];
+    }
+    manager.pendingClients = [NSArray array];
+}
+
+- (void) addPending:(OAuthClient *) client
+{
+    OAuthManager *manager = [OAuthManager sharedManager];
+    NSMutableArray *newPendingClients = [manager.pendingClients mutableCopy];
+    [newPendingClients addObject:client];
+    manager.pendingClients = newPendingClients;
+}
+
+- (void) removePending:(OAuthClient *) client
+{
+    OAuthManager *manager = [OAuthManager sharedManager];
+    NSUInteger idx = [manager.pendingClients indexOfObject:client];
+    NSMutableArray *newPendingClients = [manager.pendingClients mutableCopy];
+    [newPendingClients removeObjectAtIndex:idx];
+    [client cancelAuthentication];
+    manager.pendingClients = newPendingClients;
 }
 
 - (NSString *) stringHost:(NSURL *)url
