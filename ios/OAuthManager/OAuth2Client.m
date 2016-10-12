@@ -95,6 +95,7 @@ static NSString *TAG = @"OAuth2Client";
     NSString *username = [cfg valueForKey:@"username"];
     NSString *password = [cfg valueForKey:@"password"];
     
+    NSLog(@"getAccount config: %@", cfg);
     if (access_token_url != nil) {
         account = [[DCTOAuth2Account alloc] initWithType:providerName
                                             authorizeURL:authorize_url
