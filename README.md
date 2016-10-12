@@ -201,9 +201,9 @@ ___
 
 ## TODOS:
 
-[] Handle rerequesting tokens (automatically?)
-[] Simplify method of adding providers
-  [] Complete [facebook](https://developers.facebook.com/docs/facebook-login) support
-  [] Add [github](https://developer.github.com/v3/oauth/) support
-  [] Add [Google]() support
-[] Add Android support
+* [ ] Handle rerequesting tokens (automatically?)
+* [ ] Simplify method of adding providers
+* [ ] Complete [facebook](https://developers.facebook.com/docs/facebook-login) support
+* [ ] Add [github](https://developer.github.com/v3/oauth/) support
+* [ ] Add [Google]() support
+* [ ] Add Android support
