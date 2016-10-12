@@ -317,7 +317,12 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
 
 - (NSString *) stringHost:(NSURL *)url
 {
-    NSString *str = [NSString stringWithFormat:@"%@://%@%@", url.scheme, url.host, url.path];
+    NSString *str;
+    if (url.host != nil) {
+        str = [NSString stringWithFormat:@"%@://%@%@", url.scheme, url.host, url.path];
+    } else {
+        str = [NSString stringWithFormat:@"%@%@", url.scheme, url.path];
+    }
     
     if ([str hasSuffix:@"/"]) {
         str = [str substringToIndex:str.length - 1];
