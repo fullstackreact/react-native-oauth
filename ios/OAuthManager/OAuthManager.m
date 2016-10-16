@@ -383,7 +383,7 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
       apiUrl = [NSURL URLWithString:urlOrPath];
   } else {
       NSURL *apiHost = [cfg objectForKey:@"api_url"];
-      apiUrl  = [NSURL URLWithString:[apiHost.host stringByAppendingString:urlOrPath]];
+      apiUrl  = [NSURL URLWithString:[[apiHost absoluteString] stringByAppendingString:urlOrPath]];
   }
 
   // If there are params
@@ -519,7 +519,9 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         [accountResponse setObject:cred forKey:@"credentials"];
     }
     [accountResponse setValue:[account identifier] forKey:@"identifier"];
-    
+    if (account.userInfo != nil) {
+      [accountResponse setObject:[account userInfo] forKey:@"user_info"];
+    }    
     return accountResponse;
 }
 

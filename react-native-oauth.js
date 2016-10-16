@@ -57,7 +57,7 @@ export default class OAuthManager {
       app_name: this.appName
     });
 
-    return promisify('makeRequest')(provider, options);
+    return promisify('makeRequest')(provider, url, options);
   }
 
   deauthorize(provider) {
