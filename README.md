@@ -264,26 +264,58 @@ The `resp` object is set as follows:
 
 ## Calling a provider's API
 
-Lastly, we can use our new oauth token to make requests to the api to make authenticated, signed requests. For instance, to get a list of the mentions on twitter, we can make a request at the endpoint: `'https://api.twitter.com/1.1/statuses/user_timeline.json'`. Provided our user has been authorized (or previously authorized), we can make a request using these credentials using the `makeRequest()` method. The `makeRequest()` method accepts between three and five parameters and returns a promise:
+We can use OAuthManager to make requests to endpoints from our providers as well. For instance, let's say we want to get a user's time line from twitter. We would make the request to the url [https://api.twitter.com/1.1/statuses/user_timeline.json](https://api.twitter.com/1.1/statuses/user_timeline.json)
 
-1. The provider our user is making a request (twitter, facebook, etc)
-2. The HTTP method to use to make the request, for instance `get` or `post`
-3. The URL to make the request
-4. (optional) parameters to pass through directly to the request
-5. (optional) headers are any headers associated with the request
+If our user has been authorized for thi request, we can execute the request using the credentials stored by the OAuthManager. 
+
+The `makeRequest()` method accepts 3 parameters:
+
+1. The provider we're making a request to
+2. The url (or path) we want to make the request
+3. Any additional options
+
+We can pass a list of options for our request with the last argument. The keys OAuthManager recognizes are:
+
+1. `params` - The query parameters
+2. `method` - The http method to make the request with. 
+
+Available HTTP methods:
+  * get
+  * post
+  * put
+  * delete
+  * head
+  * options
+  * trace
+
 
 ```javascript
 const userTimelineUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
-authManager.makeRequest('twitter', 'get', userTimelineUrl)
+authManager
+  .makeRequest('twitter', userTimelineUrl)
   .then(resp => {
-    // resp is an object that includes both a `response` object containing
-    // details of the returned response as well as a `data` object which is
-    // a STRING of the returned data. OAuthManager makes zero assumptions of
-    // the data type when returned and instead passes through the string response
-  })
-  .catch(err => {
-    // err is an object that contains the error called when the promise
-    // is rejected
+    console.log('Data ->', resp.data);
+  });
+```
+
+It's possible to use just the path as well. For instance, making a request with Facebook at the `/me` endpoint can be:
+
+```javascript
+authManager
+  .makeRequest('facebook', '/me')
+  .then(resp => {
+    console.log('Data ->', resp.data);
+  });
+```
+
+## Getting authorized accounts
+
+Since OAuthManager handles storing user accounts, we can query it to see which accounts have already been authorized or not using `savedAccounts()`:
+
+```javascript
+manager.savedAccounts()
+  .then(resp => {
+    console.log('account list: ', resp.accounts);
   })
 ```
 
@@ -310,9 +342,9 @@ ___
 
 ## TODOS:
 
-* [ ] Handle rerequesting tokens (automatically?)
-* [ ] Simplify method of adding providers
-* [ ] Complete [facebook](https://developers.facebook.com/docs/facebook-login) support
+* [ ] Handle reauthenticating tokens (automatically?)
+* [x] Simplify method of adding providers
+* [x] Complete [facebook](https://developers.facebook.com/docs/facebook-login) support
 * [ ] Add [github](https://developer.github.com/v3/oauth/) support
-* [ ] Add [Google]() support
+* [x] Add [Google]() support
 * [ ] Add Android support
