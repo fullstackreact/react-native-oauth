@@ -38,17 +38,30 @@ export default class OAuthManager {
     return promisify('authorize')(provider, options);
   }
 
-  makeRequest(provider, method, url, parameters={}, headers={}) {
-    return promisify(OAuthManagerBridge.makeSignedRequest)(
-      provider, method, url, parameters, headers);
+  savedAccounts(opts={}) {
+    const options = Object.assign({}, this._options, opts, {
+      app_name: this.appName
+    })
+    return promisify('getSavedAccounts')(options);
   }
 
-  deauthorize(providerName) {
-    return new Promise((resolve, reject) => {
-      AsyncStorage.removeItem(this.makeStorageKey(providerName), (err) => {
-        return err ? reject(err) : resolve();
-      })
+  savedAccount(provider, opts={}) {
+    const options = Object.assign({}, this._options, opts, {
+      app_name: this.appName
     })
+    return promisify('getSavedAccount')(provider, options);
+  }
+
+  makeRequest(provider, url, opts={}) {
+    const options = Object.assign({}, this._options, opts, {
+      app_name: this.appName
+    });
+
+    return promisify('makeRequest')(provider, options);
+  }
+
+  deauthorize(provider) {
+    return promisify('deauthorize')(provider);
   }
 
   providers() {

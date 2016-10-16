@@ -30,7 +30,7 @@ manager.authorize('google', {scopes: 'profile email'})
 
 * Isolates the OAuth experience to a few simple methods.
 * Atomatically stores the tokens for later retrieval
-* Works with many providers and relatively simple to add a provider
+* Works with many providers and relatively simple to add a new provider
 
 ## Installation
 
@@ -49,31 +49,10 @@ As we are integrating with react-native, we have a little more setup to integrat
 To automatically link our `react-native-oauth` client to our application, use the `rnpm` tool. [rnpm](https://github.com/rnpm/rnpm) is a React Native package manager which can help to automate the process of linking package environments.
 
 ```bash
-rnpm link
+react-native link react-native-oauth
 ```
 
-#### Manually
-
-If you prefer not to use `rnpm`, we can manually link the package together with the following steps, after `npm install`:
-
-1. In XCode, right click on `Libraries` and find the `Add Files to [project name]`.
-
-![Add library to project](http://d.pr/i/2gEH.png)
-
-2. Add the `node_modules/react-native-oauth/ios/OAuthManager.xcodeproj`
-
-![OAuthManager.xcodeproj in Libraries listing](http://d.pr/i/19ktP.png)
-
-3. In the project's "Build Settings" tab in your app's target, add `libOAuthManager.a` to the list of `Link Binary with Libraries`
-
-![Linking binaries](http://d.pr/i/1cHgs.png)
-
-4. Ensure that the `Build Settings` of the `OAuthManager.xcodeproj` project is ticked to _All_ and it's `Header Search Paths` include both of the following paths _and_ are set to _recursive_:
-
-  1. `$(SRCROOT)/../../react-native/React`
-  2. `$(SRCROOT)/../node_modules/react-native/React`
-
-![Recursive paths](http://d.pr/i/1hAr1.png)
+Note: due to some restrictions on iOS, this module requires you to install cocoapods. The process has been semi-automated through using the above `react-native link` command. Once you have linked this library, run: `pod install` and then open the created `.xcworkspace` when it's complete.
 
 ### Android setup
 
@@ -90,14 +69,42 @@ We'll need to handle app loading from a url with our app in order to handle auth
 We need to add a callback method in our `ios/AppDelegate.m` file and then call our OAuthManager helper method. Let's load the `ios/AppDelegate.m` file and add the following all the way at the bottom (but before the `@end`):
 
 ```objectivec
-- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url
-  sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
-{
-  return [OAuthManager handleOpenUrl:application openURL:url sourceApplication:sourceApplication annotation:annotation];
+// Add the import at the top:
+#import "OAuthManager.h"
+// ...
+@implementation AppDelegate
+// ...
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+  return [OAuthManager handleOpenUrl:application
+                             openURL:url
+                   sourceApplication:sourceApplication
+                          annotation:annotation];
 }
 ```
 
-When our app loads up with a request that is coming back from OAuthManager _and_ matches the pattern of `[app-name]://oauth-callback/{providerName}`, the OAuthManager will take over and handle the rest and storing the credentials for later use.
+When our app loads up with a request that is coming back from OAuthManager _and_ matches the url pattern, OAuthManager will take over and handle the rest and storing the credentials for later use.
+
+### Adding URL schemes
+
+In order for our app to load through these callbacks, we need to tell our iOS app that we want to load them. In order to do that, we'll have to create some URL schemes to register our app. Some providers require specific schemes (mentioned later). 
+
+These URL schemes can be added by navigating to to the `info` panel of our app in Xcode (see screenshot).
+
+![](./resources/info-panel.png)
+
+Let's add the appropriate one for our provider. For instance, to set up twitter, add the app name as a URL scheme in the URL scheme box. 
+
+![](./resources/url-schemes.png)
+
+## Creating the manager
+
+In our JS, we can create the manager by instantiating a new instance of it using the `new` method and passing it the name of our app:
+
+```javascript
+const manager = new OAuthManager('firestackexample')
+```
+
+We need to pass the name of our app as the oauth manager uses this to create callback keys. This _must_ match the URL route created in your iOS app. For instance, above we created a URL scheme for Twitter. Pass this as the string in the `OAuthManager` constructor.
 
 ## Configuring our providers
 
@@ -115,9 +122,16 @@ const config =  {
   twitter: {
     consumer_key: 'SOME_CONSUMER_KEY',
     consumer_secret: 'SOME_CONSUMER_SECRET'
+  },
+  facebook: {
+    client_id: 'YOUR_CLIENT_ID',
+    client_Secret: 'YOUR_CLIENT_SECRET'
   }
 }
-authManager.configureProvider("twitter", config.twitter);
+// Create the manager
+const manager = new OAuthManager('firestackexample')
+// configure the manager
+manager.configure(config);
 ```
 
 The `consumer_key` and `consumer_secret` values are _generally_ provided by the provider development program. In the case of [twitter](https://apps.twitter.com), we can create an app and generate these values through their [development dashboard](https://apps.twitter.com).
@@ -126,32 +140,127 @@ The `consumer_key` and `consumer_secret` values are _generally_ provided by the 
 
 The following list are the providers we've implemented thus far in `react-native-oauth` and the _required_ keys to pass when configuring the provider:
 
-* Twitter
-  * consumer_key
-  * consumer_secret
-* Facebook (not fully implemented)
-  * consumer_key
-  * consumer_secret
+#### Twitter
+
+To authenticate against twitter, we need to register a Twitter application. Register your twitter application (or create a new one at [apps.twitter.com](https://apps.twitter.com)). 
+
+![](./resources/twitter/app.png)
+
+Once you have created one, navigate to the application and find the `Keys and Access Tokens`. Take note of the consumer key and secret:
+
+![](./resources/twitter/api-key.png)
+
+Twitter's URL scheme needs to be the app name (that we pass into the constructor method). Make sure we have one registered in Xcode as the same name:
+
+![](./resources/twitter/url-scheme.png)
+
+Add these values to the authorization configuration to pass to the `configure()` method as:
+
+```javascript
+const config =  {
+  twitter: {
+    consumer_key: 'SOME_CONSUMER_KEY',
+    consumer_secret: 'SOME_CONSUMER_SECRET'
+  }
+}
+```
+
+#### Facebook
+
+To add facebook authentication, we'll need to have a Facebook app. To create one (or use an existing one), navigate to [developers.facebook.com/](https://developers.facebook.com/). 
+
+![](./resources/facebook/dev.facebook.png)
+
+Find or create an application and find the app id. Take note of this app id. Next, navigate to the `Settings` panel and find your client_secret.
+
+![](./resources/facebook/app.png)
+
+Before we leave the Facebook settings, we need to tell Facebook we have a new redirect url to register. Navigate to the bottom of the page and add the following into the `bundle ID` field:
+
+`fb{YOUR_APP_ID}`
+
+For instance, my app ID in this example is: `1745641015707619`. In the `Bundle ID` field, I have added `fb1745641015707619`. 
+
+![](./resources/facebook/redirect-url.png)
+
+We'll need to create a new URL scheme for Facebook and (this is a weird bug on the Facebook side) the facebook redirect URL scheme _must be the first one_ in the list. The URL scheme needs to be the same id as the `Bundle ID` copied from above:
+
+![](./resources/facebook/url-scheme.png)
+
+Back in our application, add the App ID and the secret as:
+
+```javascript
+const config =  {
+  facebook: {
+    client_id: 'YOUR_APP_ID',
+    client_secret: 'YOUR_APP_SECRET'
+  }
+}
+```
+
+#### Google
+
+To add Google auth to our application, first we'll need to create a google application. Create or use an existing one by heading to the [developers.google.com/](https://developers.google.com/) page (or the console directly at [https://console.developers.google.com](https://console.developers.google.com)). 
+
+![](./resources/google/auth-page.png)
+
+We need to enable the `Identity Toolkit API` API. Click on `Enable API` and add this api to your app. Once it's enabled, we'll need to collect our credentials.
+
+Navigate to the `Credentials` tab and create a new credential. Create a web API credential. Take note of the client id and the URL scheme. In addition, make sure to set the bundle ID as the bundle id in our application in Xcode:
+
+![](./resources/google/creds.png)
+
+Take note of the `iOS URL Scheme`. We'll need to add this as a URL scheme in our app. In the `Info` panel of our app target (in Xcode), add the URL scheme:
+
+![](./resources/google/url-scheme.png)
+
+Finally, add the `client_id` credential as the id from the url page as well as the ios scheme (with any path) in our app configuration:
+
+```javascript
+const config =  {
+  google: {
+    callback_url: `[IOS SCHEME]:/google`,
+    client_id: 'YOUR_CLIENT_ID'
+  }
+}
+```
 
 ## Authenticating against our providers
 
-In order to make any authenticated calls against a provider, we need to authenticate against it. The `react-native-oauth` library passes through an easy method for dealing with authentication with the `authorizeWithCallbackURL()` method.
 
-Using the app uri we previous setup, we can call the `authorizeWithCallbackURL()` method to ask iOS to redirect our user to a browser where they can log in to our app in the usual flow. When the user authorizes the login request, the promise returned by the `authorizeWithCallbackURL()` is resolved. If they reject the login request for any reason, the promise is rejected along with an error, if there are any.
+We can use the manager in our app using the `authorize()` method on the manager.
+
+The `authorize` method takes two arguments (the first one is required):
+
+* The provider we wish to authenticate against (i.e. twitter, facebook)
+* The list of options on a per-provider basis (optional)
+
+For example:
 
 ```javascript
-authManager.authorizeWithCallbackURL('twitter', 'firebase-example://oauth-callback/twitter')
-.then((oauthResponse) => {
-  // the oauthResponse object is the response returned by the request
-  // which is later stored by react-native-oauth using AsyncStorage
-})
-.catch((err) => {
-  // err is an error object that contains the reason the user
-  // error rejected authentication.
-})
+manager.authorize('twitter')
+  .then(resp => console.log(resp))
+  .catch(err => console.log(err));
 ```
 
-When the response is returned, `react-native-oauth` will store the resulting credentials using the `AsyncStorage` object provided natively by React Native. All of this happens behinds the scenes _automatically_. When the credentials are successfully rerequested, `AsyncStorage` is updated behind the scenes automatically. All you have to do is take care of authenticating the user using the `authorizeWithCallbackURL()` method.
+This method returns a promise that is resolved once the authentication has been completed. You'll get access to the authentication keys in the `resp` object.
+
+The `resp` object is set as follows:
+
+```javascript
+{
+  status: "ok",
+  response: {
+    authorized: true, (boolean)
+    uuid: "UUID", (user UUID)
+    credentials: {
+      access_token: "access token", 
+      refresh_token: "refresh token",
+      type: 1
+    }
+  }
+}
+```
 
 ## Calling a provider's API
 
