@@ -52,7 +52,15 @@ To automatically link our `react-native-oauth` client to our application, use th
 react-native link react-native-oauth
 ```
 
-Note: due to some restrictions on iOS, this module requires you to install cocoapods. The process has been semi-automated through using the above `react-native link` command. Once you have linked this library, run: `pod install` and then open the created `.xcworkspace` when it's complete.
+Note: due to some restrictions on iOS, this module requires you to install cocoapods. The process has been semi-automated through using the above `react-native link` command. 
+
+Once you have linked this library, run the following command in the root directory: 
+
+```
+(cd ios && pod install)
+```
+
+Finally, open the created `.xcworkspace` in the `ios/` directory (**NOT THE `.xproj` file**) when it's complete.
 
 ### Android setup
 
