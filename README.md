@@ -44,6 +44,18 @@ As we are integrating with react-native, we have a little more setup to integrat
 
 ### iOS setup
 
+#### RCTLinkingManager
+
+Since `react-native-oauth` depends upon the `RCTLinkingManager` (from react-native core), we'll need to make sure we link this in our app. 
+
+In your app, add the following line to your `HEADER SEARCH PATHS`:
+
+```
+$(SRCROOT)/../node_modules/react-native/Libraries/LinkingiOS
+```
+
+![](./resources/header-search-paths.png)
+
 #### Automatically with [rnpm](https://github.com/rnpm/rnpm)
 
 To automatically link our `react-native-oauth` client to our application, use the `rnpm` tool. [rnpm](https://github.com/rnpm/rnpm) is a React Native package manager which can help to automate the process of linking package environments.
@@ -87,6 +99,26 @@ We need to add a callback method in our `ios/AppDelegate.m` file and then call o
                              openURL:url
                    sourceApplication:sourceApplication
                           annotation:annotation];
+}
+```
+
+In addition, we'll need to set up the handlers within the iOS app. Add the following line somewhere in your `application:didFinishLaunchingWithOptions:` method, like so:
+
+```objectivec
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+  NSURL *jsCodeLocation;
+
+  jsCodeLocation = [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index.ios" fallbackResource:nil];
+  
+  // other existing setup here
+  
+  // ADD THIS LINE SOMEWHERE IN THIS FUNCTION
+  [OAuthManager setupOAuthHandler:application];
+  // ...
+  
+  [self.window makeKeyAndVisible];
+  return YES;
 }
 ```
 
