@@ -39,10 +39,20 @@ export default class OAuthManager {
   }
 
   savedAccounts(opts={}) {
-    const options = Object.assign({}, this._options, opts, {
-      app_name: this.appName
-    })
-    return promisify('getSavedAccounts')(options);
+    // const options = Object.assign({}, this._options, opts, {
+      // app_name: this.appName
+    // })
+    // return promisify('getSavedAccounts')(options);
+    const promises = this.providers()
+                          .map(name => {
+                            return this.savedAccount(name, opts)
+                              .catch(err => ({provider: name, status: "error"}));
+                          });
+    return Promise.all(promises)
+      .then((accountResp) => {
+        const accounts = accountResp.filter(acc => acc.status == "ok");
+        return { accounts }
+      });
   }
 
   savedAccount(provider, opts={}) {
@@ -74,10 +84,6 @@ export default class OAuthManager {
 
   static isSupported(name) {
     return OAuthManager.providers().indexOf(name) >= 0;
-  }
-
-  makeStorageKey(path, prefix='credentials') {
-    return `${STORAGE_KEY}/${prefix}/${path}`.toLowerCase();
   }
 
   // Private

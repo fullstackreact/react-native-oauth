@@ -1,0 +1,67 @@
+// START - required to allow working on this project inside Android Studio
+// YES, jcenter is required twice - it somehow tricks studio into compiling deps below
+// doesn't break anything anywhere else and projects using this lib work as normal
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.1.3'
+    }
+}
+// END
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled  true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    android.packagingOptions {
+        exclude 'META-INF/LICENSE'
+    }
+}
+
+// START - required to allow working on this project inside Android Studio
+// YES, jcenter is required twice - it somehow tricks studio into compiling deps below
+// doesn't break anything anywhere else and projects using this lib work as normal
+// you'll now have code completion/validation and all the other AS goodies.
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
+// END
+
+dependencies {
+    compile 'com.facebook.react:react-native:+'
+    compile 'com.wu-man:android-oauth-client:0.4.5@aar'
+    compile 'com.google.android.gms:play-services-base:+'
+    compile 'com.android.volley:volley:+'
+
+    compile 'com.google.api-client:google-api-client-android:1.19.0' exclude module: 'httpclient'
+    compile 'com.google.http-client:google-http-client-gson:1.19.0' exclude module: 'httpclient'
+
+    // compile('com.google.api-client:google-api-client-android:1.15.0-rc') {
+    //     exclude group: 'com.google.android.google-play-services', module: 'google-play-services'
+    //     exclude group: 'junit', module: 'junit'
+    //     exclude group: 'com.google.android', module: 'android'
+    // }
+    // // compile 'com.google.oauth-client:google-oauth-client-java6:1.15.0-rc'
+    // compile 'com.google.apis:google-api-services-oauth2:v1-rev129-1.22.0'
+    compile 'com.google.http-client:google-http-client-jackson2:1.22.0'
+}
+

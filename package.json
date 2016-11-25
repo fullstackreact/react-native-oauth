@@ -39,7 +39,7 @@
       "project": "ios/OAuthManager.xcodeproj"
     },
     "android": {
-      "packageInstance": "new OAuthManagerPackage(getApplicationContext())"
+      "packageInstance": "new OAuthManagerPackage()"
     }
   },
   "dependencies": {

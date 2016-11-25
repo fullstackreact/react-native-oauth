@@ -292,15 +292,14 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
             [store deleteAccount:existingAccount];
         }
     }
-    
-    NSString *appName = [cfg valueForKey:@"app_name"];
-    
+        
     NSString *callbackUrl;
     NSURL *storedCallbackUrl = [cfg objectForKey:@"callback_url"];
     
     if (storedCallbackUrl != nil) {
         callbackUrl = [storedCallbackUrl absoluteString];
     } else {
+        NSString *appName = [cfg valueForKey:@"app_name"];
         callbackUrl = [NSString
                        stringWithFormat:@"%@://oauth-response/%@",
                        appName,
