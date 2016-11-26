@@ -35,11 +35,14 @@ public class OAuthManagerProviders {
     String consumerKey = (String) cfg.get("consumer_key");
     String consumerSecret = (String) cfg.get("consumer_secret");
     
-    return new ServiceBuilder()
+    ServiceBuilder builder = new ServiceBuilder()
           .apiKey(consumerKey)
           .apiSecret(consumerSecret)
-          .callback(callbackUrl)
-          .debug()
-          .build(TwitterApi.instance());
+          .debug();
+
+    if (callbackUrl != null) {
+      builder.callback(callbackUrl);
+    }
+    return builder.build(TwitterApi.instance());
   }
 }

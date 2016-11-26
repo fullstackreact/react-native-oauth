@@ -35,6 +35,7 @@ import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReactContext;
 
 import com.github.scribejava.core.builder.api.BaseApi;
+import com.github.scribejava.core.model.Verb;
 
 // import com.wuman.android.auth.AuthorizationDialogController;
 // import com.wuman.android.auth.AuthorizationFlow;
@@ -191,31 +192,81 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     final Callback onComplete) {
 
       Log.i(TAG, "makeRequest called for " + providerName + " to " + urlString);
-      // try {
-      //   Credential creds = this.loadCredentialForProvider(providerName, params);
-      //   HashMap<String,String> cfg = this.getConfiguration(providerName);
-      //   final String authVersion = (String) cfg.get("auth_version");
+      try {
+        HashMap<String,String> cfg = this.getConfiguration(providerName);
+        final String authVersion = (String) cfg.get("auth_version");
 
-      //   URL url;
-      //   try {
-      //     if (urlString.contains("http")) {
-      //       url = new URL(urlString);
-      //     }  else {
-      //       String apiHost = (String) cfg.get("api_url");
-      //       url  = new URL(apiHost + urlString);
-      //     }
-      //   } catch (MalformedURLException ex) {
-      //     Log.e(TAG, "Bad url. Check request and try again: " + ex.getMessage());
-      //     exceptionCallback(ex, onComplete);
-      //     return;
-      //   }
+        URL url;
+        try {
+          if (urlString.contains("http")) {
+            url = new URL(urlString);
+          }  else {
+            String apiHost = (String) cfg.get("api_url");
+            url  = new URL(apiHost + urlString);
+          }
+        } catch (MalformedURLException ex) {
+          Log.e(TAG, "Bad url. Check request and try again: " + ex.getMessage());
+          exceptionCallback(ex, onComplete);
+          return;
+        }
 
+        String httpMethod;
+        if (params.hasKey("method")) { 
+          httpMethod = params.getString("method");
+        } else {
+          httpMethod = "GET";
+        }
+
+        Verb httpVerb;
+        if (httpMethod.equalsIgnoreCase("GET")) {
+          httpVerb = Verb.GET;
+        } else if (httpMethod.equalsIgnoreCase("POST")) {
+          httpVerb = Verb.POST;
+        } else if (httpMethod.equalsIgnoreCase("PUT")) {
+          httpVerb = Verb.PUT;
+        } else if (httpMethod.equalsIgnoreCase("DELETE")) {
+          httpVerb = Verb.DELETE;
+        } else if (httpMethod.equalsIgnoreCase("OPTIONS")) {
+          httpVerb = Verb.OPTIONS;
+        } else if (httpMethod.equalsIgnoreCase("HEAD")) {
+          httpVerb = Verb.HEAD;
+        } else if (httpMethod.equalsIgnoreCase("PATCH")) {
+          httpVerb = Verb.PATCH;
+        } else if (httpMethod.equalsIgnoreCase("TRACE")) {
+          httpVerb = Verb.TRACE;
+        } else {
+          httpVerb = Verb.GET;
+        }
         
+        if (authVersion.equals("1.0")) {
+          final OAuth10aService service = 
+            OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null);
+          OAuth1AccessToken token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
+          final OAuthRequest request = new OAuthRequest(Verb.GET, url.toString(), service);
+          
+          service.signRequest(token, request);
+          final Response response = request.send();
+          final String rawBody = response.getBody();
+
+          Log.d(TAG, "rawBody: " + rawBody);
+          // final Object response = new Gson().fromJson(rawBody, Object.class);
+
+          WritableMap resp = Arguments.createMap();
+          resp.putInt("status", response.getCode());
+          resp.putString("data", rawBody);
+          onComplete.invoke(null, resp);
+        } else {
+          // TODO:
+        }
  
-      // } catch (Exception ex) {
-      //   Log.e(TAG, "Exception when making request: " + ex.getMessage());
-      //   exceptionCallback(ex, onComplete);
-      // }
+      } catch (IOException ex) {
+        Log.e(TAG, "IOException when making request: " + ex.getMessage());
+        ex.printStackTrace();
+        exceptionCallback(ex, onComplete);
+      } catch (Exception ex) {
+        Log.e(TAG, "Exception when making request: " + ex.getMessage());
+        exceptionCallback(ex, onComplete);
+      }
   }
 
   @ReactMethod

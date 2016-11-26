@@ -67,7 +67,15 @@ export default class OAuthManager {
       app_name: this.appName
     });
 
-    return promisify('makeRequest')(provider, url, options);
+    return promisify('makeRequest')(provider, url, options)
+      .then(response => {
+        // Little bit of a hack to support Android until we have a better
+        // way of decoding the JSON response on the Android side
+        if (response && response.data && typeof response.data === "string") {
+          response.data = JSON.parse(response.data);
+        }
+        return response;
+      });
   }
 
   deauthorize(provider) {
