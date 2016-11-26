@@ -17,6 +17,7 @@ import android.text.TextUtils;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -62,8 +63,10 @@ import com.github.scribejava.core.model.Response;
 import com.github.scribejava.core.model.Verb;
 import com.github.scribejava.core.oauth.OAuth10aService;
 
-interface KeySetterFn {
-  String setKeyOrDefault(String a, String b);
+class ProviderNotConfiguredException extends Exception {
+  public ProviderNotConfiguredException(String message) {
+    super(message);
+  }
 }
 
 @SuppressWarnings("WeakerAccess")
@@ -75,12 +78,13 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
   private HashMap _configuration = new HashMap<String, HashMap<String,String>>();
   private ArrayList _callbackUrls  = new ArrayList<String>();
-  private SharedPreferences _credentialsStore;
+  private OAuthManagerStore _credentialsStore;
 
   public OAuthManagerModule(ReactApplicationContext reactContext) {
     super(reactContext);
     mReactContext = reactContext;
 
+    _credentialsStore = OAuthManagerStore.getOAuthManagerStore(mReactContext, TAG, Context.MODE_PRIVATE);
     Log.d(TAG, "New instance");
   }
 
@@ -142,17 +146,16 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   public void authorize(
     final String providerName, 
     @Nullable final ReadableMap params, 
-    final Callback callback) throws Exception 
+    final Callback callback) 
   {
-    Log.i(TAG, "authorize called for " + providerName);
-
-    HashMap<String,String> cfg = this.getConfiguration(providerName);
-    final String authVersion = (String) cfg.get("auth_version");
-    Activity activity = mReactContext.getCurrentActivity();
-    FragmentManager fragmentManager = activity.getFragmentManager();
-    String callbackUrl = "http://localhost/" + providerName;
-
     try {
+      final OAuthManagerModule self = this;
+      HashMap<String,String> cfg = this.getConfiguration(providerName);
+      final String authVersion = (String) cfg.get("auth_version");
+      Activity activity = mReactContext.getCurrentActivity();
+      FragmentManager fragmentManager = activity.getFragmentManager();
+      String callbackUrl = "http://localhost/" + providerName;
+      
       if (authVersion.equals("1.0")) {
         final OAuth10aService service = 
           OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, callbackUrl);
@@ -163,21 +166,10 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
         ctrl.requestAuth(new OAuthManagerOnAccessTokenListener() {
           public void onRequestTokenError(final Exception ex) {}
           public void onOauth1AccessToken(final OAuth1AccessToken accessToken) {
-            Log.d(TAG, "onAccessToken: " + accessToken.getRawResponse());
-            WritableMap resp = Arguments.createMap();
-            WritableMap response = Arguments.createMap();
+            _credentialsStore.store(providerName, accessToken);
+            _credentialsStore.commit();
 
-            resp.putString("status", "ok");
-            response.putString("uuid", accessToken.getParameter("user_id"));
-            response.putString("provider", providerName);
-            
-            WritableMap credentials = Arguments.createMap();
-            credentials.putString("oauth_token", accessToken.getToken());
-            credentials.putString("oauth_secret", accessToken.getTokenSecret());
-            response.putMap("credentials", credentials);
-
-            resp.putMap("response", response);
-
+            WritableMap resp = self.accessTokenResponse(providerName, accessToken, authVersion);
             callback.invoke(null, resp);
           }
         });
@@ -237,7 +229,30 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     final ReadableMap options, 
     final Callback onComplete)
   {
-    Log.i(TAG, "getSavedAccount for " + providerName);
+    try {
+      HashMap<String,String> cfg = this.getConfiguration(providerName);
+      final String authVersion = (String) cfg.get("auth_version");
+
+      Log.i(TAG, "getSavedAccount for " + providerName);
+
+      if (authVersion.equals("1.0")) {
+        OAuth1AccessToken token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
+        Log.d(TAG, "Found token: " + token);
+
+        WritableMap resp = this.accessTokenResponse(providerName, token, authVersion);
+        onComplete.invoke(null, resp);
+      } else {
+
+      }
+    } catch (ProviderNotConfiguredException ex) {
+      Log.e(TAG, "Provider not yet configured: " + providerName);
+      exceptionCallback(ex, onComplete);
+    } catch (Exception ex) {
+      Log.e(TAG, "An exception occurred getSavedAccount: " + ex.getMessage());
+      ex.printStackTrace();
+      exceptionCallback(ex, onComplete);
+    }
+    
     
     // try {
     //   Credential creds = this.loadCredentialForProvider(providerName, options);
@@ -283,7 +298,20 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void deauthorize(final String providerName, final Callback onComplete) {
-    Log.i(TAG, "deauthorizing " + providerName);
+    try {
+      Log.i(TAG, "deauthorizing " + providerName);
+      HashMap<String,String> cfg = this.getConfiguration(providerName);
+      final String authVersion = (String) cfg.get("auth_version");
+
+      _credentialsStore.delete(providerName);
+
+      WritableMap resp = Arguments.createMap();
+      resp.putString("status", "ok");
+
+      onComplete.invoke(null, resp);
+    } catch (Exception ex) {
+      exceptionCallback(ex, onComplete);
+    }
     // try {
     //   OAuthManager manager = this.getManager(providerName, null, true);
     //   OAuthCallback<Boolean> cb = new OAuthCallback<Boolean>() {
@@ -340,11 +368,33 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     final String providerName
   ) throws Exception {
     if (!_configuration.containsKey(providerName)) {
-      throw new Exception("Provider not configured: " + providerName);
+      throw new ProviderNotConfiguredException("Provider not configured: " + providerName);
     }
 
     HashMap<String,String> cfg = (HashMap) _configuration.get(providerName);
     return cfg;
+  }
+
+  private WritableMap accessTokenResponse(
+    final String providerName,
+    final OAuth1AccessToken accessToken,
+    final String oauthVersion
+  ) {
+    WritableMap resp = Arguments.createMap();
+    WritableMap response = Arguments.createMap();
+
+    resp.putString("status", "ok");
+    resp.putString("provider", providerName);
+    response.putString("uuid", accessToken.getParameter("user_id"));
+    
+    WritableMap credentials = Arguments.createMap();
+    credentials.putString("oauth_token", accessToken.getToken());
+    credentials.putString("oauth_secret", accessToken.getTokenSecret());
+    response.putMap("credentials", credentials);
+
+    resp.putMap("response", response);
+
+    return resp;
   }
 
   // private OAuthManager getManager(

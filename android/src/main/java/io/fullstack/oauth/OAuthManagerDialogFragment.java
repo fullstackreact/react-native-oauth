@@ -97,11 +97,9 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
     }
 
     private void setupWebView(AdvancedWebView webView) {
-      Log.d(TAG, "Setting webview client");
       webView.setWebViewClient(new WebViewClient() {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-          Log.i(TAG, "shouldOverrideUrlLoading: " + url);
           interceptUrl(view, url, true);
           return true;
         }
@@ -116,7 +114,6 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
         private boolean interceptUrl(WebView view, String url, boolean loadUrl) {
           if (isCallbackUri(url, mController.getCallbackUrl())) {
             // We are on callback page
-            Log.d(TAG, "We got the callback url: " + url);
             Uri responseUri = Uri.parse(url);
             String oauthToken = responseUri.getQueryParameter("oauth_token");
             String oauthVerifier = responseUri.getQueryParameter("oauth_verifier");
