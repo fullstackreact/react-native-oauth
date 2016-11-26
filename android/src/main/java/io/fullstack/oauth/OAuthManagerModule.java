@@ -33,25 +33,34 @@ import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReactContext;
 
-import com.wuman.android.auth.AuthorizationDialogController;
-import com.wuman.android.auth.AuthorizationFlow;
-import com.wuman.android.auth.DialogFragmentController;
-import com.wuman.android.auth.OAuthManager;
-import com.wuman.android.auth.OAuthManager.OAuthCallback;
-import com.wuman.android.auth.OAuthManager.OAuthFuture;
-import com.wuman.android.auth.oauth2.store.SharedPreferencesCredentialStore;
-import com.wuman.android.auth.oauth2.store.FilePersistedCredential;
+import com.github.scribejava.core.builder.api.BaseApi;
 
-import com.google.api.client.auth.oauth2.BearerToken;
-import com.google.api.client.auth.oauth2.ClientParametersAuthentication;
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.StoredCredential;
+// import com.wuman.android.auth.AuthorizationDialogController;
+// import com.wuman.android.auth.AuthorizationFlow;
+// import com.wuman.android.auth.DialogFragmentController;
+// import com.wuman.android.auth.OAuthManager;
+// import com.wuman.android.auth.OAuthManager.OAuthCallback;
+// import com.wuman.android.auth.OAuthManager.OAuthFuture;
+// import com.wuman.android.auth.oauth2.store.SharedPreferencesCredentialStore;
+// import com.wuman.android.auth.oauth2.store.FilePersistedCredential;
 
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+// import com.google.api.client.auth.oauth2.BearerToken;
+// import com.google.api.client.auth.oauth2.ClientParametersAuthentication;
+// import com.google.api.client.auth.oauth2.Credential;
+// import com.google.api.client.auth.oauth2.StoredCredential;
+
+// import com.google.api.client.extensions.android.http.AndroidHttp;
+// import com.google.api.client.http.GenericUrl;
+// import com.google.api.client.http.HttpTransport;
+// import com.google.api.client.json.JsonFactory;
+// import com.google.api.client.json.jackson2.JacksonFactory;
+import com.github.scribejava.core.builder.ServiceBuilder;
+import com.github.scribejava.core.model.OAuth1AccessToken;
+import com.github.scribejava.core.model.OAuth1RequestToken;
+import com.github.scribejava.core.model.OAuthRequest;
+import com.github.scribejava.core.model.Response;
+import com.github.scribejava.core.model.Verb;
+import com.github.scribejava.core.oauth.OAuth10aService;
 
 interface KeySetterFn {
   String setKeyOrDefault(String a, String b);
@@ -60,29 +69,19 @@ interface KeySetterFn {
 @SuppressWarnings("WeakerAccess")
 class OAuthManagerModule extends ReactContextBaseJavaModule {
   private static final String TAG = "OAuthManager";
-  public static final JsonFactory JSON_FACTORY = new JacksonFactory();
-  public static final HttpTransport HTTP_TRANSPORT = AndroidHttp.newCompatibleTransport();
 
   private Context context;
   private ReactContext mReactContext;
 
-  private HashMap _credentials = new HashMap<String, Credential>();
   private HashMap _configuration = new HashMap<String, HashMap<String,String>>();
   private ArrayList _callbackUrls  = new ArrayList<String>();
-  private SharedPreferencesCredentialStore _credentialsStore;
-
-  // private final OAuthManager manager;
+  private SharedPreferences _credentialsStore;
 
   public OAuthManagerModule(ReactApplicationContext reactContext) {
     super(reactContext);
     mReactContext = reactContext;
 
     Log.d(TAG, "New instance");
-
-    // setup credential store
-    _credentialsStore =
-      new SharedPreferencesCredentialStore(mReactContext,
-      OAuthManagerConstants.CREDENTIALS_STORE_PREF_FILE, JSON_FACTORY);
   }
 
   @Override
@@ -91,7 +90,11 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void configureProvider(final String providerName, final ReadableMap params, @Nullable final Callback onComplete) {
+  public void configureProvider(
+    final String providerName, 
+    final ReadableMap params, 
+    @Nullable final Callback onComplete
+  ) {
     Log.i(TAG, "configureProvider for " + providerName);
 
     // Save callback url for later
@@ -139,51 +142,41 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   public void authorize(
     final String providerName, 
     @Nullable final ReadableMap params, 
-    final Callback callback) throws Exception {
+    final Callback callback) throws Exception 
+  {
     Log.i(TAG, "authorize called for " + providerName);
 
     HashMap<String,String> cfg = this.getConfiguration(providerName);
     final String authVersion = (String) cfg.get("auth_version");
+    Activity activity = mReactContext.getCurrentActivity();
+    FragmentManager fragmentManager = activity.getFragmentManager();
+    String callbackUrl = "http://localhost/" + providerName;
 
     try {
-      OAuthManager manager = this.getManager(providerName, params, true);
+      if (authVersion.equals("1.0")) {
+        final OAuth10aService service = 
+          OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, callbackUrl);
 
-      Log.d(TAG, "Setting up callback");
-      OAuthCallback<Credential> cb = new OAuthCallback<Credential>() {
-        @Override
-        public void run(OAuthFuture<Credential> future) {
-          try {
-            Credential cred = future.getResult();
-            cred.refreshToken();
-            
+        OAuthManagerFragmentController ctrl =
+          new OAuthManagerFragmentController(fragmentManager, providerName, service, callbackUrl);
+
+        ctrl.requestAuth(new OAuthManagerOnAccessTokenListener() {
+          public void onRequestTokenError(final Exception ex) {}
+          public void onOauth1AccessToken(final OAuth1AccessToken accessToken) {
+            Log.d(TAG, "onAccessToken: " + accessToken.getRawResponse());
             WritableMap resp = Arguments.createMap();
-            resp.putBoolean("status", true);
+            WritableMap response = Arguments.createMap();
 
-            WritableMap accountResp = Arguments.createMap();
-            accountResp.putBoolean("authorized", true);
-            accountResp.putString("provider", providerName);
-            // resp.putString("uuid", cred.getClientAuthentication());
-            if (authVersion.equals("1.0")) {
-              accountResp.putString("oauth_token", cred.getAccessToken());
-              // resp.putString("oauth_secret", cred.getSharedSecret());
-            } else {
-
-            }
-
-            resp.putMap("response", accountResp);
+            resp.putString("status", "ok");
+            response.putString("uuid", accessToken.getParameter("user_id"));
+            response.putString("oauth_token", accessToken.getToken());
+            response.putString("oauth_secret", accessToken.getTokenSecret());
+            resp.putMap("response", response);
 
             callback.invoke(null, resp);
-
-          } catch (IOException ex) {
-            Log.d(TAG, "Exception in callback " + ex.getMessage());
-            exceptionCallback(ex, callback);
           }
-        }
-      };
-
-      if (authVersion.equals("1.0")) {
-        Log.d(TAG, "Calling authorize10a");
-        manager.authorize10a(providerName, cb, new Handler());
+        });
+        
       } else {
         Log.d(TAG, "Auth version unknown: " + (String) cfg.get("auth_version"));
       }
@@ -201,38 +194,36 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     final Callback onComplete) {
 
       Log.i(TAG, "makeRequest called for " + providerName + " to " + urlString);
-      try {
-        Credential creds = this.loadCredentialForProvider(providerName, params);
-        HashMap<String,String> cfg = this.getConfiguration(providerName);
-        final String authVersion = (String) cfg.get("auth_version");
+      // try {
+      //   Credential creds = this.loadCredentialForProvider(providerName, params);
+      //   HashMap<String,String> cfg = this.getConfiguration(providerName);
+      //   final String authVersion = (String) cfg.get("auth_version");
 
-        URL url;
-        try {
-          if (urlString.contains("http")) {
-            url = new URL(urlString);
-          }  else {
-            String apiHost = (String) cfg.get("api_url");
-            url  = new URL(apiHost + urlString);
-          }
-        } catch (MalformedURLException ex) {
-          Log.e(TAG, "Bad url. Check request and try again: " + ex.getMessage());
-          exceptionCallback(ex, onComplete);
-          return;
-        }
+      //   URL url;
+      //   try {
+      //     if (urlString.contains("http")) {
+      //       url = new URL(urlString);
+      //     }  else {
+      //       String apiHost = (String) cfg.get("api_url");
+      //       url  = new URL(apiHost + urlString);
+      //     }
+      //   } catch (MalformedURLException ex) {
+      //     Log.e(TAG, "Bad url. Check request and try again: " + ex.getMessage());
+      //     exceptionCallback(ex, onComplete);
+      //     return;
+      //   }
 
         
  
-      } catch (Exception ex) {
-        Log.e(TAG, "Exception when making request: " + ex.getMessage());
-        exceptionCallback(ex, onComplete);
-      }
+      // } catch (Exception ex) {
+      //   Log.e(TAG, "Exception when making request: " + ex.getMessage());
+      //   exceptionCallback(ex, onComplete);
+      // }
   }
 
   @ReactMethod
   public void getSavedAccounts(final ReadableMap options, final Callback onComplete) {
-    Log.d(TAG, "getSavedAccounts");
-    if (_credentialsStore != null) {
-    }
+    // Log.d(TAG, "getSavedAccounts");
   }
 
   @ReactMethod
@@ -243,102 +234,102 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   {
     Log.i(TAG, "getSavedAccount for " + providerName);
     
-    try {
-      Credential creds = this.loadCredentialForProvider(providerName, options);
-      HashMap<String,String> cfg = this.getConfiguration(providerName);
-      final String authVersion = (String) cfg.get("auth_version");
+    // try {
+    //   Credential creds = this.loadCredentialForProvider(providerName, options);
+    //   HashMap<String,String> cfg = this.getConfiguration(providerName);
+    //   final String authVersion = (String) cfg.get("auth_version");
 
-      WritableMap resp = Arguments.createMap();
-      WritableMap response = Arguments.createMap();
+    //   WritableMap resp = Arguments.createMap();
+    //   WritableMap response = Arguments.createMap();
 
-      resp.putString("provider", providerName);
+    //   resp.putString("provider", providerName);
 
-      if (creds == null) {
-        resp.putString("status", "error");
-        response.putString("msg", "No saved account");
+    //   if (creds == null) {
+    //     resp.putString("status", "error");
+    //     response.putString("msg", "No saved account");
 
-        resp.putMap("response", response);
-        onComplete.invoke(resp);
-        return;
-      }
+    //     resp.putMap("response", response);
+    //     onComplete.invoke(resp);
+    //     return;
+    //   }
 
-      Log.d(TAG, "accessTokenResponse = " + creds);
-      resp.putString("status", "ok");
+    //   Log.d(TAG, "accessTokenResponse = " + creds);
+    //   resp.putString("status", "ok");
       
-      response.putBoolean("authorized", true); // I think?
-      response.putString("uuid", "");
+    //   response.putBoolean("authorized", true); // I think?
+    //   response.putString("uuid", "");
       
-      if (authVersion.equals("1.0")) {
-        response.putString("oauth_token", creds.getAccessToken());
-      } else if (authVersion.equals("2.0")) {
-        // TODO
-      }
-      resp.putMap("response", response);
-      onComplete.invoke(null, resp);
+    //   if (authVersion.equals("1.0")) {
+    //     response.putString("oauth_token", creds.getAccessToken());
+    //   } else if (authVersion.equals("2.0")) {
+    //     // TODO
+    //   }
+    //   resp.putMap("response", response);
+    //   onComplete.invoke(null, resp);
       
-      } catch (IOException ex) {
-        Log.e(TAG, "Exception occurred when loading credentials: " + ex.getMessage());
-        exceptionCallback(ex, onComplete);
-      } catch (Exception ex) {
-        Log.e(TAG, "Exception occurred when loading credential: " + ex.getMessage());
-        exceptionCallback(ex, onComplete);
-      }
+    //   } catch (IOException ex) {
+    //     Log.e(TAG, "Exception occurred when loading credentials: " + ex.getMessage());
+    //     exceptionCallback(ex, onComplete);
+    //   } catch (Exception ex) {
+    //     Log.e(TAG, "Exception occurred when loading credential: " + ex.getMessage());
+    //     exceptionCallback(ex, onComplete);
+    //   }
   }
 
   @ReactMethod
   public void deauthorize(final String providerName, final Callback onComplete) {
     Log.i(TAG, "deauthorizing " + providerName);
-    try {
-      OAuthManager manager = this.getManager(providerName, null, true);
-      OAuthCallback<Boolean> cb = new OAuthCallback<Boolean>() {
-        @Override
-        public void run(OAuthFuture<Boolean> future) {
-          try {
-            Boolean res = future.getResult();
-            WritableMap resp = Arguments.createMap();
+    // try {
+    //   OAuthManager manager = this.getManager(providerName, null, true);
+    //   OAuthCallback<Boolean> cb = new OAuthCallback<Boolean>() {
+    //     @Override
+    //     public void run(OAuthFuture<Boolean> future) {
+    //       try {
+    //         Boolean res = future.getResult();
+    //         WritableMap resp = Arguments.createMap();
             
-            if (res) {
-              resp.putString("status", "ok");
-              onComplete.invoke(null, resp);
-            } else {
-              resp.putString("status", "error");
-              resp.putString("msg", "No account found");
-              onComplete.invoke(resp);
-            }
-          } catch (IOException ex) {
-            Log.d(TAG, "Exception in callback " + ex.getMessage());
-            exceptionCallback(ex, onComplete);
-          }
-        }
-      };
+    //         if (res) {
+    //           resp.putString("status", "ok");
+    //           onComplete.invoke(null, resp);
+    //         } else {
+    //           resp.putString("status", "error");
+    //           resp.putString("msg", "No account found");
+    //           onComplete.invoke(resp);
+    //         }
+    //       } catch (IOException ex) {
+    //         Log.d(TAG, "Exception in callback " + ex.getMessage());
+    //         exceptionCallback(ex, onComplete);
+    //       }
+    //     }
+    //   };
 
-      manager.deleteCredential(providerName, cb, new Handler());
-    } catch (Exception ex) {
-      Log.e(TAG, "Exception with deauthorize " + ex.getMessage());
-      exceptionCallback(ex, onComplete);
-    }
+    //   manager.deleteCredential(providerName, cb, new Handler());
+    // } catch (Exception ex) {
+    //   Log.e(TAG, "Exception with deauthorize " + ex.getMessage());
+    //   exceptionCallback(ex, onComplete);
+    // }
   }
 
-  private Credential loadCredentialForProvider(
-    final String providerName,
-    final ReadableMap options
-  ) throws Exception {
-    HashMap<String,String> cfg = this.getConfiguration(providerName);
-    final String authVersion = (String) cfg.get("auth_version");
+  // private Credential loadCredentialForProvider(
+  //   final String providerName,
+  //   final ReadableMap options
+  // ) throws Exception {
+  //   HashMap<String,String> cfg = this.getConfiguration(providerName);
+  //   final String authVersion = (String) cfg.get("auth_version");
 
-    AuthorizationFlow flow = this.oauthManagerFlow(providerName, options);
+  //   AuthorizationFlow flow = this.oauthManagerFlow(providerName, options);
 
-    Credential creds;
-    if (authVersion.equals("1.0")) {
-      creds = flow.load10aCredential(providerName);
-    } else if (authVersion.equals("2.0")) {
-      creds = flow.loadCredential(providerName);
-    } else {
-      return null;
-    }
+  //   Credential creds;
+  //   if (authVersion.equals("1.0")) {
+  //     creds = flow.load10aCredential(providerName);
+  //   } else if (authVersion.equals("2.0")) {
+  //     creds = flow.loadCredential(providerName);
+  //   } else {
+  //     return null;
+  //   }
 
-    return creds;
-  }
+  //   return creds;
+  // }
 
   private HashMap<String,String> getConfiguration(
     final String providerName
@@ -351,118 +342,118 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     return cfg;
   }
 
-  private OAuthManager getManager(
-    final String providerName,
-    @Nullable final ReadableMap params,
-    final boolean fullScreen
-  ) throws Exception {
-    Log.i(TAG, "getManager");
+  // private OAuthManager getManager(
+  //   final String providerName,
+  //   @Nullable final ReadableMap params,
+  //   final boolean fullScreen
+  // ) throws Exception {
+  //   Log.i(TAG, "getManager");
 
-    AuthorizationFlow flow = this.oauthManagerFlow(providerName, params);
-    AuthorizationDialogController ctrl = 
-      this.getController(providerName, fullScreen);
+  //   AuthorizationFlow flow = this.oauthManagerFlow(providerName, params);
+  //   AuthorizationDialogController ctrl = 
+  //     this.getController(providerName, fullScreen);
 
-    Log.d(TAG, "Creating manager " + flow + " " + ctrl);
-    OAuthManager manager = new OAuthManager(flow, ctrl);
+  //   Log.d(TAG, "Creating manager " + flow + " " + ctrl);
+  //   OAuthManager manager = new OAuthManager(flow, ctrl);
 
-    return manager;
-  }
+  //   return manager;
+  // }
 
-  private AuthorizationFlow oauthManagerFlow(
-    final String providerName,
-    final ReadableMap params
-  ) throws Exception {
-    Log.i(TAG, "oauthManagerFlow");
+  // private AuthorizationFlow oauthManagerFlow(
+  //   final String providerName,
+  //   final ReadableMap params
+  // ) throws Exception {
+  //   Log.i(TAG, "oauthManagerFlow");
 
-    HashMap<String,String> cfg = this.getConfiguration(providerName);
-    final String authVersion = (String) cfg.get("auth_version");
+  //   HashMap<String,String> cfg = this.getConfiguration(providerName);
+  //   final String authVersion = (String) cfg.get("auth_version");
 
-    ClientParametersAuthentication client;
+  //   ClientParametersAuthentication client;
 
-    if (authVersion.equals("1.0")) {
-      client = new ClientParametersAuthentication(
-        (String) cfg.get("consumer_key"),
-        (String) cfg.get("consumer_secret")
-      );
+  //   if (authVersion.equals("1.0")) {
+  //     client = new ClientParametersAuthentication(
+  //       (String) cfg.get("consumer_key"),
+  //       (String) cfg.get("consumer_secret")
+  //     );
     
-      AuthorizationFlow.Builder flowBuilder = new AuthorizationFlow.Builder(
-        BearerToken.authorizationHeaderAccessMethod(),
-        HTTP_TRANSPORT,
-        JSON_FACTORY,
-        new GenericUrl((String) cfg.get("access_token_url")),
-        client,
-        client.getClientId(),
-        (String) cfg.get("authorize_url")
-      )
-      .setCredentialStore(_credentialsStore);
+  //     AuthorizationFlow.Builder flowBuilder = new AuthorizationFlow.Builder(
+  //       BearerToken.authorizationHeaderAccessMethod(),
+  //       HTTP_TRANSPORT,
+  //       JSON_FACTORY,
+  //       new GenericUrl((String) cfg.get("access_token_url")),
+  //       client,
+  //       client.getClientId(),
+  //       (String) cfg.get("authorize_url")
+  //     )
+  //     .setCredentialStore(_credentialsStore);
 
-      if (((String) cfg.get("auth_version")).equals("1.0")) {
-        String tmpRequestUrl = (String) cfg.get("request_token_url");
-        flowBuilder.setTemporaryTokenRequestUrl(tmpRequestUrl);
-      }
+  //     if (((String) cfg.get("auth_version")).equals("1.0")) {
+  //       String tmpRequestUrl = (String) cfg.get("request_token_url");
+  //       flowBuilder.setTemporaryTokenRequestUrl(tmpRequestUrl);
+  //     }
 
-      if (params != null) {
-        String scopes = null;
-        if (params.hasKey("scopes")) {
-          scopes = params.getString("scopes");
-        } else if (cfg.containsKey("scopes")) {
-          scopes = (String) cfg.get("scopes");
-        }
+  //     if (params != null) {
+  //       String scopes = null;
+  //       if (params.hasKey("scopes")) {
+  //         scopes = params.getString("scopes");
+  //       } else if (cfg.containsKey("scopes")) {
+  //         scopes = (String) cfg.get("scopes");
+  //       }
 
-        if (scopes != null) {
-          flowBuilder.setScopes(scopes);
-        }
-      }
+  //       if (scopes != null) {
+  //         flowBuilder.setScopes(scopes);
+  //       }
+  //     }
       
-      return flowBuilder.build();
-    } else {
-      return null;
-    }
-  }
+  //     return flowBuilder.build();
+  //   } else {
+  //     return null;
+  //   }
+  // }
 
-  private AuthorizationDialogController getController(
-    final String providerName,
-    final boolean fullScreen
-  ) throws Exception {
-    Activity activity = mReactContext.getCurrentActivity();
-    FragmentManager fragmentManager = activity.getFragmentManager();
-    // OAuthManagerWebView act = new OAuthManagerWebView(mReactContext);
-    // FragmentManager fm = act.getSupportFragmentManager();
+  // private AuthorizationDialogController getController(
+  //   final String providerName,
+  //   final boolean fullScreen
+  // ) throws Exception {
+  //   Activity activity = mReactContext.getCurrentActivity();
+  //   FragmentManager fragmentManager = activity.getFragmentManager();
+  //   // OAuthManagerWebView act = new OAuthManagerWebView(mReactContext);
+  //   // FragmentManager fm = act.getSupportFragmentManager();
 
-    final HashMap<String,String> cfg = this.getConfiguration(providerName);
-    final String authVersion = (String) cfg.get("auth_version");
+  //   final HashMap<String,String> cfg = this.getConfiguration(providerName);
+  //   final String authVersion = (String) cfg.get("auth_version");
 
-    AuthorizationDialogController controller = 
-      new DialogFragmentController(fragmentManager, fullScreen) {
-        @Override
-        public String getRedirectUri() throws IOException {
-          // String redirectUrl = (String) cfg.get("callback_url");
-          // if (redirectUrl == null) {
-            String appName = (String) cfg.get("app_name");
-            // redirectUrl = appName + "://oauth-response/" + providerName;
-            String redirectUrl = "http://localhost/oauth-response/" + providerName;
-          // }
-          return redirectUrl;
-        }
+    // AuthorizationDialogController controller = 
+    //   new OAuthManagerFragmentController(fragmentManager, fullScreen) {
+    //     // @Override
+    //     public String getRedirectUri() throws IOException {
+    //       // String redirectUrl = (String) cfg.get("callback_url");
+    //       // if (redirectUrl == null) {
+    //         String appName = (String) cfg.get("app_name");
+    //         // redirectUrl = appName + "://oauth-response/" + providerName;
+    //         String redirectUrl = "http://localhost/oauth-response/" + providerName;
+    //       // }
+    //       return redirectUrl;
+    //     }
 
-        @Override
-        public boolean isJavascriptEnabledForWebView() {
-          return true;
-        }
+    //     // @Override
+    //     public boolean isJavascriptEnabledForWebView() {
+    //       return true;
+    //     }
 
-        @Override
-        public boolean disableWebViewCache() {
-          return false;
-        }
+    //     // @Override
+    //     public boolean disableWebViewCache() {
+    //       return false;
+    //     }
 
-        @Override
-        public boolean removePreviousCookie() {
-          return false;
-        }
-      };
+    //     // @Override
+    //     public boolean removePreviousCookie() {
+    //       return false;
+    //     }
+    //   };
 
-    return controller;
-  }
+  //   return controller;
+  // }
 
   private void exceptionCallback(Exception ex, final Callback onFail) {
     WritableMap error = Arguments.createMap();
