@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.text.TextUtils;
 import im.delight.android.webview.AdvancedWebView;
 
+import android.net.Uri;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,10 +19,13 @@ import java.io.IOException;
 
 import com.github.scribejava.core.model.OAuth1RequestToken;
 import com.github.scribejava.core.model.OAuth1AccessToken;
+import com.github.scribejava.core.model.OAuth2AccessToken;
+import com.github.scribejava.core.model.Token;
 
 import com.github.scribejava.core.model.OAuthRequest;
 import com.github.scribejava.core.oauth.OAuthService;
 import com.github.scribejava.core.oauth.OAuth10aService;
+import com.github.scribejava.core.oauth.OAuth20Service;
 import com.github.scribejava.core.exceptions.OAuthConnectionException;
 
 // Credit where credit is due:
@@ -36,8 +40,10 @@ public class OAuthManagerFragmentController {
 
   private String authVersion;
   private OAuth10aService oauth10aService;
+  private OAuth20Service oauth20Service;
   private String callbackUrl;
   private OAuth1RequestToken oauth1RequestToken;
+
   private Runnable onAccessToken;
   private OAuthManagerOnAccessTokenListener mListener;
 
@@ -58,6 +64,21 @@ public class OAuthManagerFragmentController {
     this.oauth10aService = oauthService;
     this.callbackUrl = callbackUrl;
   }
+
+  public OAuthManagerFragmentController(
+    android.app.FragmentManager fragmentManager,
+    final String providerName,
+    OAuth20Service oauthService,
+    final String callbackUrl
+  ) {
+    this.uiHandler = new Handler(Looper.getMainLooper());
+    this.fragmentManager = fragmentManager;
+
+    this.authVersion = "2.0";
+    this.oauth20Service = oauthService;
+    this.callbackUrl = callbackUrl;
+  }
+
 
   public void requestAuth(OAuthManagerOnAccessTokenListener listener) {
     mListener = listener;
@@ -116,12 +137,13 @@ public class OAuthManagerFragmentController {
     Log.d(TAG, "Loaded access token in OAuthManagerFragmentController");
     Log.d(TAG, "AccessToken: " + accessToken + " (raw: " + accessToken.getRawResponse() + ")");
 
-    if (authVersion.equals("1.0")) {
-      this.dismissDialog();
-      mListener.onOauth1AccessToken(accessToken);
-    } else {
+    this.dismissDialog();
+    mListener.onOAuth1AccessToken(accessToken);
+  }
 
-    }
+  public void loaded20AccessToken(final OAuth2AccessToken accessToken) {
+    this.dismissDialog();
+    mListener.onOAuth2AccessToken(accessToken);
   }
 
   public void onError() {
@@ -135,11 +157,21 @@ public class OAuthManagerFragmentController {
 
   public void getAccessToken(
     final AdvancedWebView webView, 
-    final String oauthVerifier
+    final String url
   ) {
-    Load10aAccessTokenTask task = new Load10aAccessTokenTask(
-      this, webView, oauth1RequestToken, oauthVerifier);
-    task.execute();
+    Uri responseUri = Uri.parse(url);
+    if (authVersion.equals("1.0")) {
+      String oauthToken = responseUri.getQueryParameter("oauth_token");
+      String oauthVerifier = responseUri.getQueryParameter("oauth_verifier");
+      Load1AccessTokenTask task = new Load1AccessTokenTask(
+        this, webView, oauth1RequestToken, oauthVerifier);
+      task.execute();
+    } else if (authVersion.equals("2.0")) {
+      String code = responseUri.getQueryParameter("code");
+      Load2AccessTokenTask task = new Load2AccessTokenTask(
+        this, webView, code);
+      task.execute();
+    }
   }
 
   ////// TASKS
@@ -185,6 +217,10 @@ public class OAuthManagerFragmentController {
           final String requestTokenUrl = 
             oauth10aService.getAuthorizationUrl(oauth1RequestToken);
           return requestTokenUrl;
+        } else if (authVersion.equals("2.0")) {
+          final String authorizationUrl =
+            oauth20Service.getAuthorizationUrl();
+          return authorizationUrl;
         } else {
           return null;
         }
@@ -204,21 +240,25 @@ public class OAuthManagerFragmentController {
       runOnMainThread(new Runnable() {
         @Override
         public void run() {
-          if (url != null) {
+          if (url == null) {
+            mCtrl.onError();
+            return;
+          }
+          if (authVersion.equals("1.0")) {
             mCtrl.setRequestToken(oauth1RequestToken);
             mWebView.loadUrl(url);
-          } else {
-            mCtrl.onError();
+          } else if (authVersion.equals("2.0")) {
+            mWebView.loadUrl(url);
           }
         }
       });
     }
   }
 
-  private class Load10aAccessTokenTask extends OAuthTokenTask<OAuth1AccessToken> {
+  private class Load1AccessTokenTask extends OAuthTokenTask<OAuth1AccessToken> {
     private String oauthVerifier;
 
-    public Load10aAccessTokenTask(
+    public Load1AccessTokenTask(
       OAuthManagerFragmentController ctrl, 
       AdvancedWebView view,
       OAuth1RequestToken requestToken,
@@ -231,13 +271,9 @@ public class OAuthManagerFragmentController {
     @Override
     protected OAuth1AccessToken doInBackground(Void... params) {
       try {
-        if (authVersion.equals("1.0")) {
-          final OAuth1AccessToken accessToken = 
-            oauth10aService.getAccessToken(oauth1RequestToken, oauthVerifier);
-          return accessToken;
-        } else {
-          return null;
-        }
+        final OAuth1AccessToken accessToken = 
+          (OAuth1AccessToken) oauth10aService.getAccessToken(oauth1RequestToken, oauthVerifier);
+        return accessToken;
       } catch (OAuthConnectionException ex) {
         Log.e(TAG, "OAuth connection exception: " + ex.getMessage());
         ex.printStackTrace();
@@ -254,11 +290,55 @@ public class OAuthManagerFragmentController {
       runOnMainThread(new Runnable() {
         @Override
         public void run() {
-          if (accessToken != null) {
-            mCtrl.loaded10aAccessToken(accessToken);
-          } else {
+          if (accessToken == null) {
             mCtrl.onError();
+            return;
           }
+          mCtrl.loaded10aAccessToken(accessToken);
+        }
+      });
+    }
+  }
+
+  private class Load2AccessTokenTask extends OAuthTokenTask<OAuth2AccessToken> {
+    private String authorizationCode;
+
+    public Load2AccessTokenTask(
+      OAuthManagerFragmentController ctrl, 
+      AdvancedWebView view,
+      String authorizationCode
+    ) {
+      super(ctrl, view);
+      this.authorizationCode = authorizationCode;
+    }
+
+    @Override
+    protected OAuth2AccessToken doInBackground(Void... params) {
+      try {
+        final OAuth2AccessToken accessToken =
+            (OAuth2AccessToken) oauth20Service.getAccessToken(authorizationCode);
+        return accessToken;
+      } catch (OAuthConnectionException ex) {
+        Log.e(TAG, "OAuth connection exception: " + ex.getMessage());
+        ex.printStackTrace();
+        return null;
+      } catch (IOException ex) {
+        Log.e(TAG, "An exception occurred getRequestToken: " + ex.getMessage());
+        ex.printStackTrace();
+        return null;
+      }
+    }
+
+    @Override
+    protected void onPostExecute(final OAuth2AccessToken accessToken) {
+      runOnMainThread(new Runnable() {
+        @Override
+        public void run() {
+          if (accessToken == null) {
+            mCtrl.onError();
+            return;
+          }
+          mCtrl.loaded20AccessToken(accessToken);
         }
       });
     }

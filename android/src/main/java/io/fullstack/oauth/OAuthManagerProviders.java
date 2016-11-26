@@ -2,6 +2,8 @@ package io.fullstack.oauth;
 
 import android.util.Log;
 import java.util.HashMap;
+import java.util.Random;
+
 import com.github.scribejava.core.builder.api.BaseApi;
 import com.github.scribejava.core.oauth.OAuthService;
 import com.github.scribejava.core.oauth.OAuth10aService;
@@ -10,7 +12,11 @@ import com.github.scribejava.core.model.OAuth1AccessToken;
 import com.github.scribejava.core.model.OAuth1RequestToken;
 import com.github.scribejava.core.model.OAuthRequest;
 
+import com.github.scribejava.core.model.OAuth2AccessToken;
+import com.github.scribejava.core.oauth.OAuth20Service;
+
 import com.github.scribejava.apis.TwitterApi;
+import com.github.scribejava.apis.FacebookApi;
 
 public class OAuthManagerProviders {
   private static final String TAG = "OAuthManagerProviders";
@@ -20,15 +26,23 @@ public class OAuthManagerProviders {
     final HashMap params,
     final String callbackUrl
   ) {
-    if (providerName.equals("twitter")) {
+    if (providerName.equalsIgnoreCase("twitter")) {
       return OAuthManagerProviders.twitterService(params, callbackUrl);
     } else {
       return null;
     }
   }
 
-  static public BaseApi getApiFor20Provider(final String providerName) {
-    return null;
+  static public OAuth20Service getApiFor20Provider(
+    final String providerName,
+    final HashMap params,
+    final String callbackUrl
+  ) {
+    if (providerName.equalsIgnoreCase("facebook")) {
+      return OAuthManagerProviders.facebookService(params, callbackUrl);
+    } else {
+      return null;
+    }
   }
 
   private static OAuth10aService twitterService(final HashMap cfg, final String callbackUrl) {
@@ -44,5 +58,28 @@ public class OAuthManagerProviders {
       builder.callback(callbackUrl);
     }
     return builder.build(TwitterApi.instance());
+  }
+
+  private static OAuth20Service facebookService(final HashMap cfg, final String callbackUrl) {
+    String clientKey = (String) cfg.get("client_id");
+    String clientSecret = (String) cfg.get("client_secret");
+    String state;
+    if (cfg.containsKey("state")) {
+      state = (String) cfg.get("state");
+    } else {
+      state = TAG + new Random().nextInt(999_999);
+    }
+
+    ServiceBuilder builder = new ServiceBuilder()
+      .apiKey(clientKey)
+      .apiSecret(clientSecret)
+      .state(state)
+      .debug();
+    
+    if (callbackUrl != null) {
+      builder.callback(callbackUrl);
+    }
+
+    return builder.build(FacebookApi.instance());
   }
 }

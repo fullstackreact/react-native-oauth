@@ -113,11 +113,7 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
 
         private boolean interceptUrl(WebView view, String url, boolean loadUrl) {
           if (isCallbackUri(url, mController.getCallbackUrl())) {
-            // We are on callback page
-            Uri responseUri = Uri.parse(url);
-            String oauthToken = responseUri.getQueryParameter("oauth_token");
-            String oauthVerifier = responseUri.getQueryParameter("oauth_verifier");
-            mController.getAccessToken(mWebView, oauthVerifier);
+            mController.getAccessToken(mWebView, url);
 
             return true;
           }

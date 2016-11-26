@@ -15,6 +15,7 @@ import android.text.TextUtils;
 import java.util.Collection;
 
 import com.github.scribejava.core.model.OAuth1AccessToken;
+import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.model.Token;
 import com.google.gson.reflect.TypeToken;
 
@@ -68,6 +69,17 @@ public class OAuthManagerStore {
       editor.putString(providerName, new Gson().toJson(accessToken));
     }
 
+    public void store(String providerName, final OAuth2AccessToken accessToken) {
+      if (accessToken == null) {
+        throw new IllegalArgumentException("Token is null");
+      }
+      if (providerName.equals("") || providerName == null) {
+        throw new IllegalArgumentException("Provider is null");
+      }
+      editor.putString(providerName, new Gson().toJson(accessToken));
+    }
+    
+
     public void commit() {
       editor.commit();
     }
@@ -89,74 +101,4 @@ public class OAuthManagerStore {
       editor.remove(providerName);
       this.commit();
     }
-
-    // private class CredentialList {
-    //   private HashMap<String, Credential> _credentials;
-    //   private SharedPreferences prefs; 
-      
-    //   public CredentialList(final SharedPreferences prefs) {
-    //     this.prefs = prefs;
-    //     _credentials = this.load();
-    //   }
-
-    //   public CredentialList add(String providerName, OAuth1AccessToken token) {
-    //     Credential cred = new Credential(providerName, token);
-    //     if (_credentials == null) {
-    //       _credentials = this.load();
-    //     }
-    //     Log.d(TAG, "adding " + providerName + " = " + cred + " ( " + new Gson().toJson(cred) + ")");
-    //     _credentials.put(providerName, cred);
-    //     this.saveMap();
-    //     return this;
-    //   }
-
-    //   public Set<String> keys() {
-    //     return _credentials.keySet();
-    //   }
-
-    //   public Credential getCredentialFor(String providerName) {
-    //     return _credentials.get(providerName);
-    //   }
-
-    //   public void delete(String providerName) {
-    //     SharedPreferences.Editor editor = prefs.edit();
-    //     editor.remove(providerName);
-    //   }
-
-    //   public void saveMap() {
-    //     SharedPreferences.Editor editor = prefs.edit();
-    //     editor.putString(MAP_TAG, new Gson().toJson(this._credentials));
-    //     editor.commit();
-    //     this.load();
-    //   }
-
-    //   public HashMap<String, Credential> load() {
-    //     _credentials = new Gson().fromJson(prefs.getString(MAP_TAG, null), MAP_TYPE);
-    //     return _credentials;
-    //   }
-    // }
-
-    // private class Credential {
-    //   private String providerName;
-    //   private OAuth1AccessToken oauth1AccessToken;
-    //   private String authVersion;
-
-    //   public Credential(String providerName, OAuth1AccessToken token) {
-    //     this.providerName = providerName;
-    //     this.oauth1AccessToken = token;
-    //     this.authVersion = "1.0";
-    //   }
-
-    //   public Token getToken() {
-    //     if (authVersion.equals("1.0")) {
-    //       return this.oauth1AccessToken;
-    //     } else {
-    //       return null;
-    //     }
-    //   }
-
-    //   public Credential createInstance(Type type) {
-    //     return new Credential()
-    //   }
-    // }
 }
