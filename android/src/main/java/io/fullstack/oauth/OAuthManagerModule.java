@@ -169,8 +169,13 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
             resp.putString("status", "ok");
             response.putString("uuid", accessToken.getParameter("user_id"));
-            response.putString("oauth_token", accessToken.getToken());
-            response.putString("oauth_secret", accessToken.getTokenSecret());
+            response.putString("provider", providerName);
+            
+            WritableMap credentials = Arguments.createMap();
+            credentials.putString("oauth_token", accessToken.getToken());
+            credentials.putString("oauth_secret", accessToken.getTokenSecret());
+            response.putMap("credentials", credentials);
+
             resp.putMap("response", response);
 
             callback.invoke(null, resp);
