@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.io.IOException;
 
 import com.github.scribejava.core.model.OAuth1RequestToken;
@@ -43,6 +45,7 @@ public class OAuthManagerFragmentController {
   private OAuth20Service oauth20Service;
   private String callbackUrl;
   private OAuth1RequestToken oauth1RequestToken;
+  private HashMap<String,Object> mCfg;
 
   private Runnable onAccessToken;
   private OAuthManagerOnAccessTokenListener mListener;
@@ -80,8 +83,9 @@ public class OAuthManagerFragmentController {
   }
 
 
-  public void requestAuth(OAuthManagerOnAccessTokenListener listener) {
+  public void requestAuth(HashMap<String,Object> cfg, OAuthManagerOnAccessTokenListener listener) {
     mListener = listener;
+    mCfg = cfg;
 
     runOnMainThread(new Runnable() {
       @Override
@@ -218,8 +222,28 @@ public class OAuthManagerFragmentController {
             oauth10aService.getAuthorizationUrl(oauth1RequestToken);
           return requestTokenUrl;
         } else if (authVersion.equals("2.0")) {
-          final String authorizationUrl =
-            oauth20Service.getAuthorizationUrl();
+
+          String authorizationUrl;
+
+          if (mCfg.containsKey("authorization_url_params")) {
+            final HashMap<String, Object> additionalParams = new HashMap<String, Object>();
+            additionalParams.put("access_type", "offline");
+            additionalParams.put("prompt", "consent");
+
+            Map<String,String> authUrlMap = (Map) mCfg.get("authorization_url_params");
+            if (authUrlMap != null) {
+              if (authUrlMap.containsKey("access_type")) {
+                additionalParams.put("access_type", (String) authUrlMap.get("access_type"));
+              }
+              if (authUrlMap.containsKey("prompt")) {
+                additionalParams.put("prompt", (String) authUrlMap.get("prompt"));
+              }
+            }
+            authorizationUrl = oauth20Service.getAuthorizationUrl(additionalParams);
+          } else {
+            authorizationUrl = oauth20Service.getAuthorizationUrl();
+          }
+
           return authorizationUrl;
         } else {
           return null;

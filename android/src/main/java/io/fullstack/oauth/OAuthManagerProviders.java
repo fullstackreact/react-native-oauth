@@ -17,6 +17,7 @@ import com.github.scribejava.core.oauth.OAuth20Service;
 
 import com.github.scribejava.apis.TwitterApi;
 import com.github.scribejava.apis.FacebookApi;
+import com.github.scribejava.apis.GoogleApi20;
 
 public class OAuthManagerProviders {
   private static final String TAG = "OAuthManagerProviders";
@@ -40,6 +41,8 @@ public class OAuthManagerProviders {
   ) {
     if (providerName.equalsIgnoreCase("facebook")) {
       return OAuthManagerProviders.facebookService(params, callbackUrl);
+    } else if (providerName.equalsIgnoreCase("google")) {
+      return OAuthManagerProviders.googleService(params, callbackUrl);
     } else {
       return null;
     }
@@ -81,5 +84,33 @@ public class OAuthManagerProviders {
     }
 
     return builder.build(FacebookApi.instance());
+  }
+
+  private static OAuth20Service googleService(final HashMap cfg, final String callbackUrl) {
+    String clientKey = (String) cfg.get("client_id");
+    String clientSecret = (String) cfg.get("client_secret");
+    String state;
+    if (cfg.containsKey("state")) {
+      state = (String) cfg.get("state");
+    } else {
+      state = TAG + new Random().nextInt(999_999);
+    }
+    String scope = "profile";
+    if (cfg.containsKey("scope")) {
+      scope = (String) cfg.get("scope");
+    }
+
+    ServiceBuilder builder = new ServiceBuilder()
+      .apiKey(clientKey)
+      .apiSecret(clientSecret)
+      .state(state)
+      .scope(scope)
+      .debug();
+    
+    if (callbackUrl != null) {
+      builder.callback(callbackUrl);
+    }
+
+    return builder.build(GoogleApi20.instance());
   }
 }

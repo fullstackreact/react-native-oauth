@@ -260,7 +260,8 @@ Finally, add the `client_id` credential as the id from the url page as well as t
 const config =  {
   google: {
     callback_url: `[IOS SCHEME]:/google`,
-    client_id: 'YOUR_CLIENT_ID'
+    client_id: 'YOUR_CLIENT_ID',
+    client_secret: 'YOUR_CLIENT_SECRET'
   }
 }
 ```

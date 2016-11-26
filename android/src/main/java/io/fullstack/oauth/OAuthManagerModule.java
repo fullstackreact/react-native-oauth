@@ -61,7 +61,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   private Context context;
   private ReactContext mReactContext;
 
-  private HashMap _configuration = new HashMap<String, HashMap<String,String>>();
+  private HashMap _configuration = new HashMap<String, HashMap<String,Object>>();
   private ArrayList _callbackUrls  = new ArrayList<String>();
   private OAuthManagerStore _credentialsStore;
 
@@ -92,7 +92,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     
 
     // Keep configuration map
-    HashMap<String, String> cfg = new HashMap<String,String>();
+    HashMap<String, Object> cfg = new HashMap<String,Object>();
 
     ReadableMapKeySetIterator iterator = params.keySetIterator();
     while (iterator.hasNextKey()) {
@@ -122,7 +122,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   {
     try {
       final OAuthManagerModule self = this;
-      HashMap<String,String> cfg = this.getConfiguration(providerName);
+      HashMap<String,Object> cfg = this.getConfiguration(providerName);
       final String authVersion = (String) cfg.get("auth_version");
       Activity activity = mReactContext.getCurrentActivity();
       FragmentManager fragmentManager = activity.getFragmentManager();
@@ -153,7 +153,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
         OAuthManagerFragmentController ctrl =
           new OAuthManagerFragmentController(fragmentManager, providerName, service, callbackUrl);
 
-        ctrl.requestAuth(listener);
+        ctrl.requestAuth(cfg, listener);
       } else if (authVersion.equals("2.0")) {
         final OAuth20Service service =
           OAuthManagerProviders.getApiFor20Provider(providerName, cfg, callbackUrl);
@@ -161,7 +161,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
         OAuthManagerFragmentController ctrl =
           new OAuthManagerFragmentController(fragmentManager, providerName, service, callbackUrl);
 
-        ctrl.requestAuth(listener);
+        ctrl.requestAuth(cfg, listener);
       } else {
         Log.d(TAG, "Auth version unknown: " + (String) cfg.get("auth_version"));
       }
@@ -180,7 +180,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
       Log.i(TAG, "makeRequest called for " + providerName + " to " + urlString);
       try {
-        HashMap<String,String> cfg = this.getConfiguration(providerName);
+        HashMap<String,Object> cfg = this.getConfiguration(providerName);
         final String authVersion = (String) cfg.get("auth_version");
 
         URL url;
@@ -230,7 +230,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
           final OAuth10aService service = 
             OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null);
           OAuth1AccessToken token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
-
+          
           request = new OAuthRequest(httpVerb, url.toString(), service);
           service.signRequest(token, request);
         } else if (authVersion.equals("2.0")) {
@@ -283,7 +283,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     final Callback onComplete)
   {
     try {
-      HashMap<String,String> cfg = this.getConfiguration(providerName);
+      HashMap<String,Object> cfg = this.getConfiguration(providerName);
       final String authVersion = (String) cfg.get("auth_version");
 
       Log.i(TAG, "getSavedAccount for " + providerName);
@@ -291,11 +291,18 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
       if (authVersion.equals("1.0")) {
         OAuth1AccessToken token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
         Log.d(TAG, "Found token: " + token);
+        if (token == null || token.equals("")) {
+          throw new Exception("No token found");
+        }
 
         WritableMap resp = this.accessTokenResponse(providerName, token, authVersion);
         onComplete.invoke(null, resp);
       } else if (authVersion.equals("2.0")) {
         OAuth2AccessToken token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
+        
+        if (token == null || token.equals("")) {
+          throw new Exception("No token found");
+        }
         WritableMap resp = this.accessTokenResponse(providerName, token, authVersion);
         onComplete.invoke(null, resp);
       } else {
@@ -316,7 +323,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   public void deauthorize(final String providerName, final Callback onComplete) {
     try {
       Log.i(TAG, "deauthorizing " + providerName);
-      HashMap<String,String> cfg = this.getConfiguration(providerName);
+      HashMap<String,Object> cfg = this.getConfiguration(providerName);
       final String authVersion = (String) cfg.get("auth_version");
 
       _credentialsStore.delete(providerName);
@@ -331,14 +338,14 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   }
 
 
-  private HashMap<String,String> getConfiguration(
+  private HashMap<String,Object> getConfiguration(
     final String providerName
   ) throws Exception {
     if (!_configuration.containsKey(providerName)) {
       throw new ProviderNotConfiguredException("Provider not configured: " + providerName);
     }
 
-    HashMap<String,String> cfg = (HashMap) _configuration.get(providerName);
+    HashMap<String,Object> cfg = (HashMap) _configuration.get(providerName);
     return cfg;
   }
 
@@ -374,7 +381,12 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
     resp.putString("status", "ok");
     resp.putString("provider", providerName);
-    response.putString("uuid", accessToken.getParameter("user_id"));
+    try {
+      response.putString("uuid", accessToken.getParameter("user_id"));
+    } catch (Exception ex) {
+      Log.e(TAG, "Exception while getting the access token");
+      ex.printStackTrace();
+    }
     
     WritableMap credentials = Arguments.createMap();
     credentials.putString("oauth_token", accessToken.getAccessToken());
