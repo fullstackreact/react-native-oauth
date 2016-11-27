@@ -43,7 +43,9 @@
 
 - (void) clearPendingAccount
 {
-  _account = nil;
+    NSLog(@"called clearPendingAccount: %@", _account);
+    [_account cancelAuthentication];
+    _account = nil;
 }
 
 - (void (^)(DCTAuthResponse *response, NSError *error)) getHandler:(DCTAuthAccount *) account

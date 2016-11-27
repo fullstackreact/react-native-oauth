@@ -120,7 +120,7 @@ export default class OAuthManager {
       .reduce((sum, key) => ({
         ...sum,
         [key]: typeof config[key] === 'function' ? config[key](config) : config[key]
-      }), {})
+      }), {});
 
     validate(config);
     return promisify('configureProvider')(name, config);

@@ -25,16 +25,27 @@
 @synthesize callbackUrls = _callbackUrls;
 
 static NSString *const AUTH_MANAGER_TAG = @"AUTH_MANAGER";
+static OAuthManager *manager;
+static dispatch_once_t onceToken;
 
 RCT_EXPORT_MODULE(OAuthManager);
 
+// Run on a different thread
+- (dispatch_queue_t)methodQueue
+{
+  return dispatch_queue_create("io.fullstack.oauth", DISPATCH_QUEUE_SERIAL);
+}
+
 + (instancetype)sharedManager {
-    static OAuthManager *manager;
-    static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         manager = [self new];
     });
     return manager;
+}
+
++ (void) reset {
+    onceToken = nil;
+    manager = nil;
 }
 
 - (instancetype) init {
@@ -59,10 +70,7 @@ RCT_EXPORT_MODULE(OAuthManager);
 
 - (void) didBecomeActive:(NSNotification *)notification
 {
-    NSLog(@"Application reopened: %@", @(self.pendingAuthentication));
-    for (OAuthClient *client in _pendingClients) {
-        [self removePending:client];
-    }
+    // TODO?
 }
 
 /*
@@ -74,7 +82,7 @@ RCT_EXPORT_MODULE(OAuthManager);
     DCTAuthPlatform *authPlatform = [DCTAuthPlatform sharedPlatform];
     
     [authPlatform setURLOpener: ^void(NSURL *URL, DCTAuthPlatformCompletion completion) {
-        [sharedManager setPendingAuthentication:YES];
+        // [sharedManager setPendingAuthentication:YES];
         [application openURL:URL];
         completion(YES);
     }];
@@ -101,13 +109,10 @@ RCT_EXPORT_MODULE(OAuthManager);
     OAuthManager *manager = [OAuthManager sharedManager];
     NSString *strUrl = [manager stringHost:url];
 
-    NSLog(@"Handling handleOpenUrl: %@", strUrl);
-    
     if ([manager.callbackUrls indexOfObject:strUrl] != NSNotFound) {
         return [DCTAuth handleURL:url];
     }
     
-
     [manager clearPending];
     
     return [RCTLinkingManager application:application openURL:url
@@ -191,14 +196,14 @@ RCT_EXPORT_METHOD(getSavedAccounts:(NSDictionary *) opts
   callback:(RCTResponseSenderBlock) callback)
 {
     OAuthManager *manager = [OAuthManager sharedManager];
-    DCTAuthAccountStore *store = [self accountStore];
+    DCTAuthAccountStore *store = [manager accountStore];
     
     NSSet *accounts = [store accounts];
     NSMutableArray *respAccounts = [[NSMutableArray alloc] init];
     for (DCTAuthAccount *account in [accounts allObjects]) {
         NSString *providerName = account.type;
         NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
-        NSMutableDictionary *acc = [[self getAccountResponse:account cfg:cfg] mutableCopy];
+        NSMutableDictionary *acc = [[manager getAccountResponse:account cfg:cfg] mutableCopy];
         [acc setValue:providerName forKey:@"provider"];
         [respAccounts addObject:acc];
     }
@@ -215,17 +220,18 @@ RCT_EXPORT_METHOD(getSavedAccount:(NSString *)providerName
     OAuthManager *manager = [OAuthManager sharedManager];
     NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
     
-    DCTAuthAccount *existingAccount = [self accountForProvider:providerName];
+    DCTAuthAccount *existingAccount = [manager accountForProvider:providerName];
     if (existingAccount != nil) {
         if ([existingAccount isAuthorized]) {
             NSDictionary *accountResponse = [manager getAccountResponse:existingAccount cfg:cfg];
             callback(@[[NSNull null], @{
                            @"status": @"ok",
+                           @"provider": providerName,
                            @"response": accountResponse
                            }]);
             return;
         } else {
-            DCTAuthAccountStore *store = [self accountStore];
+            DCTAuthAccountStore *store = [manager accountStore];
             [store deleteAccount:existingAccount];
             NSDictionary *errResp = @{
                                       @"status": @"error",
@@ -250,9 +256,9 @@ RCT_EXPORT_METHOD(deauthorize:(NSString *) providerName
                   callback:(RCTResponseSenderBlock) callback)
 {
     OAuthManager *manager = [OAuthManager sharedManager];
-    DCTAuthAccountStore *store = [self accountStore];
+    DCTAuthAccountStore *store = [manager accountStore];
     
-    DCTAuthAccount *existingAccount = [self accountForProvider:providerName];
+    DCTAuthAccount *existingAccount = [manager accountForProvider:providerName];
     if (existingAccount != nil) {
         [store deleteAccount:existingAccount];
         callback(@[[NSNull null], @{
@@ -276,19 +282,21 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                   callback:(RCTResponseSenderBlock)callback)
 {
     OAuthManager *manager = [OAuthManager sharedManager];
+    [manager clearPending];
     NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
     
-    DCTAuthAccount *existingAccount = [self accountForProvider:providerName];
+    DCTAuthAccount *existingAccount = [manager accountForProvider:providerName];
     if (existingAccount != nil) {
         if ([existingAccount isAuthorized]) {
             NSDictionary *accountResponse = [manager getAccountResponse:existingAccount cfg:cfg];
             callback(@[[NSNull null], @{
                            @"status": @"ok",
+                           @"provider": providerName,
                            @"response": accountResponse
                            }]);
             return;
         } else {
-            DCTAuthAccountStore *store = [self accountStore];
+            DCTAuthAccountStore *store = [manager accountStore];
             [store deleteAccount:existingAccount];
         }
     }
@@ -317,7 +325,6 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
     } else if ([version isEqualToString:@"2.0"]) {
         client = (OAuthClient *)[[OAuth2Client alloc] init];
     } else {
-        NSLog(@"Provider number: %@", version);
         return callback(@[@{
                               @"status": @"error",
                               @"msg": @"Unknown provider"
@@ -326,7 +333,7 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
 
     // Store pending client
     
-    [self addPending:client];
+    [manager addPending:client];
       _pendingAuthentication = YES;
     
     [client authorizeWithUrl:providerName
@@ -334,12 +341,11 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                          cfg:cfg
      
                    onSuccess:^(DCTAuthAccount *account) {
-                    NSLog(@"authorizeWithUrl: %@", account);
                        NSDictionary *accountResponse = [manager getAccountResponse:account cfg:cfg];
                        _pendingAuthentication = NO;
                        [manager removePending:client];
                        
-                       DCTAuthAccountStore *store = [self accountStore];
+                       DCTAuthAccountStore *store = [manager accountStore];
                        [store saveAccount:account];
                        
                        callback(@[[NSNull null], @{
@@ -365,7 +371,7 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
   OAuthManager *manager = [OAuthManager sharedManager];
   NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
     
-    DCTAuthAccount *existingAccount = [self accountForProvider:providerName];
+    DCTAuthAccount *existingAccount = [manager accountForProvider:providerName];
     if (existingAccount == nil) {
         NSDictionary *errResp = @{
                                @"status": @"error",
@@ -397,7 +403,7 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
     
     NSString *methodStr = [opts valueForKey:@"method"];
     
-    DCTAuthRequestMethod method = [self getRequestMethodByString:methodStr];
+    DCTAuthRequestMethod method = [manager getRequestMethodByString:methodStr];
     
     DCTAuthRequest *request =
         [[DCTAuthRequest alloc]
@@ -531,6 +537,7 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         [manager removePending:client];
     }
     manager.pendingClients = [NSArray array];
+    _pendingAuthentication = NO;
 }
 
 - (void) addPending:(OAuthClient *) client
@@ -543,12 +550,12 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
 
 - (void) removePending:(OAuthClient *) client
 {
+    [client clearPendingAccount];
     OAuthManager *manager = [OAuthManager sharedManager];
     NSUInteger idx = [manager.pendingClients indexOfObject:client];
     if ([manager.pendingClients count] <= idx) {
         NSMutableArray *newPendingClients = [manager.pendingClients mutableCopy];
         [newPendingClients removeObjectAtIndex:idx];
-        [client cancelAuthentication];
         manager.pendingClients = newPendingClients;
     }
 }
