@@ -508,8 +508,8 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
     if ([version isEqualToString:@"1.0"]) {
         DCTOAuth1Credential *credential = account.credential;
         NSDictionary *cred = @{
-                               @"oauth_token": credential.oauthToken,
-                               @"oauth_secret": credential.oauthTokenSecret
+                               @"access_token": credential.oauthToken,
+                               @"access_token_secret": credential.oauthTokenSecret
                                };
         [accountResponse setObject:cred forKey:@"credentials"];
     } else if ([version isEqualToString:@"2.0"]) {
