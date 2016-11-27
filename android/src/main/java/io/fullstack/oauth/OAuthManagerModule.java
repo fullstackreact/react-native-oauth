@@ -225,20 +225,38 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
           httpVerb = Verb.GET;
         }
         
-        OAuthRequest request;
+        OAuthRequest request = new OAuthRequest(httpVerb, url.toString(), service);
+
+        // Params
+        if (params.hasKey("params")) {
+          final Map<String,String> params = (Map<String,String>) params.get("params");
+          ReadableMapKeySetIterator iterator = params.keySetIterator();
+          while (iterator.hasNextKey()) {
+            String key = iterator.nextKey();
+            ReadableType readableType = params.getType(key);
+            switch(readableType) {
+              case String:
+                String val = params.getString(key);
+                // String escapedVal = Uri.encode(val);
+                request.addParameter(key, val);
+                break;
+              default:
+                throw new IllegalArgumentException("Could not read object with key: " + key);
+            }
+          }
+        }
+
         if (authVersion.equals("1.0")) {
           final OAuth10aService service = 
             OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null);
           OAuth1AccessToken token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
           
-          request = new OAuthRequest(httpVerb, url.toString(), service);
           service.signRequest(token, request);
         } else if (authVersion.equals("2.0")) {
           final OAuth20Service service =
             OAuthManagerProviders.getApiFor20Provider(providerName, cfg, null);
           OAuth2AccessToken token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
 
-          request = new OAuthRequest(httpVerb, url.toString(), service);
           service.signRequest(token, request);
         } else {
           // Some kind of error here

@@ -30,7 +30,8 @@ manager.authorize('google', {scopes: 'profile email'})
 
 * Isolates the OAuth experience to a few simple methods.
 * Atomatically stores the tokens for later retrieval
-* Works with many providers and relatively simple to add a new provider
+* Works with many providers and simple to add a new provider
+* Works on both Android and iOS
 
 ## Installation
 
@@ -76,7 +77,7 @@ Finally, open the created `.xcworkspace` in the `ios/` directory (**NOT THE `.xp
 
 ### Android setup
 
-Coming soon (looking for contributors).
+All we need to do is link `react-native-oauth` to our project and Android should just work.
 
 ## Handle deep linking loading
 
@@ -123,6 +124,12 @@ In addition, we'll need to set up the handlers within the iOS app. Add the follo
 ```
 
 When our app loads up with a request that is coming back from OAuthManager _and_ matches the url pattern, OAuthManager will take over and handle the rest and storing the credentials for later use.
+
+### Android setup
+
+After we link `react-native-oauth` to our application, we're ready to go. Android integration is much simpler, thanks to the in-app browser ability for our apps. `react-native-oauth` handles this for you.
+
+One note, *all* of the callback urls follow the scheme: `http://localhost/[provider_name]`. Make sure this is set as a configuration for each provider below (documented in the provider setup sections).
 
 ### Adding URL schemes
 
@@ -180,7 +187,7 @@ The `consumer_key` and `consumer_secret` values are _generally_ provided by the 
 
 The following list are the providers we've implemented thus far in `react-native-oauth` and the _required_ keys to pass when configuring the provider:
 
-#### Twitter
+#### Twitter (iOS/Android)
 
 To authenticate against twitter, we need to register a Twitter application. Register your twitter application (or create a new one at [apps.twitter.com](https://apps.twitter.com)). 
 
@@ -205,7 +212,7 @@ const config =  {
 }
 ```
 
-#### Facebook
+#### Facebook (iOS/Android)
 
 To add facebook authentication, we'll need to have a Facebook app. To create one (or use an existing one), navigate to [developers.facebook.com/](https://developers.facebook.com/). 
 
@@ -238,7 +245,7 @@ const config =  {
 }
 ```
 
-#### Google
+#### Google  (iOS/Android)
 
 To add Google auth to our application, first we'll need to create a google application. Create or use an existing one by heading to the [developers.google.com/](https://developers.google.com/) page (or the console directly at [https://console.developers.google.com](https://console.developers.google.com)). 
 
@@ -246,7 +253,7 @@ To add Google auth to our application, first we'll need to create a google appli
 
 We need to enable the `Identity Toolkit API` API. Click on `Enable API` and add this api to your app. Once it's enabled, we'll need to collect our credentials.
 
-Navigate to the `Credentials` tab and create a new credential. Create a web API credential. Take note of the client id and the URL scheme. In addition, make sure to set the bundle ID as the bundle id in our application in Xcode:
+Navigate to the `Credentials` tab and create a new credential. Create a **web API credential**. Take note of the client id and the URL scheme. In addition, make sure to set the bundle ID as the bundle id in our application in Xcode:
 
 ![](./resources/google/creds.png)
 
@@ -266,8 +273,31 @@ const config =  {
 }
 ```
 
-## Authenticating against our providers
+#### Github  (iOS/Android)
 
+Adding Github auth to our application is pretty simple as well. We'll need to create a web application on the github apps page, which can be found at [https://github.com/settings/developers](https://github.com/settings/developers). Create one, making sure to add _two_ apps (one for iOS and one for Android) with the callback urls as:
+
+* ios: [app_name]:// oauth (for example: `firestackexample://oauth`)
+* android: http://localhost/github
+
+Take note of the `client_id` and `client_secret`
+
+![](./resources/github/apps.png)
+
+The `iOS URL Scheme` is the same as the twitter version, which means we'll just add the app name as a URL scheme (i.e. `firestackexample`).
+
+Add the `client_id` and `client_secret` credentials to your configuration object:
+
+```javascript
+const config =  {
+  github: {
+    client_id: 'YOUR_CLIENT_ID',
+    client_secret: 'YOUR_CLIENT_SECRET'
+  }
+}
+```
+
+## Authenticating against our providers
 
 We can use the manager in our app using the `authorize()` method on the manager.
 
@@ -349,6 +379,19 @@ authManager
   });
 ```
 
+To add more data to our requests, we can pass a third argument:
+
+```javascript
+authManager
+  .makeRequest('facebook', '/me', { 
+    headers: { 'Content-Type': 'application/java' }, 
+    params: { email: 'me+rocks@ari.io' }
+  })
+  .then(resp => {
+    console.log('Data ->', resp.data);
+  });
+```
+
 ## Getting authorized accounts
 
 Since OAuthManager handles storing user accounts, we can query it to see which accounts have already been authorized or not using `savedAccounts()`:
@@ -383,9 +426,8 @@ ___
 
 ## TODOS:
 
-* [ ] Handle reauthenticating tokens (automatically?)
 * [x] Simplify method of adding providers
-* [x] Complete [facebook](https://developers.facebook.com/docs/facebook-login) support
-* [ ] Add [github](https://developer.github.com/v3/oauth/) support
-* [x] Add [Google]() support
-* [ ] Add Android support
+* [x] Add github(https://developer.github.com/v3/oauth/) support
+* [x] Add Google support
+* [x] Add Facebook support
+* [x] Add Android support

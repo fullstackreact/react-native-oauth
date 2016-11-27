@@ -410,6 +410,14 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
          initWithRequestMethod:method
          URL:apiUrl
          items:items];
+
+    NSDictionary *body = [opts objectForKey:@"body"];
+    if (body != nil) {
+        for (NSString *key in body) {
+            NSData *data = [[NSString stringWithFormat:@"%@", [body valueForKey:key]] dataUsingEncoding:NSUTF8StringEncoding];
+            [request addMultiPartData:data withName:key type:@"application/json"]; // TODO: How should we handle different body types?
+        }
+    }
     
     request.account = existingAccount;
     
