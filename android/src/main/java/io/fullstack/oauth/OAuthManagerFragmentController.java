@@ -226,7 +226,7 @@ public class OAuthManagerFragmentController {
           String authorizationUrl;
 
           if (mCfg.containsKey("authorization_url_params")) {
-            final HashMap<String, Object> additionalParams = new HashMap<String, Object>();
+            final HashMap<String, String> additionalParams = new HashMap<String, String>();
             additionalParams.put("access_type", "offline");
             additionalParams.put("prompt", "consent");
 
