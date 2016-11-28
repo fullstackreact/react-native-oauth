@@ -35,8 +35,10 @@ manager.authorize('google', {scopes: 'profile email'})
 
 * Isolates the OAuth experience to a few simple methods.
 * Atomatically stores the tokens for later retrieval
-* Works with many providers and simple to add a new provider
+* Works with many providers and simple to add new providers
 * Works on both Android and iOS
+* Makes calling API methods a snap
+* Integrates seamlessly with Firestack (but can be used without it)
 
 ## Installation
 
