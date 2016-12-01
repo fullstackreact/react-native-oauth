@@ -64,6 +64,8 @@ $(SRCROOT)/../node_modules/react-native/Libraries/LinkingIOS
 
 ![](./resources/header-search-paths.png)
 
+Next, navigate to the neighboring "Build Phases" section of project settings, find the "Link Binary with Library" drop down, expand it, and click the "+" to add _libOAuthManager.a_ to the list.
+
 #### Automatically with [rnpm](https://github.com/rnpm/rnpm)
 
 To automatically link our `react-native-oauth` client to our application, use the `rnpm` tool. [rnpm](https://github.com/rnpm/rnpm) is a React Native package manager which can help to automate the process of linking package environments.
