@@ -223,28 +223,10 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
           httpVerb = Verb.TRACE;
         } else {
           httpVerb = Verb.GET;
-        }
+        }        
         
-        OAuthRequest request = new OAuthRequest(httpVerb, url.toString(), service);
-
-        // Params
-        if (params.hasKey("params")) {
-          final Map<String,String> params = (Map<String,String>) params.get("params");
-          ReadableMapKeySetIterator iterator = params.keySetIterator();
-          while (iterator.hasNextKey()) {
-            String key = iterator.nextKey();
-            ReadableType readableType = params.getType(key);
-            switch(readableType) {
-              case String:
-                String val = params.getString(key);
-                // String escapedVal = Uri.encode(val);
-                request.addParameter(key, val);
-                break;
-              default:
-                throw new IllegalArgumentException("Could not read object with key: " + key);
-            }
-          }
-        }
+        final ReadableMap requestParams = ((Map<String,ReadableMap>) params).get("params");
+        OAuthRequest request = oauthRequestWithParams(providerName, cfg, authVersion, httpVerb, url, requestParams);
 
         if (authVersion.equals("1.0")) {
           final OAuth10aService service = 
@@ -287,6 +269,50 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
         Log.e(TAG, "Exception when making request: " + ex.getMessage());
         exceptionCallback(ex, onComplete);
       }
+  }
+
+  private OAuthRequest oauthRequestWithParams(
+    final String providerName,
+    final HashMap<String,Object> cfg,
+    final String authVersion,
+    final Verb httpVerb,
+    final URL url,
+    final ReadableMap params
+    ) throws Exception {
+    OAuthRequest request;
+
+    if (authVersion.equals("1.0")) {  
+      final OAuth10aService service = 
+          OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null);
+      request = new OAuthRequest(httpVerb, url.toString(), service);
+    } else if (authVersion.equals("2.0")) {
+      final OAuth20Service service =
+        OAuthManagerProviders.getApiFor20Provider(providerName, cfg, null);
+
+      request = new OAuthRequest(httpVerb, url.toString(), service);
+    } else {
+      Log.e(TAG, "Error in making request method");
+      throw new Exception("Provider not handled yet");
+    }
+          // Params
+    if (params.hasKey("params")) {
+      ReadableMapKeySetIterator iterator = params.keySetIterator();
+      while (iterator.hasNextKey()) {
+        String key = iterator.nextKey();
+        ReadableType readableType = params.getType(key);
+        switch(readableType) {
+          case String:
+            String val = params.getString(key);
+            // String escapedVal = Uri.encode(val);
+            request.addParameter(key, val);
+            break;
+          default:
+            throw new IllegalArgumentException("Could not read object with key: " + key);
+        }
+      }
+    }
+
+    return request;
   }
 
   @ReactMethod
