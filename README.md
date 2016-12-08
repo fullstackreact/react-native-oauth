@@ -84,7 +84,24 @@ Finally, open the created `.xcworkspace` in the `ios/` directory (**NOT THE `.xp
 
 ### Android setup
 
-All we need to do is link `react-native-oauth` to our project and Android should just work.
+We need to handle two steps in the installation process: 
+
+* link `react-native-oauth` to our project (`react-native link react-native-oauth`)
+* Add the `maven { url "https://jitpack.io" }` to our `android/build.gradle` file under `allProjects`. For example:
+
+```java
+allprojects {
+    repositories {
+        mavenLocal()
+        jcenter()
+        maven { url "https://jitpack.io" }
+        maven {
+            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+            url "$rootDir/../node_modules/react-native/android"
+        }
+    }
+}
+```
 
 ## Handle deep linking loading
 
