@@ -339,14 +339,12 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
     [client authorizeWithUrl:providerName
                          url:callbackUrl
                          cfg:cfg
+                       store:[manager accountStore]
      
                    onSuccess:^(DCTAuthAccount *account) {
                        NSDictionary *accountResponse = [manager getAccountResponse:account cfg:cfg];
                        _pendingAuthentication = NO;
                        [manager removePending:client];
-                       
-                       DCTAuthAccountStore *store = [manager accountStore];
-                       [store saveAccount:account];
                        
                        callback(@[[NSNull null], @{
                                       @"status": @"ok",
@@ -515,21 +513,25 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
     
     if ([version isEqualToString:@"1.0"]) {
         DCTOAuth1Credential *credential = account.credential;
-        NSDictionary *cred = @{
-                               @"access_token": credential.oauthToken,
-                               @"access_token_secret": credential.oauthTokenSecret
-                               };
-        [accountResponse setObject:cred forKey:@"credentials"];
+        if (credential != nil) {
+            NSDictionary *cred = @{
+                                   @"access_token": credential.oauthToken,
+                                   @"access_token_secret": credential.oauthTokenSecret
+                                   };
+            [accountResponse setObject:cred forKey:@"credentials"];
+        }
     } else if ([version isEqualToString:@"2.0"]) {
         DCTOAuth2Credential *credential = account.credential;
-        NSMutableDictionary *cred = [@{
-                                       @"access_token": credential.accessToken,
-                                       @"type": @(credential.type)
-                                       } mutableCopy];
-        if (credential.refreshToken != nil) {
-            [cred setValue:credential.refreshToken forKey:@"refresh_token"];
+        if (credential != nil) {
+            NSMutableDictionary *cred = [@{
+                                           @"access_token": credential.accessToken,
+                                           @"type": @(credential.type)
+                                           } mutableCopy];
+            if (credential.refreshToken != nil) {
+                [cred setValue:credential.refreshToken forKey:@"refresh_token"];
+            }
+            [accountResponse setObject:cred forKey:@"credentials"];
         }
-        [accountResponse setObject:cred forKey:@"credentials"];
     }
     [accountResponse setValue:[account identifier] forKey:@"identifier"];
     if (account.userInfo != nil) {
