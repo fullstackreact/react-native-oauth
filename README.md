@@ -12,6 +12,8 @@ The `react-native-oauth` library provides an interface to OAuth 1.0 and OAuth 2.
 This library cuts out the muck of dealing with the [OAuth 1.0](https://tools.ietf.org/html/rfc5849) and [OAuth 2.0](http://oauth.net/2/) protocols in react-native apps. The API is incredibly simple and straight-forward and is intended on getting you up and running quickly with OAuth providers (such as Facebook, Github, Twitter, etc).
 
 ```javascript
+import OAuthManager from 'react-native-oauth';
+
 const manager = new OAuthManager('firestackexample')
 manager.configure({
   twitter: {
