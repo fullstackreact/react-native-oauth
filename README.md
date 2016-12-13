@@ -59,10 +59,12 @@ Since `react-native-oauth` depends upon the `RCTLinkingManager` (from react-nati
 In your app, add the following line to your `HEADER SEARCH PATHS`:
 
 ```
-$(SRCROOT)/../node_modules/react-native/Libraries/LinkingiOS
+$(SRCROOT)/../node_modules/react-native/Libraries/LinkingIOS
 ```
 
 ![](./resources/header-search-paths.png)
+
+Next, navigate to the neighboring "Build Phases" section of project settings, find the "Link Binary with Library" drop down, expand it, and click the "+" to add _libOAuthManager.a_ to the list.
 
 #### Automatically with [rnpm](https://github.com/rnpm/rnpm)
 
