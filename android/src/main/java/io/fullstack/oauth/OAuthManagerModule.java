@@ -225,7 +225,10 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
           httpVerb = Verb.GET;
         }        
         
-        final ReadableMap requestParams = ((Map<String,ReadableMap>) params).get("params");
+        ReadableMap requestParams = null;
+        if (params != null && params.hasKey("params")) {
+          requestParams = params.getMap("params");
+        }
         OAuthRequest request = oauthRequestWithParams(providerName, cfg, authVersion, httpVerb, url, requestParams);
 
         if (authVersion.equals("1.0")) {
@@ -277,7 +280,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     final String authVersion,
     final Verb httpVerb,
     final URL url,
-    final ReadableMap params
+    @Nullable final ReadableMap params
     ) throws Exception {
     OAuthRequest request;
 
@@ -295,7 +298,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
       throw new Exception("Provider not handled yet");
     }
           // Params
-    if (params.hasKey("params")) {
+    if (params != null && params.hasKey("params")) {
       ReadableMapKeySetIterator iterator = params.keySetIterator();
       while (iterator.hasNextKey()) {
         String key = iterator.nextKey();
