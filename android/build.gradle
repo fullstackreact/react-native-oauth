@@ -44,22 +44,7 @@ allprojects {
 
 dependencies {
     compile 'com.facebook.react:react-native:+'
-    // compile 'com.wu-man:android-oauth-client:0.4.5@aar'
-    // compile 'com.google.android.gms:play-services-base:+'
-    // compile 'com.android.volley:volley:+'
     compile 'com.github.scribejava:scribejava-apis:+'
     compile 'com.github.delight-im:Android-AdvancedWebView:v3.0.0'
     compile 'com.google.code.gson:gson:+'
-
-    // compile 'com.google.api-client:google-api-client-android:1.19.0' exclude module: 'httpclient'
-    // compile 'com.google.http-client:google-http-client-gson:1.19.0' exclude module: 'httpclient'
-
-    // compile('com.google.api-client:google-api-client-android:1.15.0-rc') {
-    //     exclude group: 'com.google.android.google-play-services', module: 'google-play-services'
-    //     exclude group: 'junit', module: 'junit'
-    //     exclude group: 'com.google.android', module: 'android'
-    // }
-    // // compile 'com.google.oauth-client:google-oauth-client-java6:1.15.0-rc'
-    // compile 'com.google.apis:google-api-services-oauth2:v1-rev129-1.22.0'
-    // compile 'com.google.http-client:google-http-client-jackson2:1.22.0'
 }
