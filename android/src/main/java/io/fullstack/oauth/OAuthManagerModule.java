@@ -41,6 +41,7 @@ import com.github.scribejava.core.builder.ServiceBuilder;
 import com.github.scribejava.core.model.OAuth1AccessToken;
 import com.github.scribejava.core.model.OAuth1RequestToken;
 import com.github.scribejava.core.model.OAuthRequest;
+import com.github.scribejava.core.model.OAuthConfig;
 import com.github.scribejava.core.model.Response;
 import com.github.scribejava.core.model.Verb;
 import com.github.scribejava.core.oauth.OAuth10aService;
@@ -287,12 +288,15 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     if (authVersion.equals("1.0")) {  
       final OAuth10aService service = 
           OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null);
-      request = new OAuthRequest(httpVerb, url.toString(), service);
+      
+      final OAuthConfig config = service.getConfig();
+      request = new OAuthRequest(httpVerb, url.toString(), config);
     } else if (authVersion.equals("2.0")) {
       final OAuth20Service service =
         OAuthManagerProviders.getApiFor20Provider(providerName, cfg, null);
 
-      request = new OAuthRequest(httpVerb, url.toString(), service);
+      final OAuthConfig config = service.getConfig();
+      request = new OAuthRequest(httpVerb, url.toString(), config);
     } else {
       Log.e(TAG, "Error in making request method");
       throw new Exception("Provider not handled yet");
