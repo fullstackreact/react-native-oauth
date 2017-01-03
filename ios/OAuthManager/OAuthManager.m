@@ -551,7 +551,6 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         } else {
             id value = [credential valueForKey:key];
             
-            NSLog(@"key: %@ = %@", key, value);
             if (value == nil) {
                 
             } else if ([value isKindOfClass:[NSNumber class]]

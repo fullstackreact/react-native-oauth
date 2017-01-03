@@ -285,7 +285,7 @@ To add Google auth to our application, first we'll need to create a google appli
 
 We need to enable the `Identity Toolkit API` API. Click on `Enable API` and add this api to your app. Once it's enabled, we'll need to collect our credentials.
 
-Navigate to the `Credentials` tab and create a new credential. Create a **web API credential**. Take note of the client id and the URL scheme. In addition, make sure to set the bundle ID as the bundle id in our application in Xcode:
+Navigate to the `Credentials` tab and create a new credential. Create an **iOS API credential**. Take note of the `client_id` and the `iOS URL scheme`. In addition, make sure to set the bundle ID as the bundle id in our application in Xcode:
 
 ![](./resources/google/creds.png)
 
@@ -299,8 +299,7 @@ Finally, add the `client_id` credential as the id from the url page as well as t
 const config =  {
   google: {
     callback_url: `[IOS SCHEME]:/google`,
-    client_id: 'YOUR_CLIENT_ID',
-    client_secret: 'YOUR_CLIENT_SECRET'
+    client_id: 'YOUR_CLIENT_ID'
   }
 }
 ```

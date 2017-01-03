@@ -107,13 +107,14 @@ export default class OAuthManager {
     invariant(OAuthManager.isSupported(name), `The provider ${name} is not supported yet`);
 
     const providerCfg = Object.assign({}, authProviders[name]);
-    let { validate = identity, transform = identity, callback_url } = providerCfg;
+    let { validate = identity, transform = identity, callback_url, api_url } = providerCfg;
     delete providerCfg.transform;
     delete providerCfg.validate;
 
     let config = Object.assign({}, {
       app_name: this.appName,
-      callback_url
+      callback_url,
+      api_url
     }, providerCfg, props);
 
     config = Object.keys(config)
@@ -123,6 +124,7 @@ export default class OAuthManager {
       }), {});
 
     validate(config);
+
     return promisify('configureProvider')(name, config);
   }
 
