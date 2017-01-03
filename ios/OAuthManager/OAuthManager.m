@@ -344,6 +344,7 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                        NSDictionary *accountResponse = [manager getAccountResponse:account cfg:cfg];
                        _pendingAuthentication = NO;
                        [manager removePending:client];
+                       [[manager accountStore] saveAccount:account]; // <~
                        
                        callback(@[[NSNull null], @{
                                       @"status": @"ok",
