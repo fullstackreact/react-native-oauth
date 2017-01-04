@@ -278,7 +278,7 @@ const config =  {
 }
 ```
 
-#### Google  (iOS/Android)
+#### Google  (iOS)
 
 To add Google auth to our application, first we'll need to create a google application. Create or use an existing one by heading to the [developers.google.com/](https://developers.google.com/) page (or the console directly at [https://console.developers.google.com](https://console.developers.google.com)). 
 
@@ -304,6 +304,14 @@ const config =  {
   }
 }
 ```
+
+#### Google (Android)
+
+To set up Google on Android, follow the same steps as before, except this time instead of creating an iOS API, create a **web api credential**. Make sure to add the **redirect url** at the bottom (it defaults to `http://localhost/google`):
+
+![](./resources/google/android-creds.png)
+
+When creating an Android-specific configuration, create a file called `config/development.android.js`. React Native will load it instead of the `config/development.js` file automatically on Android. 
 
 #### Github  (iOS/Android)
 
