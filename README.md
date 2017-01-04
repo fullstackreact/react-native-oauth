@@ -6,6 +6,7 @@ The `react-native-oauth` library provides an interface to OAuth 1.0 and OAuth 2.
 * Facebook
 * Google
 * Github
+* Slack (iOS)
 
 ## TL;DR;
 
@@ -328,6 +329,35 @@ const config =  {
 }
 ```
 
+## Slack (iOS)
+
+Currently implemented only for iOS, Slack support is ready to go. We'll need to create an app first. Head to the slack developer docs at [https://slack.com/developers](https://slack.com/developers). 
+
+![](./resources/slack/dev.png)
+
+Click on the Getting Started button:
+
+![](./resources/slack/getting_started.png)
+
+ From here, find the `create an app` link:
+
+![](./resources/slack/create.png)
+
+ Take note of the `client_id` and the `client_secret`. We'll place these in our configuration object just like so:
+
+```javascript
+const config =  {
+  slack: {
+    client_id: 'YOUR_CLIENT_ID',
+    client_secret: 'YOUR_CLIENT_SECRET'
+  }
+}
+```
+
+Lastly, Slack requires us to add a redirect_url. By default, the callback_url pattern is `${app_name}://oauth`, so make sure to add your redirect_url where it asks for them before starting to work with the API.
+
+![](./resources/slack/redirect.png)
+
 ## Authenticating against our providers
 
 We can use the manager in our app using the `authorize()` method on the manager.
@@ -363,6 +393,16 @@ The `resp` object is set as follows:
   }
 }
 ```
+
+The second argument accepts an object where we can ask for additional scopes, override default values, etc. 
+
+```javascript
+manager.authorize('google', {scopes: 'email,profile'})
+  .then(resp => console.log(resp))
+  .catch(err => console.log(err));
+```
+
+* Scopes are a list of scopes _comma separated_ as a string. 
 
 ## Calling a provider's API
 

@@ -62,7 +62,7 @@ public class OAuthManagerProviders {
 
     String scopes = (String) cfg.get("scopes");
     if (scopes != null) {
-      builder.scopes(scopes);
+      builder.scope(scopes);
     }
 
     if (callbackUrl != null) {
@@ -87,6 +87,11 @@ public class OAuthManagerProviders {
       .apiSecret(clientSecret)
       .state(state)
       .debug();
+
+    String scopes = (String) cfg.get("scopes");
+    if (scopes != null) {
+      builder.scope(scopes);
+    }
     
     if (callbackUrl != null) {
       builder.callback(callbackUrl);
@@ -104,9 +109,10 @@ public class OAuthManagerProviders {
     } else {
       state = TAG + new Random().nextInt(999_999);
     }
+
     String scope = "profile";
-    if (cfg.containsKey("scope")) {
-      scope = (String) cfg.get("scope");
+    if (cfg.containsKey("scopes")) {
+      scope = (String) cfg.get("scopes");
     }
 
     ServiceBuilder builder = new ServiceBuilder()
@@ -133,8 +139,8 @@ public class OAuthManagerProviders {
       state = TAG + new Random().nextInt(999_999);
     }
     String scope = "profile";
-    if (cfg.containsKey("scope")) {
-      scope = (String) cfg.get("scope");
+    if (cfg.containsKey("scopes")) {
+      scope = (String) cfg.get("scopes");
     }
 
     ServiceBuilder builder = new ServiceBuilder()
@@ -147,8 +153,6 @@ public class OAuthManagerProviders {
     if (callbackUrl != null) {
       builder.callback(callbackUrl);
     }
-
-    Log.d(TAG, "builder ---> " + callbackUrl);
 
     return builder.build(GitHubApi.instance());
   }
