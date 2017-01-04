@@ -67,6 +67,8 @@ export default class OAuthManager {
       app_name: this.appName
     });
 
+    console.log('making request', provider, url, opts);
+
     return promisify('makeRequest')(provider, url, options)
       .then(response => {
         // Little bit of a hack to support Android until we have a better
@@ -107,15 +109,18 @@ export default class OAuthManager {
     invariant(OAuthManager.isSupported(name), `The provider ${name} is not supported yet`);
 
     const providerCfg = Object.assign({}, authProviders[name]);
-    let { validate = identity, transform = identity, callback_url, api_url } = providerCfg;
+    let { validate = identity, transform = identity, callback_url } = providerCfg;
     delete providerCfg.transform;
     delete providerCfg.validate;
 
     let config = Object.assign({}, {
       app_name: this.appName,
-      callback_url,
-      api_url
+      callback_url
     }, providerCfg, props);
+
+    if (config.defaultParams) {
+      delete config.defaultParams;
+    }
 
     config = Object.keys(config)
       .reduce((sum, key) => ({

@@ -379,6 +379,8 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         return;
     }
     
+    NSDictionary *creds = [self credentialForAccount:providerName cfg:cfg];
+    
     // If we have the http in the string, use it as the URL, otherwise create one
     // with the configuration
     NSURL *apiUrl;
@@ -394,8 +396,18 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
     NSDictionary *params = [opts objectForKey:@"params"];
     if (params != nil) {
         for (NSString *key in params) {
-            NSURLQueryItem *item = [NSURLQueryItem queryItemWithName:key value:[params valueForKey:key]];
-            [items addObject:item];
+            
+            NSString *value = [params valueForKey:key];
+            
+            if ([value isEqualToString:@"access_token"]) {
+                value = [creds valueForKey:@"access_token"];
+            }
+            
+            NSURLQueryItem *item = [NSURLQueryItem queryItemWithName:key value:value];
+            
+            if (item != nil) {
+                [items addObject:item];
+            }
         }
     }
     
@@ -477,6 +489,31 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
             return [allAccounts lastObject];
         }
     }
+}
+
+- (NSDictionary *) credentialForAccount:(NSString *)providerName
+                                                cfg:(NSDictionary *)cfg
+{
+    DCTAuthAccount *account = [self accountForProvider:providerName];
+    if (!account) {
+        return nil;
+    }
+    
+    id credentials;
+    NSString *version = [cfg valueForKey:@"auth_version"];
+    if ([version isEqualToString:@"1.0"]) {
+        credentials = [account credential];
+    } else if ([version isEqualToString:@"2.0"]) {
+        credentials = [account credential];
+    } else {
+        return nil;
+    }
+    
+    NSDictionary *dict = @{
+                           @"access_token": [credentials accessToken]
+                           };
+    
+    return dict;
 }
 
 - (DCTAuthRequestMethod) getRequestMethodByString:(NSString *) method
