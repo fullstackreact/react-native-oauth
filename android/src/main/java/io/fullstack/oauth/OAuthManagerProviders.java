@@ -60,9 +60,15 @@ public class OAuthManagerProviders {
           .apiSecret(consumerSecret)
           .debug();
 
+    String scopes = (String) cfg.get("scopes");
+    if (scopes != null) {
+      builder.scopes(scopes);
+    }
+
     if (callbackUrl != null) {
       builder.callback(callbackUrl);
     }
+    
     return builder.build(TwitterApi.instance());
   }
 

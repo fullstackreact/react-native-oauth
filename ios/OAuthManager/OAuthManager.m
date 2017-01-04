@@ -499,19 +499,24 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         return nil;
     }
     
-    id credentials;
     NSString *version = [cfg valueForKey:@"auth_version"];
-    if ([version isEqualToString:@"1.0"]) {
-        credentials = [account credential];
-    } else if ([version isEqualToString:@"2.0"]) {
-        credentials = [account credential];
-    } else {
-        return nil;
-    }
+    NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
     
-    NSDictionary *dict = @{
-                           @"access_token": [credentials accessToken]
-                           };
+    if ([version isEqualToString:@"1.0"]) {
+        DCTOAuth1Credential *credentials = [account credential];
+        
+        if (credentials && credentials.oauthToken) {
+            NSString *token = credentials.oauthToken;
+            [dict setObject:token forKey:@"access_token"];
+        }
+    } else if ([version isEqualToString:@"2.0"]) {
+        DCTOAuth2Credential *credentials = [account credential];
+        
+        if (credentials && credentials.accessToken) {
+            NSString *token = credentials.accessToken;
+            [dict setObject:token forKey:@"access_token"];
+        }
+    }
     
     return dict;
 }

@@ -28,7 +28,7 @@ manager.configure({
 });
 
 // ...
-manager.authorize('google', {scopes: 'profile email'})
+manager.authorize('google', {scopes: 'profile,email'})
 .then(resp => console.log('Your users ID'))
 .catch(err => console.log('There was an error'));
 ```
