@@ -18,6 +18,7 @@ import android.text.TextUtils;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReactContext;
@@ -91,6 +93,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     String callbackUrlStr = params.getString("callback_url");
     _callbackUrls.add(callbackUrlStr);
     
+    Log.d(TAG, "Added callback url " + callbackUrlStr + " for providler " + providerName);
 
     // Keep configuration map
     HashMap<String, Object> cfg = new HashMap<String,Object>();
@@ -130,7 +133,10 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
       String callbackUrl = "http://localhost/" + providerName;
       
       OAuthManagerOnAccessTokenListener listener = new OAuthManagerOnAccessTokenListener() {
-        public void onRequestTokenError(final Exception ex) {}
+        public void onRequestTokenError(final Exception ex) {
+          Log.e(TAG, "Exception with request token: " + ex.getMessage());
+          _credentialsStore.delete(providerName);
+        }
         public void onOAuth1AccessToken(final OAuth1AccessToken accessToken) {
           _credentialsStore.store(providerName, accessToken);
           _credentialsStore.commit();
@@ -284,18 +290,23 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     @Nullable final ReadableMap params
     ) throws Exception {
     OAuthRequest request;
+    OAuthConfig config;
+    OAuth1AccessToken oa1token = null;
+    OAuth2AccessToken oa2token = null;
 
     if (authVersion.equals("1.0")) {  
       final OAuth10aService service = 
           OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null);
+      oa1token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
       
-      final OAuthConfig config = service.getConfig();
+      config = service.getConfig();
       request = new OAuthRequest(httpVerb, url.toString(), config);
     } else if (authVersion.equals("2.0")) {
       final OAuth20Service service =
         OAuthManagerProviders.getApiFor20Provider(providerName, cfg, null);
+      oa2token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
 
-      final OAuthConfig config = service.getConfig();
+      config = service.getConfig();
       request = new OAuthRequest(httpVerb, url.toString(), config);
     } else {
       Log.e(TAG, "Error in making request method");
@@ -311,6 +322,13 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
           case String:
             String val = params.getString(key);
             // String escapedVal = Uri.encode(val);
+            if (val.equals("access_token")) {
+              if (oa1token != null) {
+                val = oa1token.toString();
+              } else if (oa2token != null) {
+                val = oa2token.toString();
+              }
+            }
             request.addParameter(key, val);
             break;
           default:
@@ -449,7 +467,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
     return resp;
   }
-  
+
 
   private void exceptionCallback(Exception ex, final Callback onFail) {
     WritableMap error = Arguments.createMap();
@@ -458,5 +476,72 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     error.putString("allErrorMessage", ex.toString());
 
     onFail.invoke(error);
+  }
+
+    public static Map<String, Object> recursivelyDeconstructReadableMap(ReadableMap readableMap) {
+    Map<String, Object> deconstructedMap = new HashMap<>();
+    if (readableMap == null) {
+      return deconstructedMap;
+    }
+
+    ReadableMapKeySetIterator iterator = readableMap.keySetIterator();
+    while (iterator.hasNextKey()) {
+      String key = iterator.nextKey();
+      ReadableType type = readableMap.getType(key);
+      switch (type) {
+        case Null:
+          deconstructedMap.put(key, null);
+          break;
+        case Boolean:
+          deconstructedMap.put(key, readableMap.getBoolean(key));
+          break;
+        case Number:
+          deconstructedMap.put(key, readableMap.getDouble(key));
+          break;
+        case String:
+          deconstructedMap.put(key, readableMap.getString(key));
+          break;
+        case Map:
+          deconstructedMap.put(key, OAuthManagerModule.recursivelyDeconstructReadableMap(readableMap.getMap(key)));
+          break;
+        case Array:
+          deconstructedMap.put(key, OAuthManagerModule.recursivelyDeconstructReadableArray(readableMap.getArray(key)));
+          break;
+        default:
+          throw new IllegalArgumentException("Could not convert object with key: " + key + ".");
+      }
+
+    }
+    return deconstructedMap;
+  }
+
+  public static List<Object> recursivelyDeconstructReadableArray(ReadableArray readableArray) {
+    List<Object> deconstructedList = new ArrayList<>(readableArray.size());
+    for (int i = 0; i < readableArray.size(); i++) {
+      ReadableType indexType = readableArray.getType(i);
+      switch (indexType) {
+        case Null:
+          deconstructedList.add(i, null);
+          break;
+        case Boolean:
+          deconstructedList.add(i, readableArray.getBoolean(i));
+          break;
+        case Number:
+          deconstructedList.add(i, readableArray.getDouble(i));
+          break;
+        case String:
+          deconstructedList.add(i, readableArray.getString(i));
+          break;
+        case Map:
+          deconstructedList.add(i, OAuthManagerModule.recursivelyDeconstructReadableMap(readableArray.getMap(i)));
+          break;
+        case Array:
+          deconstructedList.add(i, OAuthManagerModule.recursivelyDeconstructReadableArray(readableArray.getArray(i)));
+          break;
+        default:
+          throw new IllegalArgumentException("Could not convert object at index " + i + ".");
+      }
+    }
+    return deconstructedList;
   }
 }

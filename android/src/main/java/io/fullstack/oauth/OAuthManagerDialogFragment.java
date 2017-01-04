@@ -197,6 +197,7 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
     @Override
     public void onPageError(int errorCode, String description, String failingUrl) {
       Log.e(TAG, "onPageError: " + failingUrl);
+      mController.onError(errorCode, description, failingUrl);
     }
 
     @Override

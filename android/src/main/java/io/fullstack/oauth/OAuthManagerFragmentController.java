@@ -150,8 +150,10 @@ public class OAuthManagerFragmentController {
     mListener.onOAuth2AccessToken(accessToken);
   }
 
-  public void onError() {
+  public void onError(int errorCode, String description, String failingUrl) {
+    Log.e(TAG, "Error in OAuthManagerFragmentController: " + description);
     this.dismissDialog();
+    mListener.onRequestTokenError(new Exception(description));
   }
 
   public void getRequestTokenUrlAndLoad(AdvancedWebView webView) {
@@ -265,7 +267,7 @@ public class OAuthManagerFragmentController {
         @Override
         public void run() {
           if (url == null) {
-            mCtrl.onError();
+            mCtrl.onError(-1, "No url", "");
             return;
           }
           if (authVersion.equals("1.0")) {
@@ -315,7 +317,7 @@ public class OAuthManagerFragmentController {
         @Override
         public void run() {
           if (accessToken == null) {
-            mCtrl.onError();
+            mCtrl.onError(-1, "No accessToken found", "");
             return;
           }
           mCtrl.loaded10aAccessToken(accessToken);
@@ -359,7 +361,7 @@ public class OAuthManagerFragmentController {
         @Override
         public void run() {
           if (accessToken == null) {
-            mCtrl.onError();
+            mCtrl.onError(-1, "No accessToken found", "");
             return;
           }
           mCtrl.loaded20AccessToken(accessToken);
