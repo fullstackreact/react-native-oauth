@@ -126,7 +126,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   {
     try {
       final OAuthManagerModule self = this;
-      HashMap<String,Object> cfg = this.getConfiguration(providerName);
+      final HashMap<String,Object> cfg = this.getConfiguration(providerName);
       final String authVersion = (String) cfg.get("auth_version");
       Activity activity = mReactContext.getCurrentActivity();
       FragmentManager fragmentManager = activity.getFragmentManager();
@@ -141,14 +141,14 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
           _credentialsStore.store(providerName, accessToken);
           _credentialsStore.commit();
 
-          WritableMap resp = self.accessTokenResponse(providerName, accessToken, authVersion);
+          WritableMap resp = self.accessTokenResponse(providerName, cfg, accessToken, authVersion);
           callback.invoke(null, resp);
         }
         public void onOAuth2AccessToken(final OAuth2AccessToken accessToken) {
           _credentialsStore.store(providerName, accessToken);
           _credentialsStore.commit();
 
-          WritableMap resp = self.accessTokenResponse(providerName, accessToken, authVersion);
+          WritableMap resp = self.accessTokenResponse(providerName, cfg, accessToken, authVersion);
           callback.invoke(null, resp);
         }
       };
@@ -364,7 +364,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
           throw new Exception("No token found");
         }
 
-        WritableMap resp = this.accessTokenResponse(providerName, token, authVersion);
+        WritableMap resp = this.accessTokenResponse(providerName, cfg, token, authVersion);
         onComplete.invoke(null, resp);
       } else if (authVersion.equals("2.0")) {
         OAuth2AccessToken token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
@@ -372,7 +372,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
         if (token == null || token.equals("")) {
           throw new Exception("No token found");
         }
-        WritableMap resp = this.accessTokenResponse(providerName, token, authVersion);
+        WritableMap resp = this.accessTokenResponse(providerName, cfg, token, authVersion);
         onComplete.invoke(null, resp);
       } else {
 
@@ -420,19 +420,33 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
   private WritableMap accessTokenResponse(
     final String providerName,
+    final HashMap<String,Object> cfg,
     final OAuth1AccessToken accessToken,
     final String oauthVersion
   ) {
     WritableMap resp = Arguments.createMap();
     WritableMap response = Arguments.createMap();
 
+    Log.d(TAG, "Credential raw response: " + accessToken.getRawResponse());
+
     resp.putString("status", "ok");
+    resp.putBoolean("authorized", true);
     resp.putString("provider", providerName);
     response.putString("uuid", accessToken.getParameter("user_id"));
     
+    String tokenType = accessToken.getParameter("token_type");
+    if (tokenType == null) {
+      tokenType = "Bearer";
+    }
+
+    String consumerKey = (String) cfg.get("consumer_key");
+
     WritableMap credentials = Arguments.createMap();
-    credentials.putString("oauth_token", accessToken.getToken());
-    credentials.putString("oauth_secret", accessToken.getTokenSecret());
+    credentials.putString("accessToken", accessToken.getToken());
+    credentials.putString("type", tokenType);
+    // credentials.putString("scope", accessToken.getScope());
+    credentials.putString("consumerKey", consumerKey);
+
     response.putMap("credentials", credentials);
 
     resp.putMap("response", response);
@@ -442,6 +456,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
   private WritableMap accessTokenResponse(
     final String providerName,
+    final HashMap<String,Object> cfg,
     final OAuth2AccessToken accessToken,
     final String oauthVersion
   ) {
@@ -449,6 +464,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     WritableMap response = Arguments.createMap();
 
     resp.putString("status", "ok");
+    resp.putBoolean("authorized", true);
     resp.putString("provider", providerName);
     try {
       response.putString("uuid", accessToken.getParameter("user_id"));
@@ -458,9 +474,27 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     }
     
     WritableMap credentials = Arguments.createMap();
-    credentials.putString("oauth_token", accessToken.getAccessToken());
-    credentials.putString("oauth_secret", "");
-    credentials.putString("scope", accessToken.getScope());
+    Log.d(TAG, "Credential raw response: " + accessToken.getRawResponse());
+
+    credentials.putString("accessToken", accessToken.getAccessToken());
+    String authHeader;
+
+    String tokenType = accessToken.getParameter("token_type");
+    if (tokenType == null) {
+      tokenType = "Bearer";
+    }
+    String scope = accessToken.getScope();
+    if (scope == null) {
+      scope = (String) cfg.get("scopes");
+    }
+
+    String clientID = (String) cfg.get("client_id");
+
+    authHeader = tokenType + " " + accessToken.getAccessToken();
+    credentials.putString("authorizationHeader", authHeader);
+    credentials.putString("type", tokenType);
+    credentials.putString("scope", scope);
+    credentials.putString("clientID", clientID);
     response.putMap("credentials", credentials);
 
     resp.putMap("response", response);
