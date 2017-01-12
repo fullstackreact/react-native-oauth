@@ -483,6 +483,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     if (tokenType == null) {
       tokenType = "Bearer";
     }
+    
     String scope = accessToken.getScope();
     if (scope == null) {
       scope = (String) cfg.get("scopes");

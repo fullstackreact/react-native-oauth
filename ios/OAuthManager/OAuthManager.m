@@ -567,7 +567,13 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         DCTOAuth2Credential *credential = account.credential;
         if (credential != nil) {
             
-            NSDictionary *cred = [self dictionaryForCredentialKeys: credential];
+            NSMutableDictionary *cred = [self dictionaryForCredentialKeys: credential];
+            
+            DCTOAuth2Account *oauth2Account = (DCTOAuth2Account *) account;
+            if (oauth2Account.scopes) {
+                [cred setObject:oauth2Account.scopes forKey:@"scopes"];
+            }
+            
             [accountResponse setObject:cred forKey:@"credentials"];
         }
     }
@@ -575,6 +581,7 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
     if (account.userInfo != nil) {
         [accountResponse setObject:[account userInfo] forKey:@"user_info"];
     }
+    
     return accountResponse;
 }
 
