@@ -6,7 +6,7 @@ The `react-native-oauth` library provides an interface to OAuth 1.0 and OAuth 2.
 * Facebook
 * Google
 * Github
-* Slack (iOS)
+* Slack
 
 ## TL;DR;
 
@@ -337,9 +337,9 @@ const config =  {
 }
 ```
 
-## Slack (iOS)
+## Slack
 
-Currently implemented only for iOS, Slack support is ready to go. We'll need to create an app first. Head to the slack developer docs at [https://slack.com/developers](https://slack.com/developers). 
+We'll need to create an app first. Head to the slack developer docs at [https://slack.com/developers](https://slack.com/developers). 
 
 ![](./resources/slack/dev.png)
 
@@ -362,7 +362,11 @@ const config =  {
 }
 ```
 
-Lastly, Slack requires us to add a redirect_url. By default, the callback_url pattern is `${app_name}://oauth`, so make sure to add your redirect_url where it asks for them before starting to work with the API.
+Lastly, Slack requires us to add a redirect_url. 
+
+For **iOS**: the callback_url pattern is `${app_name}://oauth`, so make sure to add your redirect_url where it asks for them before starting to work with the API.
+
+for **Android**: the `callback_url` pattern is `http://localhost/slack`. Be sure to add this to your list of redirect urls.
 
 ![](./resources/slack/redirect.png)
 
