@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import android.annotation.SuppressLint;
 import android.widget.LinearLayout;
 import android.view.Gravity;
+import android.os.Build;
 
 import android.app.DialogFragment;
 import android.content.DialogInterface;
@@ -25,6 +26,9 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.content.Context;
 import android.util.DisplayMetrics;
+import android.view.Display;
+import java.lang.reflect.Method;
+import android.view.WindowManager;
 
 import com.github.scribejava.core.model.OAuth1AccessToken;
 import com.github.scribejava.core.model.OAuth1RequestToken;
@@ -33,6 +37,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.app.Fragment;
 import java.io.IOException;
+import com.facebook.react.bridge.ReactContext;
 
 public class OAuthManagerDialogFragment extends DialogFragment implements AdvancedWebView.Listener {
 
@@ -42,34 +47,45 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
     private static final String TAG = "OAuthManagerDialogFragment";
     private OAuthManagerFragmentController mController;
 
+    private ReactContext mReactContext;
     private AdvancedWebView mWebView;
 
     public static final OAuthManagerDialogFragment newInstance(
+      final ReactContext reactContext,
       OAuthManagerFragmentController controller
     ) {
       Bundle args = new Bundle();
       OAuthManagerDialogFragment frag =
-        new OAuthManagerDialogFragment(controller);
+        new OAuthManagerDialogFragment(reactContext, controller);
 
       return frag;
     }
 
     public OAuthManagerDialogFragment(
+      final ReactContext reactContext,
       OAuthManagerFragmentController controller
     ) {
       this.mController = controller;
+      this.mReactContext = reactContext;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // View rootView = inflater.inflate(R.id.primary, container, false);
-        final Context context = inflater.getContext();
+        // final Context context = inflater.getContext();
         // DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-        // final int DIALOG_HEIGHT = (int) Math.min(0.8f * metrics.heightPixels, 1024);
+        // final int DIALOG_HEIGHT = (int) Math.min(0.99f * metrics.heightPixels, 1024);
+
+        // LayoutParams rootViewLayoutParams = new LayoutParams(
+        //   LayoutParams.FILL_PARENT, 
+        //   LayoutParams.FILL_PARENT
+        // );
+        final Context context = mReactContext;
+        LayoutParams rootViewLayoutParams = this.getFullscreenLayoutParams(context);
 
         FrameLayout rootView = new FrameLayout(context);
         getDialog().setCanceledOnTouchOutside(true);
-        rootView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+        rootView.setLayoutParams(rootViewLayoutParams);
 
         // mWebView = (AdvancedWebView) rootView.findViewById(R.id.webview);
         Log.d(TAG, "Creating webview");
@@ -77,17 +93,26 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
         mWebView.setId(WEBVIEW_TAG);
         mWebView.setListener(this, this);
         mWebView.setVisibility(View.VISIBLE);
+        mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.getSettings().setDomStorageEnabled(true);
 
-        rootView.addView(mWebView, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+        LayoutParams layoutParams = this.getFullscreenLayoutParams(context);
+        //new LayoutParams(
+        //   LayoutParams.FILL_PARENT, 
+        //   DIALOG_HEIGHT
+        // );
+        // mWebView.setLayoutParams(layoutParams);
+
+        rootView.addView(mWebView, layoutParams);
         
-        LinearLayout pframe = new LinearLayout(context);
-        pframe.setId(WIDGET_TAG);
-        pframe.setOrientation(LinearLayout.VERTICAL);
-        pframe.setVisibility(View.GONE);
-        pframe.setGravity(Gravity.CENTER);
+        // LinearLayout pframe = new LinearLayout(context);
+        // pframe.setId(WIDGET_TAG);
+        // pframe.setOrientation(LinearLayout.VERTICAL);
+        // pframe.setVisibility(View.GONE);
+        // pframe.setGravity(Gravity.CENTER);
+        // pframe.setLayoutParams(layoutParams);
 
-        rootView.addView(pframe,
-          new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+        // rootView.addView(pframe, layoutParams);
 
         this.setupWebView(mWebView);
         mController.getRequestTokenUrlAndLoad(mWebView);
@@ -96,12 +121,49 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
         return rootView;
     }
 
+    private LayoutParams getFullscreenLayoutParams(Context context) {
+      WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+      // DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+      Display display = wm.getDefaultDisplay();
+      int realWidth;
+      int realHeight;
+
+      if (Build.VERSION.SDK_INT >= 17){
+          //new pleasant way to get real metrics
+          DisplayMetrics realMetrics = new DisplayMetrics();
+          display.getRealMetrics(realMetrics);
+          realWidth = realMetrics.widthPixels;
+          realHeight = realMetrics.heightPixels;
+
+      } else if (Build.VERSION.SDK_INT >= 14) {
+          //reflection for this weird in-between time
+          try {
+              Method mGetRawH = Display.class.getMethod("getRawHeight");
+              Method mGetRawW = Display.class.getMethod("getRawWidth");
+              realWidth = (Integer) mGetRawW.invoke(display);
+              realHeight = (Integer) mGetRawH.invoke(display);
+          } catch (Exception e) {
+              //this may not be 100% accurate, but it's all we've got
+              realWidth = display.getWidth();
+              realHeight = display.getHeight();
+              Log.e("Display Info", "Couldn't use reflection to get the real display metrics.");
+          }
+
+      } else {
+          //This should be close, as lower API devices should not have window navigation bars
+          realWidth = display.getWidth();
+          realHeight = display.getHeight();
+      }
+
+      return new LayoutParams(realWidth, realHeight);
+    }
+
+
     private void setupWebView(AdvancedWebView webView) {
       webView.setWebViewClient(new WebViewClient() {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-          interceptUrl(view, url, true);
-          return true;
+          return interceptUrl(view, url, true);
         }
 
         @Override
@@ -112,6 +174,7 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
         }
 
         private boolean interceptUrl(WebView view, String url, boolean loadUrl) {
+          Log.i(TAG, "interceptUrl called with url: " + url);
           if (isCallbackUri(url, mController.getCallbackUrl())) {
             mController.getAccessToken(mWebView, url);
 
@@ -192,6 +255,7 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
     @Override
     public void onPageFinished(String url) {
       Log.d(TAG, "onPageFinished: " + url);
+      // mController.onComplete(url);
     }
 
     @Override

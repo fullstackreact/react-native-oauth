@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.text.TextUtils;
 import im.delight.android.webview.AdvancedWebView;
 
+import com.facebook.react.bridge.ReactContext;
 import android.net.Uri;
 import android.util.Log;
 import android.view.View;
@@ -40,12 +41,15 @@ public class OAuthManagerFragmentController {
   private final android.app.FragmentManager fragmentManager;
   private final Handler uiHandler;
 
+  private ReactContext context;
+  private String providerName;
   private String authVersion;
   private OAuth10aService oauth10aService;
   private OAuth20Service oauth20Service;
   private String callbackUrl;
   private OAuth1RequestToken oauth1RequestToken;
   private HashMap<String,Object> mCfg;
+  private AdvancedWebView mWebView;
 
   private Runnable onAccessToken;
   private OAuthManagerOnAccessTokenListener mListener;
@@ -55,6 +59,7 @@ public class OAuthManagerFragmentController {
   }
 
   public OAuthManagerFragmentController(
+    final ReactContext mReactContext,
     android.app.FragmentManager fragmentManager,
     final String providerName,
     OAuth10aService oauthService,
@@ -63,12 +68,15 @@ public class OAuthManagerFragmentController {
     this.uiHandler = new Handler(Looper.getMainLooper());
     this.fragmentManager = fragmentManager;
 
+    this.context = mReactContext;
+    this.providerName = providerName;
     this.authVersion = "1.0";
     this.oauth10aService = oauthService;
     this.callbackUrl = callbackUrl;
   }
 
   public OAuthManagerFragmentController(
+    final ReactContext mReactContext,
     android.app.FragmentManager fragmentManager,
     final String providerName,
     OAuth20Service oauthService,
@@ -77,6 +85,8 @@ public class OAuthManagerFragmentController {
     this.uiHandler = new Handler(Looper.getMainLooper());
     this.fragmentManager = fragmentManager;
 
+    this.context = mReactContext;
+    this.providerName = providerName;
     this.authVersion = "2.0";
     this.oauth20Service = oauthService;
     this.callbackUrl = callbackUrl;
@@ -107,7 +117,7 @@ public class OAuthManagerFragmentController {
 
         Log.d(TAG, "Creating new Fragment");
         OAuthManagerDialogFragment frag = 
-          OAuthManagerDialogFragment.newInstance(OAuthManagerFragmentController.this);
+          OAuthManagerDialogFragment.newInstance(context, OAuthManagerFragmentController.this);
 
         ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         ft.add(frag, TAG);
@@ -141,13 +151,24 @@ public class OAuthManagerFragmentController {
     Log.d(TAG, "Loaded access token in OAuthManagerFragmentController");
     Log.d(TAG, "AccessToken: " + accessToken + " (raw: " + accessToken.getRawResponse() + ")");
 
+    mWebView = null;
     this.dismissDialog();
     mListener.onOAuth1AccessToken(accessToken);
   }
 
   public void loaded20AccessToken(final OAuth2AccessToken accessToken) {
+    mWebView = null;
     this.dismissDialog();
     mListener.onOAuth2AccessToken(accessToken);
+  }
+
+  public void onComplete(String url) {
+    Log.d(TAG, "onComplete called in fragment controller " + url);
+    // if (mWebView != null) {
+    //   this.getAccessToken(mWebView, url);
+    // } else {
+      // this.dismissDialog();
+    // }
   }
 
   public void onError(int errorCode, String description, String failingUrl) {
@@ -157,6 +178,7 @@ public class OAuthManagerFragmentController {
   }
 
   public void getRequestTokenUrlAndLoad(AdvancedWebView webView) {
+    mWebView = webView;
     LoadRequestTokenTask task = new LoadRequestTokenTask(this, webView);
     task.execute();
   }
@@ -174,9 +196,15 @@ public class OAuthManagerFragmentController {
       task.execute();
     } else if (authVersion.equals("2.0")) {
       String code = responseUri.getQueryParameter("code");
-      Load2AccessTokenTask task = new Load2AccessTokenTask(
-        this, webView, code);
-      task.execute();
+      Log.d(TAG, "Called getAccessToken with code: " + code + " at " + url);
+      if (code != null) {
+        Load2AccessTokenTask task = new Load2AccessTokenTask(
+          this, webView, code);
+        task.execute();
+      } else {
+        this.dismissDialog();
+        mListener.onRequestTokenError(new Exception("No token found"));
+      }
     }
   }
 

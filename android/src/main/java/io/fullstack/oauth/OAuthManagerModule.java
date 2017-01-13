@@ -136,6 +136,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
         public void onRequestTokenError(final Exception ex) {
           Log.e(TAG, "Exception with request token: " + ex.getMessage());
           _credentialsStore.delete(providerName);
+          _credentialsStore.commit();
         }
         public void onOAuth1AccessToken(final OAuth1AccessToken accessToken) {
           _credentialsStore.store(providerName, accessToken);
@@ -155,18 +156,18 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
       if (authVersion.equals("1.0")) {
         final OAuth10aService service = 
-          OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, callbackUrl);
+          OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, params, callbackUrl);
 
         OAuthManagerFragmentController ctrl =
-          new OAuthManagerFragmentController(fragmentManager, providerName, service, callbackUrl);
+          new OAuthManagerFragmentController(mReactContext, fragmentManager, providerName, service, callbackUrl);
 
         ctrl.requestAuth(cfg, listener);
       } else if (authVersion.equals("2.0")) {
         final OAuth20Service service =
-          OAuthManagerProviders.getApiFor20Provider(providerName, cfg, callbackUrl);
+          OAuthManagerProviders.getApiFor20Provider(providerName, cfg, params, callbackUrl);
         
         OAuthManagerFragmentController ctrl =
-          new OAuthManagerFragmentController(fragmentManager, providerName, service, callbackUrl);
+          new OAuthManagerFragmentController(mReactContext, fragmentManager, providerName, service, callbackUrl);
 
         ctrl.requestAuth(cfg, listener);
       } else {
@@ -240,13 +241,13 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
         if (authVersion.equals("1.0")) {
           final OAuth10aService service = 
-            OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null);
+            OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, requestParams, null);
           OAuth1AccessToken token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
           
           service.signRequest(token, request);
         } else if (authVersion.equals("2.0")) {
           final OAuth20Service service =
-            OAuthManagerProviders.getApiFor20Provider(providerName, cfg, null);
+            OAuthManagerProviders.getApiFor20Provider(providerName, cfg, requestParams, null);
           OAuth2AccessToken token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
 
           service.signRequest(token, request);
@@ -290,51 +291,41 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     @Nullable final ReadableMap params
     ) throws Exception {
     OAuthRequest request;
-    OAuthConfig config;
-    OAuth1AccessToken oa1token = null;
-    OAuth2AccessToken oa2token = null;
+    // OAuthConfig config;
 
     if (authVersion.equals("1.0")) {  
-      final OAuth10aService service = 
-          OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null);
-      oa1token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
+      // final OAuth10aService service = 
+          // OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null, null);
+      OAuth1AccessToken oa1token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
+      request = OAuthManagerProviders.getRequestForProvider(
+        providerName, 
+        httpVerb,
+        oa1token, 
+        url,
+        cfg,
+        params);
       
-      config = service.getConfig();
-      request = new OAuthRequest(httpVerb, url.toString(), config);
+      // config = service.getConfig();
+      // request = new OAuthRequest(httpVerb, url.toString(), config);
     } else if (authVersion.equals("2.0")) {
-      final OAuth20Service service =
-        OAuthManagerProviders.getApiFor20Provider(providerName, cfg, null);
-      oa2token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
+      // final OAuth20Service service =
+        // OAuthManagerProviders.getApiFor20Provider(providerName, cfg, null, null);
+      // oa2token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
 
-      config = service.getConfig();
-      request = new OAuthRequest(httpVerb, url.toString(), config);
+      OAuth2AccessToken oa2token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
+      request = OAuthManagerProviders.getRequestForProvider(
+        providerName, 
+        httpVerb,
+        oa2token, 
+        url,
+        cfg,
+        params);
+      
+      // config = service.getConfig();
+      // request = new OAuthRequest(httpVerb, url.toString(), config);
     } else {
       Log.e(TAG, "Error in making request method");
       throw new Exception("Provider not handled yet");
-    }
-          // Params
-    if (params != null && params.hasKey("params")) {
-      ReadableMapKeySetIterator iterator = params.keySetIterator();
-      while (iterator.hasNextKey()) {
-        String key = iterator.nextKey();
-        ReadableType readableType = params.getType(key);
-        switch(readableType) {
-          case String:
-            String val = params.getString(key);
-            // String escapedVal = Uri.encode(val);
-            if (val.equals("access_token")) {
-              if (oa1token != null) {
-                val = oa1token.toString();
-              } else if (oa2token != null) {
-                val = oa2token.toString();
-              }
-            }
-            request.addParameter(key, val);
-            break;
-          default:
-            throw new IllegalArgumentException("Could not read object with key: " + key);
-        }
-      }
     }
 
     return request;
@@ -494,7 +485,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     authHeader = tokenType + " " + accessToken.getAccessToken();
     credentials.putString("authorizationHeader", authHeader);
     credentials.putString("type", tokenType);
-    credentials.putString("scope", scope);
+    credentials.putString("scopes", scope);
     credentials.putString("clientID", clientID);
     response.putMap("credentials", credentials);
 
