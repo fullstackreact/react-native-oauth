@@ -137,6 +137,8 @@ RCT_EXPORT_MODULE(OAuthManager);
     NSString *saveCallbackUrl = [self stringHost:callbackUrl];
     [arr addObject:saveCallbackUrl];
     _callbackUrls = [arr copy];
+
+    NSLog(@"Saved callback url: %@ in %@", saveCallbackUrl, _callbackUrls);
     
     // Convert objects of url type
     for (NSString *name in [config allKeys]) {
@@ -193,6 +195,7 @@ RCT_EXPORT_METHOD(configureProvider:
 
 #pragma mark OAuth
 
+// TODO: Remove opts
 RCT_EXPORT_METHOD(getSavedAccounts:(NSDictionary *) opts
                   callback:(RCTResponseSenderBlock) callback)
 {
@@ -214,6 +217,7 @@ RCT_EXPORT_METHOD(getSavedAccounts:(NSDictionary *) opts
                    }]);
 }
 
+// TODO: Remove opts
 RCT_EXPORT_METHOD(getSavedAccount:(NSString *)providerName
                   opts:(NSDictionary *) opts
                   callback:(RCTResponseSenderBlock)callback)
@@ -336,6 +340,8 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
     
     [manager addPending:client];
     _pendingAuthentication = YES;
+
+    NSLog(@"Calling authorizeWithUrl: %@ with callbackURL: %@\n %@", providerName, callbackUrl, cfg);
     
     [client authorizeWithUrl:providerName
                          url:callbackUrl

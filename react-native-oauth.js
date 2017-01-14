@@ -45,7 +45,7 @@ export default class OAuthManager {
     // return promisify('getSavedAccounts')(options);
     const promises = this.providers()
                           .map(name => {
-                            return this.savedAccount(name, opts)
+                            return this.savedAccount(name)
                               .catch(err => ({provider: name, status: "error"}));
                           });
     return Promise.all(promises)
@@ -55,8 +55,8 @@ export default class OAuthManager {
       });
   }
 
-  savedAccount(provider, opts={}) {
-    const options = Object.assign({}, this._options, opts, {
+  savedAccount(provider) {
+    const options = Object.assign({}, this._options, {
       app_name: this.appName
     })
     return promisify('getSavedAccount')(provider, options);
