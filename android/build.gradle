@@ -44,7 +44,7 @@ allprojects {
 
 dependencies {
     compile 'com.facebook.react:react-native:+'
-    compile 'com.github.scribejava:scribejava-apis:+'
+    compile 'com.github.scribejava:scribejava-apis:3.4.1'
     compile 'com.github.delight-im:Android-AdvancedWebView:v3.0.0'
     compile 'com.google.code.gson:gson:+'
 }
