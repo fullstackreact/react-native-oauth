@@ -102,27 +102,6 @@ When working on iOS 10, we'll need to enable _Keychain Sharing Entitlement_ in _
 
 ![](./resources/capabilities.png)
 
-### Android setup
-
-We need to handle two steps in the installation process:
-
-* link `react-native-oauth` to our project (`react-native link react-native-oauth`)
-* Add the `maven { url "https://jitpack.io" }` to our `android/build.gradle` file under `allProjects`. For example:
-
-```java
-allprojects {
-    repositories {
-        mavenLocal()
-        jcenter()
-        maven { url "https://jitpack.io" }
-        maven {
-            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-            url "$rootDir/../node_modules/react-native/android"
-        }
-    }
-}
-```
-
 ## Handle deep linking loading
 
 **Required step**
@@ -169,12 +148,6 @@ In addition, we'll need to set up the handlers within the iOS app. Add the follo
 
 When our app loads up with a request that is coming back from OAuthManager _and_ matches the url pattern, OAuthManager will take over and handle the rest and storing the credentials for later use.
 
-### Android setup
-
-After we link `react-native-oauth` to our application, we're ready to go. Android integration is much simpler, thanks to the in-app browser ability for our apps. `react-native-oauth` handles this for you.
-
-One note, *all* of the callback urls follow the scheme: `http://localhost/[provider_name]`. Make sure this is set as a configuration for each provider below (documented in the provider setup sections).
-
 ### Adding URL schemes
 
 In order for our app to load through these callbacks, we need to tell our iOS app that we want to load them. In order to do that, we'll have to create some URL schemes to register our app. Some providers require specific schemes (mentioned later).
@@ -186,6 +159,12 @@ These URL schemes can be added by navigating to to the `info` panel of our app i
 Let's add the appropriate one for our provider. For instance, to set up twitter, add the app name as a URL scheme in the URL scheme box.
 
 ![](./resources/url-schemes.png)
+
+### Android setup
+
+After we link `react-native-oauth` to our application, we're ready to go. Android integration is much simpler, thanks to the in-app browser ability for our apps. `react-native-oauth` handles this for you.
+
+One note, *all* of the callback urls follow the scheme: `http://localhost/[provider_name]`. Make sure this is set as a configuration for each provider below (documented in the provider setup sections).
 
 ## Creating the manager
 
