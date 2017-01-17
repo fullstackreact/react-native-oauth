@@ -3,9 +3,12 @@ package io.fullstack.oauth;
 import android.util.Log;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.List;
 import android.support.annotation.Nullable;
 import java.net.URL;
 import java.net.MalformedURLException;
+import android.text.TextUtils;
+import java.util.Arrays;
 
 import com.github.scribejava.core.model.Verb;
 import com.github.scribejava.core.builder.api.BaseApi;
@@ -156,7 +159,9 @@ public class OAuthManagerProviders {
 
     String scopes = (String) cfg.get("scopes");
     if (scopes != null) {
-      builder.scope(scopes);
+      // String scopeStr = OAuthManagerProviders.getScopeString(scopes, "+");
+      // Log.d(TAG, "scopeStr: " + scopeStr);
+      // builder.scope(scopeStr);
     }
 
     if (callbackUrl != null) {
@@ -228,10 +233,14 @@ public class OAuthManagerProviders {
     String scopes = "";
     if (cfg.containsKey("scopes")) {
       scopes = (String) cfg.get("scopes");
-      builder.scope(scopes);
-    } else if (opts != null && opts.hasKey("scopes")) {
+      String scopeStr = OAuthManagerProviders.getScopeString(scopes, ",");
+      builder.scope(scopeStr);
+    }
+    
+    if (opts != null && opts.hasKey("scopes")) {
       scopes = (String) opts.getString("scopes");
-      builder.scope(scopes);
+      String scopeStr = OAuthManagerProviders.getScopeString(scopes, ",");
+      builder.scope(scopeStr);
     }
     
     if (callbackUrl != null) {
@@ -239,5 +248,17 @@ public class OAuthManagerProviders {
     }
 
     return builder;
+  }
+
+  /**
+   * Convert a list of scopes by space or string into an array
+   */
+  private static String getScopeString(
+    final String scopes,
+    final String joinBy
+  ) {
+    List<String> array = Arrays.asList(scopes.replaceAll("\\s", "").split("[ ,]+"));
+    Log.d(TAG, "array: " + array + " (" + array.size() + ") from " + scopes);
+    return TextUtils.join(joinBy, array);
   }
 }
