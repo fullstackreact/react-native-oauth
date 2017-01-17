@@ -57,7 +57,7 @@ As we are integrating with react-native, we have a little more setup to integrat
 
 #### RCTLinkingManager
 
-Since `react-native-oauth` depends upon the `RCTLinkingManager` (from react-native core), we'll need to make sure we link this in our app. 
+Since `react-native-oauth` depends upon the `RCTLinkingManager` (from react-native core), we'll need to make sure we link this in our app.
 
 In your app, add the following line to your `HEADER SEARCH PATHS`:
 
@@ -77,9 +77,9 @@ To automatically link our `react-native-oauth` client to our application, use th
 react-native link react-native-oauth
 ```
 
-Note: due to some restrictions on iOS, this module requires you to install cocoapods. The process has been semi-automated through using the above `react-native link` command. 
+Note: due to some restrictions on iOS, this module requires you to install cocoapods. The process has been semi-automated through using the above `react-native link` command.
 
-Once you have linked this library, run the following command in the root directory: 
+Once you have linked this library, run the following command in the root directory:
 
 ```
 (cd ios && pod install)
@@ -93,7 +93,7 @@ When working on iOS 10, we'll need to enable _Keychain Sharing Entitlement_ in _
 
 ### Android setup
 
-We need to handle two steps in the installation process: 
+We need to handle two steps in the installation process:
 
 * link `react-native-oauth` to our project (`react-native link react-native-oauth`)
 * Add the `maven { url "https://jitpack.io" }` to our `android/build.gradle` file under `allProjects`. For example:
@@ -144,13 +144,13 @@ In addition, we'll need to set up the handlers within the iOS app. Add the follo
   NSURL *jsCodeLocation;
 
   jsCodeLocation = [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index.ios" fallbackResource:nil];
-  
+
   // other existing setup here
-  
+
   // ADD THIS LINE SOMEWHERE IN THIS FUNCTION
   [OAuthManager setupOAuthHandler:application];
   // ...
-  
+
   [self.window makeKeyAndVisible];
   return YES;
 }
@@ -166,13 +166,13 @@ One note, *all* of the callback urls follow the scheme: `http://localhost/[provi
 
 ### Adding URL schemes
 
-In order for our app to load through these callbacks, we need to tell our iOS app that we want to load them. In order to do that, we'll have to create some URL schemes to register our app. Some providers require specific schemes (mentioned later). 
+In order for our app to load through these callbacks, we need to tell our iOS app that we want to load them. In order to do that, we'll have to create some URL schemes to register our app. Some providers require specific schemes (mentioned later).
 
 These URL schemes can be added by navigating to to the `info` panel of our app in Xcode (see screenshot).
 
 ![](./resources/info-panel.png)
 
-Let's add the appropriate one for our provider. For instance, to set up twitter, add the app name as a URL scheme in the URL scheme box. 
+Let's add the appropriate one for our provider. For instance, to set up twitter, add the app name as a URL scheme in the URL scheme box.
 
 ![](./resources/url-schemes.png)
 
@@ -222,7 +222,7 @@ The following list are the providers we've implemented thus far in `react-native
 
 #### Twitter (iOS/Android)
 
-To authenticate against twitter, we need to register a Twitter application. Register your twitter application (or create a new one at [apps.twitter.com](https://apps.twitter.com)). 
+To authenticate against twitter, we need to register a Twitter application. Register your twitter application (or create a new one at [apps.twitter.com](https://apps.twitter.com)).
 
 ![](./resources/twitter/app.png)
 
@@ -247,7 +247,7 @@ const config =  {
 
 #### Facebook (iOS/Android)
 
-To add facebook authentication, we'll need to have a Facebook app. To create one (or use an existing one), navigate to [developers.facebook.com/](https://developers.facebook.com/). 
+To add facebook authentication, we'll need to have a Facebook app. To create one (or use an existing one), navigate to [developers.facebook.com/](https://developers.facebook.com/).
 
 ![](./resources/facebook/dev.facebook.png)
 
@@ -259,7 +259,7 @@ Before we leave the Facebook settings, we need to tell Facebook we have a new re
 
 `fb{YOUR_APP_ID}`
 
-For instance, my app ID in this example is: `1745641015707619`. In the `Bundle ID` field, I have added `fb1745641015707619`. 
+For instance, my app ID in this example is: `1745641015707619`. In the `Bundle ID` field, I have added `fb1745641015707619`.
 
 ![](./resources/facebook/redirect-url.png)
 
@@ -280,7 +280,7 @@ const config =  {
 
 #### Google  (iOS)
 
-To add Google auth to our application, first we'll need to create a google application. Create or use an existing one by heading to the [developers.google.com/](https://developers.google.com/) page (or the console directly at [https://console.developers.google.com](https://console.developers.google.com)). 
+To add Google auth to our application, first we'll need to create a google application. Create or use an existing one by heading to the [developers.google.com/](https://developers.google.com/) page (or the console directly at [https://console.developers.google.com](https://console.developers.google.com)).
 
 ![](./resources/google/auth-page.png)
 
@@ -311,7 +311,7 @@ To set up Google on Android, follow the same steps as before, except this time i
 
 ![](./resources/google/android-creds.png)
 
-When creating an Android-specific configuration, create a file called `config/development.android.js`. React Native will load it instead of the `config/development.js` file automatically on Android. 
+When creating an Android-specific configuration, create a file called `config/development.android.js`. React Native will load it instead of the `config/development.js` file automatically on Android.
 
 #### Github  (iOS/Android)
 
@@ -339,7 +339,7 @@ const config =  {
 
 ## Slack
 
-We'll need to create an app first. Head to the slack developer docs at [https://slack.com/developers](https://slack.com/developers). 
+We'll need to create an app first. Head to the slack developer docs at [https://slack.com/developers](https://slack.com/developers).
 
 ![](./resources/slack/dev.png)
 
@@ -362,7 +362,7 @@ const config =  {
 }
 ```
 
-Lastly, Slack requires us to add a redirect_url. 
+Lastly, Slack requires us to add a redirect_url.
 
 For **iOS**: the callback_url pattern is `${app_name}://oauth`, so make sure to add your redirect_url where it asks for them before starting to work with the API.
 
@@ -398,7 +398,7 @@ The `resp` object is set as follows:
     authorized: true, (boolean)
     uuid: "UUID", (user UUID)
     credentials: {
-      access_token: "access token", 
+      access_token: "access token",
       refresh_token: "refresh token",
       type: 1
     }
@@ -406,7 +406,7 @@ The `resp` object is set as follows:
 }
 ```
 
-The second argument accepts an object where we can ask for additional scopes, override default values, etc. 
+The second argument accepts an object where we can ask for additional scopes, override default values, etc.
 
 ```javascript
 manager.authorize('google', {scopes: 'email,profile'})
@@ -414,13 +414,13 @@ manager.authorize('google', {scopes: 'email,profile'})
   .catch(err => console.log(err));
 ```
 
-* Scopes are a list of scopes _comma separated_ as a string. 
+* Scopes are a list of scopes _comma separated_ as a string.
 
 ## Calling a provider's API
 
 We can use OAuthManager to make requests to endpoints from our providers as well. For instance, let's say we want to get a user's time line from twitter. We would make the request to the url [https://api.twitter.com/1.1/statuses/user_timeline.json](https://api.twitter.com/1.1/statuses/user_timeline.json)
 
-If our user has been authorized for thi request, we can execute the request using the credentials stored by the OAuthManager. 
+If our user has been authorized for thi request, we can execute the request using the credentials stored by the OAuthManager.
 
 The `makeRequest()` method accepts 3 parameters:
 
@@ -431,7 +431,7 @@ The `makeRequest()` method accepts 3 parameters:
 We can pass a list of options for our request with the last argument. The keys OAuthManager recognizes are:
 
 1. `params` - The query parameters
-2. `method` - The http method to make the request with. 
+2. `method` - The http method to make the request with.
 
 Available HTTP methods:
   * get
@@ -445,17 +445,29 @@ Available HTTP methods:
 
 ```javascript
 const userTimelineUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
-authManager
+manager
   .makeRequest('twitter', userTimelineUrl)
   .then(resp => {
     console.log('Data ->', resp.data);
   });
 ```
 
+"me" represents the authenticated user, in any call to the Google+ API
+
+```javascript
+const googleUrl = 'https://www.googleapis.com/plus/v1/people/me';
+manager
+  .makeRequest('google', googleUrl)
+    .then(resp => {
+      console.log('Data -> ', resp.data);
+    });
+
+```
+
 It's possible to use just the path as well. For instance, making a request with Facebook at the `/me` endpoint can be:
 
 ```javascript
-authManager
+manager
   .makeRequest('facebook', '/me')
   .then(resp => {
     console.log('Data ->', resp.data);
@@ -465,9 +477,9 @@ authManager
 To add more data to our requests, we can pass a third argument:
 
 ```javascript
-authManager
-  .makeRequest('facebook', '/me', { 
-    headers: { 'Content-Type': 'application/java' }, 
+manager
+  .makeRequest('facebook', '/me', {
+    headers: { 'Content-Type': 'application/java' },
     params: { email: 'me+rocks@ari.io' }
   })
   .then(resp => {
@@ -493,7 +505,7 @@ We can `deauthorize()` our user's from using the provider by calling the `deauth
 1. The `provider` we want to remove from our user credentials.
 
 ```javascript
-authManager.deauthorize('twitter');
+manager.deauthorize('twitter');
 ```
 
 ## Contributing
