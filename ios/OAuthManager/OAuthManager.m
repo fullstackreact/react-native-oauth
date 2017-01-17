@@ -347,6 +347,7 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                          url:callbackUrl
                          cfg:cfg
                    onSuccess:^(DCTAuthAccount *account) {
+                      NSLog(@"on success called with account: %@", account);
                        NSDictionary *accountResponse = [manager getAccountResponse:account cfg:cfg];
                        _pendingAuthentication = NO;
                        [manager removePending:client];

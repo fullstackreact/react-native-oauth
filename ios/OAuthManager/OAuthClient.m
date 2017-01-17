@@ -30,7 +30,12 @@
 - (void) cancelAuthentication
 {
   if (_account != nil) {
-    [_account cancelAuthentication];
+    @try {
+      [_account cancelAuthentication];
+    }
+    @catch (NSException *exception) {
+      NSLog(@"An exception occurred while cancelling authentication: %@", [exception reason]);
+    }
   }
 }
 
