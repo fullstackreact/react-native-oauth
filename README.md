@@ -55,6 +55,14 @@ As we are integrating with react-native, we have a little more setup to integrat
 
 ### iOS setup
 
+**Important**: This will _not_ work if you do not complete all the steps:
+
+[ ] Link the `RCTLinkingManager` project
+[ ] Update your `AppDelegate.h` file
+[ ] Add KeychainSharing in your app
+[ ] Link the `react-native-oauth` project with your application (`react-native link`)
+[ ] Register a URL type of your application (Info tab -- see below)
+
 #### RCTLinkingManager
 
 Since `react-native-oauth` depends upon the `RCTLinkingManager` (from react-native core), we'll need to make sure we link this in our app.
