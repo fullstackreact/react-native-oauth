@@ -220,6 +220,10 @@ Once you have created one, navigate to the application and find the `Keys and Ac
 
 ![](./resources/twitter/api-key.png)
 
+For the authentication to work properly, you need to set the Callback URL. It doesn't matter what you choose as long as its a valid url.
+
+![](./resources/twitter/callback-url.png)
+
 Twitter's URL scheme needs to be the app name (that we pass into the constructor method). Make sure we have one registered in Xcode as the same name:
 
 ![](./resources/twitter/url-scheme.png)
@@ -253,9 +257,13 @@ For instance, my app ID in this example is: `1745641015707619`. In the `Bundle I
 
 ![](./resources/facebook/redirect-url.png)
 
+For Android, you will also need to set the redirect url to `http://localhost/facebook` in the Facebook Login settings.
+
+![](./resources/facebook/redirect-url.png)
+
 We'll need to create a new URL scheme for Facebook and (this is a weird bug on the Facebook side) the facebook redirect URL scheme _must be the first one_ in the list. The URL scheme needs to be the same id as the `Bundle ID` copied from above:
 
-![](./resources/facebook/url-scheme.png)
+![](./resources/facebook/facebook-redirect.png)
 
 Back in our application, add the App ID and the secret as:
 
