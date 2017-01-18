@@ -166,6 +166,33 @@ After we link `react-native-oauth` to our application, we're ready to go. Androi
 
 One note, *all* of the callback urls follow the scheme: `http://localhost/[provider_name]`. Make sure this is set as a configuration for each provider below (documented in the provider setup sections).
 
+Make sure you add the following to your `android/build.gradle` file:
+
+```
+maven { url "https://jitpack.io" }
+```
+
+For instance, an example `android/build.gradle` file would look like this:
+
+```
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+  // ...
+}
+
+allprojects {
+    repositories {
+        mavenLocal()
+        jcenter()
+        maven { url "https://jitpack.io" } // <~ ADD THIS LINE
+        maven {
+            url "$rootDir/../node_modules/react-native/android"
+        }
+    }
+}
+```
+
 ## Creating the manager
 
 In our JS, we can create the manager by instantiating a new instance of it using the `new` method and passing it the name of our app:
