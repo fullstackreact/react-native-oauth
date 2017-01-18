@@ -360,11 +360,12 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                    } onError:^(NSError *error) {
                        NSLog(@"Error in authorizeWithUrl: %@", error);
                        _pendingAuthentication = NO;
-                       [manager removePending:client];
                        callback(@[@{
                                       @"status": @"error",
-                                      @"msg": [error localizedDescription]
+                                      @"msg": [error localizedDescription],
+                                      @"userInfo": error.userInfo
                                       }]);
+                       [manager removePending:client];
                    }];
 }
 
