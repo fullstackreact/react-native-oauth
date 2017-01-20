@@ -96,7 +96,7 @@ Once you have linked this library, run the following command in the root directo
 (cd ios && pod install)
 ```
 
-Open the created `.xcworkspace` in the `ios/` directory (**NOT THE `.xproj` file**) when it's complete.
+Open in xcode the created `.xcworkspace` in the `ios/` directory (**NOT THE `.xproj` file**) when it's complete.
 
 When working on iOS 10, we'll need to enable _Keychain Sharing Entitlement_ in _Capabilities_ of the build target of `io.fullstack.oauth.AUTH_MANAGER`.
 
