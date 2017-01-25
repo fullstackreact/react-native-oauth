@@ -114,7 +114,7 @@ RCT_EXPORT_MODULE(OAuthManager);
         return [DCTAuth handleURL:url];
     }
     
-    [manager clearPending];
+    // [manager clearPending];
     
     return [RCTLinkingManager application:application openURL:url
                         sourceApplication:sourceApplication annotation:annotation];
@@ -134,11 +134,14 @@ RCT_EXPORT_MODULE(OAuthManager);
     NSMutableArray *arr = [_callbackUrls mutableCopy];
     NSString *callbackUrlStr = [config valueForKey:@"callback_url"];
     NSURL *callbackUrl = [NSURL URLWithString:callbackUrlStr];
-    NSString *saveCallbackUrl = [self stringHost:callbackUrl];
-    [arr addObject:saveCallbackUrl];
-    _callbackUrls = [arr copy];
+    NSString *saveCallbackUrl = [[self stringHost:callbackUrl] lowercaseString];
+    
+    if ([arr indexOfObject:saveCallbackUrl] == NSNotFound) {
+        [arr addObject:saveCallbackUrl];
+        _callbackUrls = [arr copy];
+        NSLog(@"Saved callback url: %@ in %@", saveCallbackUrl, _callbackUrls);
+    }
 
-    NSLog(@"Saved callback url: %@ in %@", saveCallbackUrl, _callbackUrls);
     
     // Convert objects of url type
     for (NSString *name in [config allKeys]) {
@@ -513,16 +516,26 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
     if ([version isEqualToString:@"1.0"]) {
         DCTOAuth1Credential *credentials = [account credential];
         
-        if (credentials && credentials.oauthToken) {
-            NSString *token = credentials.oauthToken;
-            [dict setObject:token forKey:@"access_token"];
+        if (credentials) {
+            if (credentials.oauthToken) {
+                NSString *token = credentials.oauthToken;
+                [dict setObject:token forKey:@"access_token"];
+            }
+            
+            if (credentials.oauthTokenSecret) {
+                NSString *secret = credentials.oauthTokenSecret;
+                [dict setObject:secret forKey:@"access_token_secret"];
+            }
         }
+        
     } else if ([version isEqualToString:@"2.0"]) {
         DCTOAuth2Credential *credentials = [account credential];
         
-        if (credentials && credentials.accessToken) {
-            NSString *token = credentials.accessToken;
-            [dict setObject:token forKey:@"access_token"];
+        if (credentials) {
+            if (credentials.accessToken) {
+                NSString *token = credentials.accessToken;
+                [dict setObject:token forKey:@"access_token"];
+            }
         }
     }
     

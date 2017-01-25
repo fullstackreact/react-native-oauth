@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "RCTBridgeModule.h"
+#import <React/RCTBridgeModule.h>
 #import "RCTLinkingManager.h"
 
 @class OAuthClient;
