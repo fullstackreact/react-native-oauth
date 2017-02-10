@@ -13,7 +13,9 @@ const OAuthManagerBridge = NativeModules.OAuthManager;
 let configured = false;
 const STORAGE_KEY = 'ReactNativeOAuth';
 import promisify from './lib/promisify'
-import authProviders from './lib/authProviders';
+import defaultProviders from './lib/authProviders';
+
+let authProviders = defaultProviders;
 
 const identity = (props) => props;
 /**
@@ -25,6 +27,10 @@ export default class OAuthManager {
 
     this.appName = appName;
     this._options = opts;
+  }
+
+  addProvider(provider) {
+     Object.assign({}, authProviders, provider);
   }
 
   configure(providerConfigs) {
@@ -99,11 +105,11 @@ export default class OAuthManager {
   // Private
   /**
    * Configure a single provider
-   * 
-   * 
+   *
+   *
    * @param {string} name of the provider
    * @param {object} additional configuration
-   * 
+   *
    **/
   configureProvider(name, props) {
     invariant(OAuthManager.isSupported(name), `The provider ${name} is not supported yet`);
