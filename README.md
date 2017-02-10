@@ -222,7 +222,7 @@ const config =  {
   },
   facebook: {
     client_id: 'YOUR_CLIENT_ID',
-    client_Secret: 'YOUR_CLIENT_SECRET'
+    client_secret: 'YOUR_CLIENT_SECRET'
   }
 }
 // Create the manager
