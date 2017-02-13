@@ -533,6 +533,21 @@ We can `deauthorize()` our user's from using the provider by calling the `deauth
 manager.deauthorize('twitter');
 ```
 
+## Adding your own providers
+
+To add your own providers you can use the `addProvider()` method and fill in your provider details:
+
+```javascript
+manager.addProvider({
+    'name_of_provider': {
+        auth_version: '2.0',
+        authorize_url: 'https://provider.dev/oauth',
+        access_token_url: 'https://provider.dev/oauth/token',
+        callback_url: ({app_name}) => `${app_name}://oauth`,
+    }
+});
+```
+
 ## Contributing
 
 This is _open-source_ software and we can make it rock for everyone through contributions.
