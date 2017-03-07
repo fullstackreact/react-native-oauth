@@ -7,8 +7,18 @@
 
 #import <Foundation/Foundation.h>
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTLinkingManager.h>
+#if __has_include("RCTBridgeModule.h")
+    #import "RCTBridgeModule.h"
+else
+    #import <React/RCTBridgeModule.h>
+#endif
+
+#if __has_include("RCTLinkingManager.h")
+    #import "RCTLinkingManager.h"
+else
+    #import <React/RCTLinkingManager.h>
+#endif
+
 
 @class OAuthClient;
 
