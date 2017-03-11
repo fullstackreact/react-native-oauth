@@ -30,7 +30,7 @@ export default class OAuthManager {
   }
 
   addProvider(provider) {
-     Object.assign({}, authProviders, provider);
+     Object.assign(authProviders, provider);
   }
 
   configure(providerConfigs) {
