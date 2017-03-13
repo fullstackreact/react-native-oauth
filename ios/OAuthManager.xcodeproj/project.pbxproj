@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B76E094E1E768CE100A9AF9A /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = B76E094B1E768CE100A9AF9A /* README.md */; };
+		B76E094F1E768CE100A9AF9A /* XMLReader.h in Headers */ = {isa = PBXBuildFile; fileRef = B76E094C1E768CE100A9AF9A /* XMLReader.h */; };
+		B76E09501E768CE100A9AF9A /* XMLReader.m in Sources */ = {isa = PBXBuildFile; fileRef = B76E094D1E768CE100A9AF9A /* XMLReader.m */; };
 		D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D935004C1D513CF700C7BA47 /* OAuthManager.m */; };
 		D9F2EAD31DA9A9650000BD52 /* OAuthClient.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F2EAD11DA9A9650000BD52 /* OAuthClient.h */; };
 		D9F2EAD41DA9A9650000BD52 /* OAuthClient.m in Sources */ = {isa = PBXBuildFile; fileRef = D9F2EAD21DA9A9650000BD52 /* OAuthClient.m */; };
@@ -65,6 +68,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B76E094B1E768CE100A9AF9A /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		B76E094C1E768CE100A9AF9A /* XMLReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMLReader.h; sourceTree = "<group>"; };
+		B76E094D1E768CE100A9AF9A /* XMLReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XMLReader.m; sourceTree = "<group>"; };
 		D91353961DA7849100AABC96 /* libOAuthManager.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOAuthManager.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		D935004C1D513CF700C7BA47 /* OAuthManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OAuthManager.m; path = OAuthManager/OAuthManager.m; sourceTree = "<group>"; };
 		D991AB771D1B237400DE9E58 /* Pods.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Pods.xcodeproj; path = Pods/Pods.xcodeproj; sourceTree = "<group>"; };
@@ -91,9 +97,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B76E094A1E768CE100A9AF9A /* XMLReader */ = {
+			isa = PBXGroup;
+			children = (
+				B76E094B1E768CE100A9AF9A /* README.md */,
+				B76E094C1E768CE100A9AF9A /* XMLReader.h */,
+				B76E094D1E768CE100A9AF9A /* XMLReader.m */,
+			);
+			name = XMLReader;
+			path = OAuthManager/XMLReader;
+			sourceTree = SOURCE_ROOT;
+		};
 		D93EF9941DA77CBB00EC55A0 /* /Users/auser/Development/react-native/mine/OAuthManager/ios/OAuthManager.xcodeproj */ = {
 			isa = PBXGroup;
 			children = (
+				B76E094A1E768CE100A9AF9A /* XMLReader */,
 				D9F2EADF1DA9A9930000BD52 /* OAuthManager.h */,
 				D9F2EAE01DA9A9930000BD52 /* OAuthManager.m */,
 				D9F2EAE11DA9A9930000BD52 /* OAuthManagerConstants.h */,
@@ -143,6 +161,7 @@
 			files = (
 				D9F2EAD91DA9A9730000BD52 /* OAuth1Client.h in Headers */,
 				D9F2EADE1DA9A9840000BD52 /* OAuthClientProtocol.h in Headers */,
+				B76E094F1E768CE100A9AF9A /* XMLReader.h in Headers */,
 				D9F2EADB1DA9A9730000BD52 /* OAuth2Client.h in Headers */,
 				D9F2EAD31DA9A9650000BD52 /* OAuthClient.h in Headers */,
 				D9F2EAE41DA9A9930000BD52 /* OAuthManagerConstants.h in Headers */,
@@ -232,11 +251,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B76E094E1E768CE100A9AF9A /* README.md in Sources */,
 				D9F2EADC1DA9A9730000BD52 /* OAuth2Client.m in Sources */,
 				D935004D1D513CF700C7BA47 /* OAuthManager.m in Sources */,
 				D9F2EAD41DA9A9650000BD52 /* OAuthClient.m in Sources */,
 				D9F2EADA1DA9A9730000BD52 /* OAuth1Client.m in Sources */,
 				D9F2EAE31DA9A9930000BD52 /* OAuthManager.m in Sources */,
+				B76E09501E768CE100A9AF9A /* XMLReader.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

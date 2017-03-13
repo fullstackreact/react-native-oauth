@@ -9,13 +9,13 @@
 
 #if __has_include("RCTBridgeModule.h")
     #import "RCTBridgeModule.h"
-else
+#else
     #import <React/RCTBridgeModule.h>
 #endif
 
 #if __has_include("RCTLinkingManager.h")
     #import "RCTLinkingManager.h"
-else
+#else
     #import <React/RCTLinkingManager.h>
 #endif
 

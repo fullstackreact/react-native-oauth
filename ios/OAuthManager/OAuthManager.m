@@ -15,6 +15,7 @@
 #import "OAuthClient.h"
 #import "OAuth1Client.h"
 #import "OAuth2Client.h"
+#import "XMLReader.h"
 
 @interface OAuthManager()
 @property (nonatomic) NSArray *pendingClients;
@@ -464,9 +465,22 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
             NSData *rawData = response.data;
             
             NSError *err;
-            NSArray *data = [NSJSONSerialization JSONObjectWithData:rawData
-                                                            options:kNilOptions
-                                                              error:&err];
+            NSArray *data;
+            
+            // Check if returned data is a valid JSON
+            // != nil returned if the rawdata is not a valid JSON
+            if ((data = [NSJSONSerialization JSONObjectWithData:rawData
+                                                        options:kNilOptions
+                                                          error:&err]) == nil) {
+                // Resetting err variable.
+                err = nil;
+                
+                // Parse XML
+                data = [XMLReader dictionaryForXMLData:rawData
+                                            options:XMLReaderOptionsProcessNamespaces
+                                                    error:&err];
+            }
+            
             if (err != nil) {
                 NSDictionary *errResp = @{
                                           @"status": @"error",
