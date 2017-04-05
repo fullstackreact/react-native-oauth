@@ -294,7 +294,9 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
     NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
     
     DCTAuthAccount *existingAccount = [manager accountForProvider:providerName];
-    if (existingAccount != nil) {
+    NSString *clientID = ((DCTOAuth2Credential *) existingAccount).clientID;
+    if (([providerName isEqualToString:@"google"] && existingAccount && clientID != nil)
+        || (![providerName isEqualToString:@"google"] && existingAccount != nil)) {
         if ([existingAccount isAuthorized]) {
             NSDictionary *accountResponse = [manager getAccountResponse:existingAccount cfg:cfg];
             callback(@[[NSNull null], @{
