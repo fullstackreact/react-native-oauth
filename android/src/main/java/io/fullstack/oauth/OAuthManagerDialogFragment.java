@@ -1,50 +1,40 @@
 package io.fullstack.oauth;
 
-import im.delight.android.webview.AdvancedWebView;
-import android.app.Dialog;
-
-import android.net.Uri;
-import java.util.Set;
-import java.net.URL;
-import java.net.MalformedURLException;
-import android.text.TextUtils;
 import android.annotation.SuppressLint;
-import android.widget.LinearLayout;
-import android.view.Gravity;
-import android.os.Build;
-
 import android.app.DialogFragment;
-import android.content.DialogInterface;
-import android.widget.FrameLayout;
-
-import android.webkit.WebView;
-import android.view.View;
-import android.webkit.WebViewClient;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.content.Context;
-import android.util.DisplayMetrics;
-import android.view.Display;
-import java.lang.reflect.Method;
 import android.view.WindowManager;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 
-import com.github.scribejava.core.model.OAuth1AccessToken;
-import com.github.scribejava.core.model.OAuth1RequestToken;
-import android.util.Log;
-import android.graphics.Bitmap;
-import android.os.Bundle;
-import android.app.Fragment;
-import java.io.IOException;
 import com.facebook.react.bridge.ReactContext;
+import com.github.scribejava.core.model.OAuth1AccessToken;
+
+import java.lang.reflect.Method;
+import java.util.Set;
+
+import im.delight.android.webview.AdvancedWebView;
 
 public class OAuthManagerDialogFragment extends DialogFragment implements AdvancedWebView.Listener {
 
   private static final int WEBVIEW_TAG = 100001;
   private static final int WIDGET_TAG  = 100002;
 
-    private static final String TAG = "OAuthManagerDialogFragment";
+    private static final String TAG = "OauthFragment";
     private OAuthManagerFragmentController mController;
 
     private ReactContext mReactContext;
@@ -57,7 +47,6 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
       Bundle args = new Bundle();
       OAuthManagerDialogFragment frag =
         new OAuthManagerDialogFragment(reactContext, controller);
-
       return frag;
     }
 
@@ -90,7 +79,7 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
         // mWebView = (AdvancedWebView) rootView.findViewById(R.id.webview);
         Log.d(TAG, "Creating webview");
         mWebView = new AdvancedWebView(context);
-        mWebView.setId(WEBVIEW_TAG);
+//        mWebView.setId(WEBVIEW_TAG);
         mWebView.setListener(this, this);
         mWebView.setVisibility(View.VISIBLE);
         mWebView.getSettings().setJavaScriptEnabled(true);
@@ -179,7 +168,6 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
           Log.i(TAG, "interceptUrl called with url: " + url);
           if (isCallbackUri(url, mController.getCallbackUrl())) {
             mController.getAccessToken(mWebView, url);
-
             return true;
           }
 
@@ -203,11 +191,11 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
       Log.d(TAG, "onStart for DialogFragment");
     }
 
-    @Override
-    public void onDismiss(final DialogInterface dialog) {
-        super.onDismiss(dialog);
-        Log.d(TAG, "Dismissing dialog");
-    }
+//    @Override
+//    public void onDismiss(final DialogInterface dialog) {
+//        super.onDismiss(dialog);
+//        Log.d(TAG, "Dismissing dialog");
+//    }
 
 
     // @Override
