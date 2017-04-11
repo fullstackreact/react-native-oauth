@@ -169,7 +169,7 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
           realHeight = display.getHeight();
       }
 
-      return new LayoutParams(realWidth, realHeight-100);
+      return new LayoutParams(realWidth, realHeight-convertDpToPixel(50f,context));
     }
 
 
