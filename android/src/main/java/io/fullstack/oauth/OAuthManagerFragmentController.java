@@ -1,35 +1,26 @@
 package io.fullstack.oauth;
 
-import android.app.Dialog;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.AsyncTask;
-import android.text.TextUtils;
-import im.delight.android.webview.AdvancedWebView;
-
-import com.facebook.react.bridge.ReactContext;
-import android.net.Uri;
-import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.io.IOException;
-
-import com.github.scribejava.core.model.OAuth1RequestToken;
+import com.facebook.react.bridge.ReactContext;
+import com.github.scribejava.core.exceptions.OAuthConnectionException;
 import com.github.scribejava.core.model.OAuth1AccessToken;
+import com.github.scribejava.core.model.OAuth1RequestToken;
 import com.github.scribejava.core.model.OAuth2AccessToken;
-import com.github.scribejava.core.model.Token;
-
-import com.github.scribejava.core.model.OAuthRequest;
-import com.github.scribejava.core.oauth.OAuthService;
 import com.github.scribejava.core.oauth.OAuth10aService;
 import com.github.scribejava.core.oauth.OAuth20Service;
-import com.github.scribejava.core.exceptions.OAuthConnectionException;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import im.delight.android.webview.AdvancedWebView;
 
 // Credit where credit is due:
 // Mostly taken from 
@@ -135,7 +126,7 @@ public class OAuthManagerFragmentController {
                       (OAuthManagerDialogFragment) fragmentManager.findFragmentByTag(TAG);
                       
               if (frag != null) {
-                  frag.dismissAllowingStateLoss();
+                  //frag.dismissAllowingStateLoss();
               }
           }
       });
