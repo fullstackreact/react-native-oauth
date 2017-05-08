@@ -1,55 +1,39 @@
 package io.fullstack.oauth;
 
-import android.util.Log;
-import android.content.Context;
-import android.net.Uri;
-import android.os.Handler;
-import android.content.SharedPreferences;
-
-import java.net.URL;
-import java.net.MalformedURLException;
-
-import android.support.annotation.Nullable;
-import android.app.FragmentManager;
-import android.support.v4.app.FragmentActivity;
 import android.app.Activity;
-import android.text.TextUtils;
+import android.app.FragmentManager;
+import android.content.Context;
+import android.support.annotation.Nullable;
+import android.util.Log;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
+import com.google.gson.Gson;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.LifecycleEventListener;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.Callback;
-import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableArray;
-import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
-import com.facebook.react.bridge.ReactContext;
-
-import com.github.scribejava.core.builder.api.BaseApi;
-import com.github.scribejava.core.model.Verb;
-
-import com.github.scribejava.core.builder.ServiceBuilder;
+import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableMap;
 import com.github.scribejava.core.model.OAuth1AccessToken;
-import com.github.scribejava.core.model.OAuth1RequestToken;
+import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.model.OAuthRequest;
-import com.github.scribejava.core.model.OAuthConfig;
 import com.github.scribejava.core.model.Response;
 import com.github.scribejava.core.model.Verb;
 import com.github.scribejava.core.oauth.OAuth10aService;
-
-import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.oauth.OAuth20Service;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class ProviderNotConfiguredException extends Exception {
   public ProviderNotConfiguredException(String message) {
@@ -71,7 +55,6 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   public OAuthManagerModule(ReactApplicationContext reactContext) {
     super(reactContext);
     mReactContext = reactContext;
-
     _credentialsStore = OAuthManagerStore.getOAuthManagerStore(mReactContext, TAG, Context.MODE_PRIVATE);
     Log.d(TAG, "New instance");
   }
@@ -128,7 +111,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
       final OAuthManagerModule self = this;
       final HashMap<String,Object> cfg = this.getConfiguration(providerName);
       final String authVersion = (String) cfg.get("auth_version");
-      Activity activity = mReactContext.getCurrentActivity();
+      Activity activity = this.getCurrentActivity();
       FragmentManager fragmentManager = activity.getFragmentManager();
       String callbackUrl = "http://localhost/" + providerName;
       
@@ -417,15 +400,17 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   ) {
     WritableMap resp = Arguments.createMap();
     WritableMap response = Arguments.createMap();
+    Map accessTokenMap = new Gson().fromJson(accessToken.getRawResponse(), Map.class);
 
     Log.d(TAG, "Credential raw response: " + accessToken.getRawResponse());
-
+    
     resp.putString("status", "ok");
     resp.putBoolean("authorized", true);
     resp.putString("provider", providerName);
-    response.putString("uuid", accessToken.getParameter("user_id"));
+    String uuid = (String) accessTokenMap.get("user_id");
+    response.putString("uuid", uuid);
     
-    String tokenType = accessToken.getParameter("token_type");
+    String tokenType = (String) accessTokenMap.get("token_type");
     if (tokenType == null) {
       tokenType = "Bearer";
     }
@@ -453,12 +438,14 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   ) {
     WritableMap resp = Arguments.createMap();
     WritableMap response = Arguments.createMap();
+    Map accessTokenMap = new Gson().fromJson(accessToken.getRawResponse(), Map.class);
 
     resp.putString("status", "ok");
     resp.putBoolean("authorized", true);
     resp.putString("provider", providerName);
     try {
-      response.putString("uuid", accessToken.getParameter("user_id"));
+      String uuid = (String) accessTokenMap.get("user_id");
+      response.putString("uuid", uuid);
     } catch (Exception ex) {
       Log.e(TAG, "Exception while getting the access token");
       ex.printStackTrace();
@@ -466,11 +453,11 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     
     WritableMap credentials = Arguments.createMap();
     Log.d(TAG, "Credential raw response: " + accessToken.getRawResponse());
-
+    
     credentials.putString("accessToken", accessToken.getAccessToken());
     String authHeader;
 
-    String tokenType = accessToken.getParameter("token_type");
+    String tokenType = (String) accessTokenMap.get("token_type");
     if (tokenType == null) {
       tokenType = "Bearer";
     }
@@ -481,12 +468,14 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     }
 
     String clientID = (String) cfg.get("client_id");
+    String idToken = (String) accessTokenMap.get("id_token");
 
     authHeader = tokenType + " " + accessToken.getAccessToken();
     credentials.putString("authorizationHeader", authHeader);
     credentials.putString("type", tokenType);
     credentials.putString("scopes", scope);
     credentials.putString("clientID", clientID);
+    credentials.putString("idToken", idToken);
     response.putMap("credentials", credentials);
 
     resp.putMap("response", response);
