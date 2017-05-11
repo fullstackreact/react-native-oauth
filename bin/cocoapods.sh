@@ -3,7 +3,7 @@
 ## https://github.com/auth0/react-native-lock/blob/master/bin/cocoapods.sh
 
 ios_dir=`pwd`/ios
-if [ -d ios_dir ]
+if [ ! -d $ios_dir ]
   then
   exit 0
 fi
