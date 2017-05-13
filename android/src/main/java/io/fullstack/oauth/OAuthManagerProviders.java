@@ -28,6 +28,7 @@ import com.github.scribejava.apis.FacebookApi;
 import com.github.scribejava.apis.GoogleApi20;
 import com.github.scribejava.apis.GitHubApi;
 
+import com.github.scribejava.apis.ConfigurableApi;
 import com.github.scribejava.apis.SlackApi;
 
 import com.facebook.react.bridge.ReadableMap;
@@ -59,15 +60,27 @@ public class OAuthManagerProviders {
   ) {
     if (providerName.equalsIgnoreCase("facebook")) {
       return OAuthManagerProviders.facebookService(params, opts, callbackUrl);
-    } else if (providerName.equalsIgnoreCase("google")) {
+    }
+    
+    if (providerName.equalsIgnoreCase("google")) {
       return OAuthManagerProviders.googleService(params, opts, callbackUrl);
-    } else if (providerName.equalsIgnoreCase("github")) {
+    }
+    
+    if (providerName.equalsIgnoreCase("github")) {
       return OAuthManagerProviders.githubService(params, opts, callbackUrl);
-    } else if (providerName.equalsIgnoreCase("slack")) {
+    }
+    
+    if (providerName.equalsIgnoreCase("slack")) {
       return OAuthManagerProviders.slackService(params, opts, callbackUrl);
     } else {
       return null;
     }
+    
+    if (params.containsKey("access_token_url") && params.containsKey("authorize_url")) {
+      return OAuthManagerProviders.configurableService(params, opts, callbackUrl);
+    }
+    
+    return null;
   }
 
   static public OAuthRequest getRequestForProvider(
@@ -198,6 +211,19 @@ public class OAuthManagerProviders {
     return builder.build(GitHubApi.instance());
   }
 
+  private static OAuth20Service configurableService(
+    final HashMap cfg, 
+    @Nullable final ReadableMap opts,
+    final String callbackUrl
+  ) {
+    ServiceBuilder builder = OAuthManagerProviders._oauth2ServiceBuilder(cfg, opts, callbackUrl);
+    ConfigurableApi api = ConfigurableApi.instance()
+      .setAccessTokenEndpoint((String) cfg.get("access_token_url"))
+      .setAuthorizationBaseUrl((String) cfg.get("authorize_url"));
+    
+    return builder.build(api);
+  }
+  
   private static OAuth20Service slackService(
     final HashMap cfg, 
     @Nullable final ReadableMap opts,
