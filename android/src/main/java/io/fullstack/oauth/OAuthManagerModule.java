@@ -6,8 +6,6 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.gson.Gson;
-
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -400,17 +398,17 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   ) {
     WritableMap resp = Arguments.createMap();
     WritableMap response = Arguments.createMap();
-    Map accessTokenMap = new Gson().fromJson(accessToken.getRawResponse(), Map.class);
 
     Log.d(TAG, "Credential raw response: " + accessToken.getRawResponse());
     
     resp.putString("status", "ok");
     resp.putBoolean("authorized", true);
     resp.putString("provider", providerName);
-    String uuid = (String) accessTokenMap.get("user_id");
+
+    String uuid = accessToken.getParameter("user_id");
     response.putString("uuid", uuid);
     
-    String tokenType = (String) accessTokenMap.get("token_type");
+    String tokenType = (String) accessToken.getParameter("token_type");
     if (tokenType == null) {
       tokenType = "Bearer";
     }
@@ -419,8 +417,8 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
     WritableMap credentials = Arguments.createMap();
     credentials.putString("accessToken", accessToken.getToken());
+    credentials.putString("accessTokenSecret", accessToken.getTokenSecret());
     credentials.putString("type", tokenType);
-    // credentials.putString("scope", accessToken.getScope());
     credentials.putString("consumerKey", consumerKey);
 
     response.putMap("credentials", credentials);
@@ -438,18 +436,13 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   ) {
     WritableMap resp = Arguments.createMap();
     WritableMap response = Arguments.createMap();
-    Map accessTokenMap = new Gson().fromJson(accessToken.getRawResponse(), Map.class);
 
     resp.putString("status", "ok");
     resp.putBoolean("authorized", true);
     resp.putString("provider", providerName);
-    try {
-      String uuid = (String) accessTokenMap.get("user_id");
-      response.putString("uuid", uuid);
-    } catch (Exception ex) {
-      Log.e(TAG, "Exception while getting the access token");
-      ex.printStackTrace();
-    }
+
+    String uuid = accessToken.getParameter("user_id");
+    response.putString("uuid", uuid);
     
     WritableMap credentials = Arguments.createMap();
     Log.d(TAG, "Credential raw response: " + accessToken.getRawResponse());
@@ -457,7 +450,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     credentials.putString("accessToken", accessToken.getAccessToken());
     String authHeader;
 
-    String tokenType = (String) accessTokenMap.get("token_type");
+    String tokenType = accessToken.getTokenType();
     if (tokenType == null) {
       tokenType = "Bearer";
     }
@@ -468,7 +461,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     }
 
     String clientID = (String) cfg.get("client_id");
-    String idToken = (String) accessTokenMap.get("id_token");
+    String idToken = accessToken.getParameter("id_token");
 
     authHeader = tokenType + " " + accessToken.getAccessToken();
     credentials.putString("authorizationHeader", authHeader);
