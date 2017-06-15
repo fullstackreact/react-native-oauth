@@ -7,6 +7,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
+#import <SafariServices/SafariServices.h>
 
 #import "OAuthManager.h"
 #import "DCTAuth.h"
@@ -29,6 +30,7 @@
 static NSString *const AUTH_MANAGER_TAG = @"AUTH_MANAGER";
 static OAuthManager *manager;
 static dispatch_once_t onceToken;
+static SFSafariViewController *safariViewController = nil;
 
 RCT_EXPORT_MODULE(OAuthManager);
 
@@ -85,7 +87,13 @@ RCT_EXPORT_MODULE(OAuthManager);
     
     [authPlatform setURLOpener: ^void(NSURL *URL, DCTAuthPlatformCompletion completion) {
         // [sharedManager setPendingAuthentication:YES];
-        [application openURL:URL];
+        if ([SFSafariViewController class] != nil) {
+            safariViewController = [[SFSafariViewController alloc] initWithURL:URL];
+            UIViewController *viewController = application.keyWindow.rootViewController;
+            [viewController presentViewController:safariViewController animated:YES completion: nil];
+        } else {
+            [application openURL:URL];
+        }
         completion(YES);
     }];
     
@@ -112,6 +120,9 @@ RCT_EXPORT_MODULE(OAuthManager);
     NSString *strUrl = [manager stringHost:url];
     
     if ([manager.callbackUrls indexOfObject:strUrl] != NSNotFound) {
+        if(safariViewController != nil) {
+            [safariViewController dismissViewControllerAnimated:YES completion:nil];
+        }
         return [DCTAuth handleURL:url];
     }
     
