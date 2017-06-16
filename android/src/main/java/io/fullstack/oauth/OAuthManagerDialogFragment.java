@@ -35,6 +35,9 @@ import java.util.Set;
 
 import im.delight.android.webview.AdvancedWebView;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class OAuthManagerDialogFragment extends DialogFragment implements AdvancedWebView.Listener {
 
   private static final int WEBVIEW_TAG = 100001;
@@ -195,6 +198,15 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
 
         private boolean interceptUrl(WebView view, String url, boolean loadUrl) {
           Log.i(TAG, "interceptUrl called with url: " + url);
+
+          // url would be http://localhost/twitter?denied=xxx when it's canceled
+          Pattern p = Pattern.compile("\\S*denied\\S*");
+          Matcher m = p.matcher(url);
+          if(m.matches()){
+            Log.i(TAG, "authentication is canceled");
+            return false;
+          }
+
           if (isCallbackUri(url, mController.getCallbackUrl())) {
             mController.getAccessToken(mWebView, url);
             return true;
