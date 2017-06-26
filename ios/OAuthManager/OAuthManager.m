@@ -149,14 +149,11 @@ RCT_EXPORT_MODULE(OAuthManager);
         if ([name rangeOfString:@"_url"].location != NSNotFound) {
             // This is a URL representation
             NSString *urlStr = [config valueForKey:name];
-            NSURL *url = [NSURL URLWithString:[urlStr
-                                               stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+            NSURL *url = [NSURL URLWithString:urlStr];
             [objectProps setObject:url forKey:name];
         } else {
             NSString *str = [NSString stringWithString:[config valueForKey:name]];
-            NSString *escapedStr = [str
-                                    stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]];
-            [objectProps setValue:[escapedStr copy] forKey:name];
+            [objectProps setValue:str forKey:name];
         }
     }
     
