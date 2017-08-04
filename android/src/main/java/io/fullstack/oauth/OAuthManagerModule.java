@@ -137,11 +137,13 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
         }
       };
 
+      OAuthManagerFragmentController ctrl = null;
+
       if (authVersion.equals("1.0")) {
         final OAuth10aService service = 
           OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, params, callbackUrl);
 
-        OAuthManagerFragmentController ctrl =
+        ctrl =
           new OAuthManagerFragmentController(mReactContext, fragmentManager, providerName, service, callbackUrl);
 
         ctrl.requestAuth(cfg, listener);
@@ -149,13 +151,15 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
         final OAuth20Service service =
           OAuthManagerProviders.getApiFor20Provider(providerName, cfg, params, callbackUrl);
         
-        OAuthManagerFragmentController ctrl =
+        ctrl =
           new OAuthManagerFragmentController(mReactContext, fragmentManager, providerName, service, callbackUrl);
 
         ctrl.requestAuth(cfg, listener);
       } else {
         Log.d(TAG, "Auth version unknown: " + (String) cfg.get("auth_version"));
       }
+
+      this.ctrlReference = ctrl;
     } catch (Exception ex) {
       Log.d(TAG, "Exception in callback " + ex.getMessage());
       exceptionCallback(ex, callback);
@@ -377,6 +381,23 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
       onComplete.invoke(null, resp);
     } catch (Exception ex) {
       exceptionCallback(ex, onComplete);
+    }
+  }
+
+  private OAuthManagerFragmentController ctrlReference;
+
+  @ReactMethod
+  public void isVisible(final Callback callback)
+  {
+    try
+    {
+      boolean visible = this.ctrlReference != null && this.ctrlReference.webViewVisible();
+      WritableMap resp = Arguments.createMap();
+      resp.putBoolean("visible", visible);
+      callback.invoke(null, resp);
+    } catch (Exception e)
+    {
+      exceptionCallback(e, callback);
     }
   }
 

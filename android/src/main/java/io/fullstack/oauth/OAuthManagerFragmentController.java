@@ -46,6 +46,10 @@ public class OAuthManagerFragmentController {
   private Runnable onAccessToken;
   private OAuthManagerOnAccessTokenListener mListener;
 
+  public boolean webViewVisible() {
+    return this.mWebView != null && this.mWebView.isShown();
+  }
+
   private void runOnMainThread(Runnable runnable) {
     uiHandler.post(runnable);
   }

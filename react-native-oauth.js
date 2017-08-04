@@ -90,6 +90,10 @@ export default class OAuthManager {
     return promisify('deauthorize')(provider);
   }
 
+  isVisible() {
+    return promisify('isVisible')();
+  }
+
   providers() {
     return OAuthManager.providers();
   }
