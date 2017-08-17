@@ -371,6 +371,7 @@ public class OAuthManagerFragmentController {
       } catch (OAuth2AccessTokenErrorResponse ex)
       {
         Log.e(TAG, "Failed to extract access token: " + ex.getMessage());
+        mCtrl.onError(-1, ex.getMessage(), "Failed to extract access token.");        
         return null;
       } catch (IOException ex) {
         Log.e(TAG, "An exception occurred getRequestToken: " + ex.getMessage());
