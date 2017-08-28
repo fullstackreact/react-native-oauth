@@ -407,6 +407,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
     String uuid = accessToken.getParameter("user_id");
     response.putString("uuid", uuid);
+    String oauthTokenSecret = (String) accessTokenMap.get("oauth_token_secret");
     
     String tokenType = (String) accessToken.getParameter("token_type");
     if (tokenType == null) {
@@ -416,8 +417,8 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     String consumerKey = (String) cfg.get("consumer_key");
 
     WritableMap credentials = Arguments.createMap();
-    credentials.putString("accessToken", accessToken.getToken());
-    credentials.putString("accessTokenSecret", accessToken.getTokenSecret());
+    credentials.putString("access_token", accessToken.getToken());
+    credentials.putString("access_token_secret", oauthTokenSecret);
     credentials.putString("type", tokenType);
     credentials.putString("consumerKey", consumerKey);
 
