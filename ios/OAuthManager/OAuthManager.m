@@ -383,6 +383,61 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                    }];
 }
 
+RCT_EXPORT_METHOD(reauthenticate:(NSString *) providerName
+                  opts:(NSDictionary *) opts
+                  callback:(RCTResponseSenderBlock) callback)
+{
+    OAuthManager *manager = [OAuthManager sharedManager];
+    DCTAuthAccountStore *store = [manager accountStore];
+    NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
+
+    NSString *newToken = [opts valueForKey:@"accessToken"];
+
+    DCTAuthAccount *existingAccount = [manager accountForProvider:providerName];
+    if (existingAccount == nil) {
+        NSDictionary *resp = @{
+                               @"status": @"error",
+                               @"msg": [NSString stringWithFormat:@"No account found for %@", providerName]
+                               };
+        callback(@[resp]);
+    } else if (newToken != nil) {
+        DCTOAuth2Credential *existingCredential = existingAccount.credential;
+        existingAccount.credential = [[DCTOAuth2Credential alloc] initWithClientID:existingCredential.clientID
+                                                           clientSecret:existingCredential.clientSecret
+                                                               password:existingCredential.password
+                                                            accessToken:newToken
+                                                                      refreshToken: existingCredential.refreshToken
+                                                                   type:existingCredential.type];
+
+        [store saveAccount:existingAccount];
+        NSDictionary *accountResponse = [manager getAccountResponse:existingAccount cfg:cfg];
+        callback(@[[NSNull null], @{
+                       @"status": @"ok",
+                       @"provider": providerName,
+                       @"response": accountResponse
+                       }]);
+    } else {
+        [existingAccount reauthenticateWithHandler:^(DCTAuthResponse *response, NSError *error) {
+            if (error != nil) {
+                NSDictionary *resp = @{
+                                       @"status": @"error",
+                                       @"msg": [error localizedDescription]
+                                       };
+                callback(@[resp]);
+            }
+            else {
+                [store saveAccount:existingAccount];
+                NSDictionary *accountResponse = [manager getAccountResponse:existingAccount cfg:cfg];
+                callback(@[[NSNull null], @{
+                               @"status": @"ok",
+                               @"provider": providerName,
+                               @"response": accountResponse
+                               }]);
+            }
+        }];
+    }
+}
+
 RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
                   urlOrPath:(NSString *) urlOrPath
                   opts:(NSDictionary *) opts
@@ -403,6 +458,8 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
     
     NSDictionary *creds = [self credentialForAccount:providerName cfg:cfg];
     
+    id<DCTAuthAccountCredential> existingCredential = [existingAccount credential];
+
     // If we have the http in the string, use it as the URL, otherwise create one
     // with the configuration
     NSURL *apiUrl;
@@ -474,6 +531,11 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
             NSInteger statusCode = response.statusCode;
             NSData *rawData = response.data;
             
+            // if account.credential has changed through use of a refresh token, save the updated token
+            if ([existingAccount credential] != existingCredential) {
+                [[manager accountStore] saveAccount:existingAccount];
+            }
+
             NSError *err;
             NSArray *data;
             
