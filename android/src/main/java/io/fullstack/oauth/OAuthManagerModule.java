@@ -401,7 +401,6 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   ) {
     WritableMap resp = Arguments.createMap();
     WritableMap response = Arguments.createMap();
-    Map accessTokenMap = new Gson().fromJson(accessToken.getRawResponse(), Map.class);
 
     Log.d(TAG, "Credential raw response: " + accessToken.getRawResponse());
 
