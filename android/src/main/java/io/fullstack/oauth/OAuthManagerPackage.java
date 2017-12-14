@@ -45,7 +45,6 @@ public class OAuthManagerPackage implements ReactPackage {
      * @param reactContext
      * @return a list of view managers that should be registered with {@link UIManagerModule}
      */
-    @Override
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
         return Collections.emptyList();
     }
