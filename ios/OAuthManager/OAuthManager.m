@@ -443,12 +443,18 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
      URL:apiUrl
      items:items];
     
+    // Allow json body in POST / PUT requests
+    
     NSDictionary *body = [opts objectForKey:@"body"];
     if (body != nil) {
-        for (NSString *key in body) {
-            NSData *data = [[NSString stringWithFormat:@"%@", [body valueForKey:key]] dataUsingEncoding:NSUTF8StringEncoding];
-            [request addMultiPartData:data withName:key type:@"application/json"]; // TODO: How should we handle different body types?
-        }
+        /*for (NSString *key in body) {
+            NSString *value = [body valueForKey:key];
+            
+            if(value != nil) {
+                [request.content.HTTPBody addObject:];
+            }
+        }*/
+        [request.content setHTTPBody: body];
     }
     
     request.account = existingAccount;
