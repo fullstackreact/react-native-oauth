@@ -153,7 +153,7 @@ RCT_EXPORT_MODULE(OAuthManager);
         _callbackUrls = [arr copy];
         NSLog(@"Saved callback url: %@ in %@", saveCallbackUrl, _callbackUrls);
     }
-
+    
     
     // Convert objects of url type
     for (NSString *name in [config allKeys]) {
@@ -354,14 +354,14 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
     
     [manager addPending:client];
     _pendingAuthentication = YES;
-
+    
     NSLog(@"Calling authorizeWithUrl: %@ with callbackURL: %@\n %@", providerName, callbackUrl, cfg);
     
     [client authorizeWithUrl:providerName
                          url:callbackUrl
                          cfg:cfg
                    onSuccess:^(DCTAuthAccount *account) {
-                      NSLog(@"on success called with account: %@", account);
+                       NSLog(@"on success called with account: %@", account);
                        NSDictionary *accountResponse = [manager getAccountResponse:account cfg:cfg];
                        _pendingAuthentication = NO;
                        [manager removePending:client];
@@ -444,20 +444,25 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
      items:items];
     
     // Allow json body in POST / PUT requests
-    
     NSDictionary *body = [opts objectForKey:@"body"];
     if (body != nil) {
-        /*for (NSString *key in body) {
+        NSMutableArray *items = [NSMutableArray array];
+        
+        for (NSString *key in body) {
             NSString *value = [body valueForKey:key];
             
-            if(value != nil) {
-                [request.content.HTTPBody addObject:];
+            DCTAuthContentItem *item = [[DCTAuthContentItem alloc] initWithName:key value:value];
+            
+            if(item != nil) {
+                [items addObject: item];
             }
-        }*/
-        [request.content setHTTPBody: body];
+        }
+        
+        DCTAuthContent *content = [[DCTAuthContent alloc] initWithEncoding:NSUTF8StringEncoding
+                                                                      type:DCTAuthContentTypeJSON
+                                                                     items:items];
+        [request setContent:content];
     }
-    
-    request.account = existingAccount;
     
     // If there are headers
     NSDictionary *headers = [opts objectForKey:@"headers"];
@@ -468,6 +473,8 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         }
         request.HTTPHeaders = existingHeaders;
     }
+    
+    request.account = existingAccount;
     
     [request performRequestWithHandler:^(DCTAuthResponse *response, NSError *error) {
         if (error != nil) {
@@ -493,10 +500,9 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
                 
                 // Parse XML
                 data = [XMLReader dictionaryForXMLData:rawData
-                                            options:XMLReaderOptionsProcessNamespaces
-                                                    error:&err];
+                                               options:XMLReaderOptionsProcessNamespaces
+                                                 error:&err];
             }
-            
             if (err != nil) {
                 NSDictionary *errResp = @{
                                           @"status": @"error",
@@ -506,7 +512,7 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
             } else {
                 NSDictionary *resp = @{
                                        @"status": @(statusCode),
-                                       @"data": data
+                                       @"data": data != nil ? data : @[]
                                        };
                 callback(@[[NSNull null], resp]);
             }
@@ -533,7 +539,7 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
 }
 
 - (NSDictionary *) credentialForAccount:(NSString *)providerName
-                                                cfg:(NSDictionary *)cfg
+                                    cfg:(NSDictionary *)cfg
 {
     DCTAuthAccount *account = [self accountForProvider:providerName];
     if (!account) {
@@ -721,3 +727,4 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
 }
 
 @end
+
