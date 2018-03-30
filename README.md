@@ -34,6 +34,10 @@ manager.authorize('google', {scopes: 'profile email'})
 .catch(err => console.log('There was an error'));
 ```
 
+### Help
+
+Due to other time contraints, I cannot continue to work on react-native-oauth for the time it deserves. If you're interested in supporting this library, please help! It's a widely used library and I'd love to continue supporting it. Looking for maintainers!
+
 ## Features
 
 * Isolates the OAuth experience to a few simple methods.
