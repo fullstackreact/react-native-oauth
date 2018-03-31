@@ -30,18 +30,6 @@
     "react": "*",
     "react-native": "*"
   },
-  "rnpm": {
-    "commands": {
-      "prelink": "node_modules/react-native-oauth/bin/prepare.sh",
-      "postlink": "node_modules/react-native-oauth/bin/cocoapods.sh"
-    },
-    "ios": {
-      "project": "ios/OAuthManager.xcodeproj"
-    },
-    "android": {
-      "packageInstance": "new OAuthManagerPackage()"
-    }
-  },
   "dependencies": {
     "invariant": "^2.2.1",
     "valib": "^2.0.0"
