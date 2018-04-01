@@ -264,7 +264,7 @@ public class OAuthManagerProviders {
     String scopes = "";
     if (cfg.containsKey("scopes")) {
       scopes = (String) cfg.get("scopes");
-      String scopeStr = OAuthManagerProviders.getScopeString(scopes, ",");
+      String scopeStr = OAuthManagerProviders.getScopeString(scopes, " ");
       builder.scope(scopeStr);
     }
 
@@ -278,7 +278,7 @@ public class OAuthManagerProviders {
         scopeStr = OAuthManagerProviders.getScopeString(scopes, ",");
       else
         scopeStr = scopes;
-        
+
       builder.scope(scopeStr);
     } 
 
@@ -296,7 +296,7 @@ public class OAuthManagerProviders {
     final String scopes,
     final String joinBy
   ) {
-    List<String> array = Arrays.asList(scopes.replaceAll("\\s", "").split("[ ,]+"));
+    List<String> array = Arrays.asList(scopes.replaceAll("\\s", "").split(","));
     Log.d(TAG, "array: " + array + " (" + array.size() + ") from " + scopes);
     return TextUtils.join(joinBy, array);
   }
