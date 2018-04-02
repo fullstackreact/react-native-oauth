@@ -109,7 +109,9 @@ public class OAuthManagerDialogFragment extends DialogFragment implements Advanc
         mWebView.setVisibility(View.VISIBLE);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setDomStorageEnabled(true);
-        mWebView.getSettings().setUserAgentString("Mozilla/5.0 Google");
+        // mWebView.getSettings().setUserAgentString("Mozilla/5.0 Google");
+		String userAgent = new WebView(mReactContext.getApplicationContext()).getSettings().getUserAgentString();
+        mWebView.getSettings().setUserAgentString(userAgent);
 
 
         LayoutParams layoutParams = this.getFullscreenLayoutParams(context);
