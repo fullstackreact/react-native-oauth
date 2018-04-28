@@ -486,9 +486,12 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         } else {
             NSInteger statusCode = response.statusCode;
             NSData *rawData = response.data;
+            NSDictionary *headers = response.HTTPHeaders;
             
             NSError *err;
             NSArray *data;
+
+            
             
             // Check if returned data is a valid JSON
             // != nil returned if the rawdata is not a valid JSON
@@ -510,9 +513,11 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
                                           };
                 callback(@[errResp]);
             } else {
+                
                 NSDictionary *resp = @{
                                        @"status": @(statusCode),
-                                       @"data": data != nil ? data : @[]
+                                       @"data": data != nil ? data : @[],
+                                       @"headers": headers,
                                        };
                 callback(@[[NSNull null], resp]);
             }
