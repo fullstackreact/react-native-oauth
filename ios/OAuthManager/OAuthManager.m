@@ -91,7 +91,9 @@ RCT_EXPORT_MODULE(OAuthManager);
             dispatch_async(dispatch_get_main_queue(), ^{
                 safariViewController = [[SFSafariViewController alloc] initWithURL:URL];
                 UIViewController *viewController = application.keyWindow.rootViewController;
-                [viewController presentViewController:safariViewController animated:YES completion: nil];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [viewController presentViewController:safariViewController animated:YES completion: nil];
+                });
             });
         } else {
             [application openURL:URL];
