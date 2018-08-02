@@ -121,6 +121,18 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
           Log.e(TAG, "Exception with request token: " + ex.getMessage());
           _credentialsStore.delete(providerName);
           _credentialsStore.commit();
+
+          WritableMap error = Arguments.createMap();
+          error.putString("message", ex.getMessage());
+
+          // In an invalid client situation we will get two errors, first for the invalid client, and second for the null access token
+          // we really want to report the invalid client error because it provides better feedback
+          try {
+            callback.invoke(error);
+          } catch (Exception e2)
+          {
+            Log.e(TAG, "exception with request: callback failed: " + e2.getMessage() );
+          }          
         }
         public void onOAuth1AccessToken(final OAuth1AccessToken accessToken) {
           _credentialsStore.store(providerName, accessToken);
