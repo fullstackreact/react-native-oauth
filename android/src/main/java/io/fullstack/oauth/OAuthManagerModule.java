@@ -164,6 +164,21 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
+  public void reauthenticate(
+    final String providerName,
+    @Nullable final ReadableMap params,
+    final Callback callback)
+  {
+    Log.e(TAG, "Reauthenticate is not implemented for android");
+    WritableMap err = Arguments.createMap();
+    err.putString("status", "error");
+    err.putString("msg", "Reauthenticate is not implemented for android");
+    callback.invoke(err);
+    return;
+  }
+
+
+  @ReactMethod
   public void makeRequest(
     final String providerName, 
     final String urlString,
