@@ -473,6 +473,9 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
     NSDictionary *headers = [opts objectForKey:@"headers"];
     if (headers != nil) {
         NSMutableDictionary *existingHeaders = [request.HTTPHeaders mutableCopy];
+        if (existingHeaders == nil) {
+            existingHeaders = [@{} mutableCopy];
+        }
         for (NSString *header in headers) {
             [existingHeaders setValue:[headers valueForKey:header] forKey:header];
         }
