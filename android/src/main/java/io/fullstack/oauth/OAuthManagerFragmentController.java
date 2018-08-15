@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.facebook.react.bridge.ReactContext;
 import com.github.scribejava.core.exceptions.OAuthConnectionException;
+import com.github.scribejava.core.model.OAuth2AccessTokenErrorResponse;
 import com.github.scribejava.core.model.OAuth1AccessToken;
 import com.github.scribejava.core.model.OAuth1RequestToken;
 import com.github.scribejava.core.model.OAuth2AccessToken;
@@ -44,6 +45,10 @@ public class OAuthManagerFragmentController {
 
   private Runnable onAccessToken;
   private OAuthManagerOnAccessTokenListener mListener;
+
+  public boolean webViewVisible() {
+    return this.mWebView != null && this.mWebView.isShown();
+  }
 
   private void runOnMainThread(Runnable runnable) {
     uiHandler.post(runnable);
@@ -366,6 +371,10 @@ public class OAuthManagerFragmentController {
       } catch (OAuthConnectionException ex) {
         Log.e(TAG, "OAuth connection exception: " + ex.getMessage());
         ex.printStackTrace();
+        return null;
+      } catch (OAuth2AccessTokenErrorResponse ex)
+      {
+        Log.e(TAG, "Failed to extract access token: " + ex.getMessage());
         return null;
       } catch (IOException ex) {
         Log.e(TAG, "An exception occurred getRequestToken: " + ex.getMessage());
