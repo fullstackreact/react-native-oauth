@@ -40,6 +40,11 @@ RCT_EXPORT_MODULE(OAuthManager);
     return dispatch_queue_create("io.fullstack.oauth", DISPATCH_QUEUE_SERIAL);
 }
 
++ (BOOL)requiresMainQueueSetup
+{
+    return YES;
+}
+
 + (instancetype)sharedManager {
     dispatch_once(&onceToken, ^{
         manager = [self new];
