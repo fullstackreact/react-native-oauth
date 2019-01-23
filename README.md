@@ -41,7 +41,7 @@ Due to other time contraints, I cannot continue to work on react-native-oauth fo
 ## Features
 
 * Isolates the OAuth experience to a few simple methods.
-* Atomatically stores the tokens for later retrieval
+* Automatically stores the tokens for later retrieval
 * Works with many providers and simple to add new providers
 * Works on both Android and iOS
 * Makes calling API methods a snap
