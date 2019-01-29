@@ -22,7 +22,6 @@ public class OAuthManagerPackage implements ReactPackage {
      * @param reactContext react application context that can be used to create modules
      * @return list of native modules to register with the newly created catalyst instance
      */
-    @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
         modules.add(new OAuthManagerModule(reactContext));
@@ -36,7 +35,7 @@ public class OAuthManagerPackage implements ReactPackage {
      * listed here. Also listing a native module here doesn't imply that the JS implementation of it
      * will be automatically included in the JS bundle.
      */
-    @Override
+
     public List<Class<? extends JavaScriptModule>> createJSModules() {
         return Collections.emptyList();
     }
@@ -45,7 +44,6 @@ public class OAuthManagerPackage implements ReactPackage {
      * @param reactContext
      * @return a list of view managers that should be registered with {@link UIManagerModule}
      */
-    @Override
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
         return Collections.emptyList();
     }

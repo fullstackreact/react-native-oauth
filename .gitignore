@@ -16,3 +16,5 @@ xcuserdata/
 
 .idea
 .vscode
+javac-services.0.log*
+dist/

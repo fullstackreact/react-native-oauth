@@ -1,52 +1,40 @@
 package io.fullstack.oauth;
 
-import android.util.Log;
-import android.content.Context;
-import android.net.Uri;
-import android.os.Handler;
-import android.content.SharedPreferences;
-
-import java.net.URL;
-import java.net.MalformedURLException;
-
-import android.support.annotation.Nullable;
-import android.app.FragmentManager;
-import android.support.v4.app.FragmentActivity;
 import android.app.Activity;
-import android.text.TextUtils;
+import android.app.FragmentManager;
+import android.content.Context;
+import android.support.annotation.Nullable;
+import android.util.Log;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.LifecycleEventListener;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.Callback;
-import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
-import com.facebook.react.bridge.ReactContext;
-
-import com.github.scribejava.core.builder.api.BaseApi;
-import com.github.scribejava.core.model.Verb;
-
-import com.github.scribejava.core.builder.ServiceBuilder;
+import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableMap;
 import com.github.scribejava.core.model.OAuth1AccessToken;
-import com.github.scribejava.core.model.OAuth1RequestToken;
+import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.model.OAuthRequest;
 import com.github.scribejava.core.model.Response;
 import com.github.scribejava.core.model.Verb;
 import com.github.scribejava.core.oauth.OAuth10aService;
-
-import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.oauth.OAuth20Service;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class ProviderNotConfiguredException extends Exception {
   public ProviderNotConfiguredException(String message) {
@@ -68,7 +56,6 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   public OAuthManagerModule(ReactApplicationContext reactContext) {
     super(reactContext);
     mReactContext = reactContext;
-
     _credentialsStore = OAuthManagerStore.getOAuthManagerStore(mReactContext, TAG, Context.MODE_PRIVATE);
     Log.d(TAG, "New instance");
   }
@@ -90,6 +77,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     String callbackUrlStr = params.getString("callback_url");
     _callbackUrls.add(callbackUrlStr);
     
+    Log.d(TAG, "Added callback url " + callbackUrlStr + " for providler " + providerName);
 
     // Keep configuration map
     HashMap<String, Object> cfg = new HashMap<String,Object>();
@@ -122,44 +110,48 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
   {
     try {
       final OAuthManagerModule self = this;
-      HashMap<String,Object> cfg = this.getConfiguration(providerName);
+      final HashMap<String,Object> cfg = this.getConfiguration(providerName);
       final String authVersion = (String) cfg.get("auth_version");
-      Activity activity = mReactContext.getCurrentActivity();
+      Activity activity = this.getCurrentActivity();
       FragmentManager fragmentManager = activity.getFragmentManager();
       String callbackUrl = "http://localhost/" + providerName;
       
       OAuthManagerOnAccessTokenListener listener = new OAuthManagerOnAccessTokenListener() {
-        public void onRequestTokenError(final Exception ex) {}
+        public void onRequestTokenError(final Exception ex) {
+          Log.e(TAG, "Exception with request token: " + ex.getMessage());
+          _credentialsStore.delete(providerName);
+          _credentialsStore.commit();
+        }
         public void onOAuth1AccessToken(final OAuth1AccessToken accessToken) {
           _credentialsStore.store(providerName, accessToken);
           _credentialsStore.commit();
 
-          WritableMap resp = self.accessTokenResponse(providerName, accessToken, authVersion);
+          WritableMap resp = self.accessTokenResponse(providerName, cfg, accessToken, authVersion);
           callback.invoke(null, resp);
         }
         public void onOAuth2AccessToken(final OAuth2AccessToken accessToken) {
           _credentialsStore.store(providerName, accessToken);
           _credentialsStore.commit();
 
-          WritableMap resp = self.accessTokenResponse(providerName, accessToken, authVersion);
+          WritableMap resp = self.accessTokenResponse(providerName, cfg, accessToken, authVersion);
           callback.invoke(null, resp);
         }
       };
 
       if (authVersion.equals("1.0")) {
         final OAuth10aService service = 
-          OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, callbackUrl);
+          OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, params, callbackUrl);
 
         OAuthManagerFragmentController ctrl =
-          new OAuthManagerFragmentController(fragmentManager, providerName, service, callbackUrl);
+          new OAuthManagerFragmentController(mReactContext, fragmentManager, providerName, service, callbackUrl);
 
         ctrl.requestAuth(cfg, listener);
       } else if (authVersion.equals("2.0")) {
         final OAuth20Service service =
-          OAuthManagerProviders.getApiFor20Provider(providerName, cfg, callbackUrl);
+          OAuthManagerProviders.getApiFor20Provider(providerName, cfg, params, callbackUrl);
         
         OAuthManagerFragmentController ctrl =
-          new OAuthManagerFragmentController(fragmentManager, providerName, service, callbackUrl);
+          new OAuthManagerFragmentController(mReactContext, fragmentManager, providerName, service, callbackUrl);
 
         ctrl.requestAuth(cfg, listener);
       } else {
@@ -223,22 +215,25 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
           httpVerb = Verb.TRACE;
         } else {
           httpVerb = Verb.GET;
-        }
+        }        
         
-        OAuthRequest request;
+        ReadableMap requestParams = null;
+        if (params != null && params.hasKey("params")) {
+          requestParams = params.getMap("params");
+        }
+        OAuthRequest request = oauthRequestWithParams(providerName, cfg, authVersion, httpVerb, url, requestParams);
+
         if (authVersion.equals("1.0")) {
           final OAuth10aService service = 
-            OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null);
+            OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, requestParams, null);
           OAuth1AccessToken token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
           
-          request = new OAuthRequest(httpVerb, url.toString(), service);
           service.signRequest(token, request);
         } else if (authVersion.equals("2.0")) {
           final OAuth20Service service =
-            OAuthManagerProviders.getApiFor20Provider(providerName, cfg, null);
+            OAuthManagerProviders.getApiFor20Provider(providerName, cfg, requestParams, null);
           OAuth2AccessToken token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
 
-          request = new OAuthRequest(httpVerb, url.toString(), service);
           service.signRequest(token, request);
         } else {
           // Some kind of error here
@@ -271,6 +266,55 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
       }
   }
 
+  private OAuthRequest oauthRequestWithParams(
+    final String providerName,
+    final HashMap<String,Object> cfg,
+    final String authVersion,
+    final Verb httpVerb,
+    final URL url,
+    @Nullable final ReadableMap params
+    ) throws Exception {
+    OAuthRequest request;
+    // OAuthConfig config;
+
+    if (authVersion.equals("1.0")) {  
+      // final OAuth10aService service = 
+          // OAuthManagerProviders.getApiFor10aProvider(providerName, cfg, null, null);
+      OAuth1AccessToken oa1token = _credentialsStore.get(providerName, OAuth1AccessToken.class);
+      request = OAuthManagerProviders.getRequestForProvider(
+        providerName, 
+        httpVerb,
+        oa1token, 
+        url,
+        cfg,
+        params);
+      
+      // config = service.getConfig();
+      // request = new OAuthRequest(httpVerb, url.toString(), config);
+    } else if (authVersion.equals("2.0")) {
+      // final OAuth20Service service =
+        // OAuthManagerProviders.getApiFor20Provider(providerName, cfg, null, null);
+      // oa2token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
+
+      OAuth2AccessToken oa2token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
+      request = OAuthManagerProviders.getRequestForProvider(
+        providerName, 
+        httpVerb,
+        oa2token, 
+        url,
+        cfg,
+        params);
+      
+      // config = service.getConfig();
+      // request = new OAuthRequest(httpVerb, url.toString(), config);
+    } else {
+      Log.e(TAG, "Error in making request method");
+      throw new Exception("Provider not handled yet");
+    }
+
+    return request;
+  }
+
   @ReactMethod
   public void getSavedAccounts(final ReadableMap options, final Callback onComplete) {
     // Log.d(TAG, "getSavedAccounts");
@@ -295,7 +339,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
           throw new Exception("No token found");
         }
 
-        WritableMap resp = this.accessTokenResponse(providerName, token, authVersion);
+        WritableMap resp = this.accessTokenResponse(providerName, cfg, token, authVersion);
         onComplete.invoke(null, resp);
       } else if (authVersion.equals("2.0")) {
         OAuth2AccessToken token = _credentialsStore.get(providerName, OAuth2AccessToken.class);
@@ -303,7 +347,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
         if (token == null || token.equals("")) {
           throw new Exception("No token found");
         }
-        WritableMap resp = this.accessTokenResponse(providerName, token, authVersion);
+        WritableMap resp = this.accessTokenResponse(providerName, cfg, token, authVersion);
         onComplete.invoke(null, resp);
       } else {
 
@@ -351,19 +395,54 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
   private WritableMap accessTokenResponse(
     final String providerName,
+    final HashMap<String,Object> cfg,
     final OAuth1AccessToken accessToken,
     final String oauthVersion
   ) {
     WritableMap resp = Arguments.createMap();
     WritableMap response = Arguments.createMap();
 
+    Log.d(TAG, "Credential raw response: " + accessToken.getRawResponse());
+
+    /* Some things return as JSON, some as x-www-form-urlencoded (querystring) */
+
+    Map accessTokenMap = null;
+    try {
+      accessTokenMap = new Gson().fromJson(accessToken.getRawResponse(), Map.class);
+    } catch (JsonSyntaxException e) {
+      /*
+      failed to parse as JSON, so turn it into a HashMap which looks like the one we'd
+      get back from the JSON parser, so the rest of the code continues unchanged.
+      */
+      Log.d(TAG, "Credential looks like a querystring; parsing as such");
+      accessTokenMap = new HashMap();
+      accessTokenMap.put("user_id", accessToken.getParameter("user_id"));
+      accessTokenMap.put("oauth_token_secret", accessToken.getParameter("oauth_token_secret"));
+      accessTokenMap.put("token_type", accessToken.getParameter("token_type"));
+    }
+
+
     resp.putString("status", "ok");
+    resp.putBoolean("authorized", true);
     resp.putString("provider", providerName);
-    response.putString("uuid", accessToken.getParameter("user_id"));
+
+    String uuid = accessToken.getParameter("user_id");
+    response.putString("uuid", uuid);
+    String oauthTokenSecret = (String) accessToken.getParameter("oauth_token_secret");
     
+    String tokenType = (String) accessToken.getParameter("token_type");
+    if (tokenType == null) {
+      tokenType = "Bearer";
+    }
+
+    String consumerKey = (String) cfg.get("consumer_key");
+
     WritableMap credentials = Arguments.createMap();
-    credentials.putString("oauth_token", accessToken.getToken());
-    credentials.putString("oauth_secret", accessToken.getTokenSecret());
+    credentials.putString("access_token", accessToken.getToken());
+    credentials.putString("access_token_secret", oauthTokenSecret);
+    credentials.putString("type", tokenType);
+    credentials.putString("consumerKey", consumerKey);
+
     response.putMap("credentials", credentials);
 
     resp.putMap("response", response);
@@ -373,6 +452,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
 
   private WritableMap accessTokenResponse(
     final String providerName,
+    final HashMap<String,Object> cfg,
     final OAuth2AccessToken accessToken,
     final String oauthVersion
   ) {
@@ -380,25 +460,44 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     WritableMap response = Arguments.createMap();
 
     resp.putString("status", "ok");
+    resp.putBoolean("authorized", true);
     resp.putString("provider", providerName);
-    try {
-      response.putString("uuid", accessToken.getParameter("user_id"));
-    } catch (Exception ex) {
-      Log.e(TAG, "Exception while getting the access token");
-      ex.printStackTrace();
-    }
+
+    String uuid = accessToken.getParameter("user_id");
+    response.putString("uuid", uuid);
     
     WritableMap credentials = Arguments.createMap();
-    credentials.putString("oauth_token", accessToken.getAccessToken());
-    credentials.putString("oauth_secret", "");
-    credentials.putString("scope", accessToken.getScope());
+    Log.d(TAG, "Credential raw response: " + accessToken.getRawResponse());
+    
+    credentials.putString("accessToken", accessToken.getAccessToken());
+    String authHeader;
+
+    String tokenType = accessToken.getTokenType();
+    if (tokenType == null) {
+      tokenType = "Bearer";
+    }
+    
+    String scope = accessToken.getScope();
+    if (scope == null) {
+      scope = (String) cfg.get("scopes");
+    }
+
+    String clientID = (String) cfg.get("client_id");
+    String idToken = accessToken.getParameter("id_token");
+
+    authHeader = tokenType + " " + accessToken.getAccessToken();
+    credentials.putString("authorizationHeader", authHeader);
+    credentials.putString("type", tokenType);
+    credentials.putString("scopes", scope);
+    credentials.putString("clientID", clientID);
+    credentials.putString("idToken", idToken);
     response.putMap("credentials", credentials);
 
     resp.putMap("response", response);
 
     return resp;
   }
-  
+
 
   private void exceptionCallback(Exception ex, final Callback onFail) {
     WritableMap error = Arguments.createMap();
@@ -407,5 +506,72 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     error.putString("allErrorMessage", ex.toString());
 
     onFail.invoke(error);
+  }
+
+    public static Map<String, Object> recursivelyDeconstructReadableMap(ReadableMap readableMap) {
+    Map<String, Object> deconstructedMap = new HashMap<>();
+    if (readableMap == null) {
+      return deconstructedMap;
+    }
+
+    ReadableMapKeySetIterator iterator = readableMap.keySetIterator();
+    while (iterator.hasNextKey()) {
+      String key = iterator.nextKey();
+      ReadableType type = readableMap.getType(key);
+      switch (type) {
+        case Null:
+          deconstructedMap.put(key, null);
+          break;
+        case Boolean:
+          deconstructedMap.put(key, readableMap.getBoolean(key));
+          break;
+        case Number:
+          deconstructedMap.put(key, readableMap.getDouble(key));
+          break;
+        case String:
+          deconstructedMap.put(key, readableMap.getString(key));
+          break;
+        case Map:
+          deconstructedMap.put(key, OAuthManagerModule.recursivelyDeconstructReadableMap(readableMap.getMap(key)));
+          break;
+        case Array:
+          deconstructedMap.put(key, OAuthManagerModule.recursivelyDeconstructReadableArray(readableMap.getArray(key)));
+          break;
+        default:
+          throw new IllegalArgumentException("Could not convert object with key: " + key + ".");
+      }
+
+    }
+    return deconstructedMap;
+  }
+
+  public static List<Object> recursivelyDeconstructReadableArray(ReadableArray readableArray) {
+    List<Object> deconstructedList = new ArrayList<>(readableArray.size());
+    for (int i = 0; i < readableArray.size(); i++) {
+      ReadableType indexType = readableArray.getType(i);
+      switch (indexType) {
+        case Null:
+          deconstructedList.add(i, null);
+          break;
+        case Boolean:
+          deconstructedList.add(i, readableArray.getBoolean(i));
+          break;
+        case Number:
+          deconstructedList.add(i, readableArray.getDouble(i));
+          break;
+        case String:
+          deconstructedList.add(i, readableArray.getString(i));
+          break;
+        case Map:
+          deconstructedList.add(i, OAuthManagerModule.recursivelyDeconstructReadableMap(readableArray.getMap(i)));
+          break;
+        case Array:
+          deconstructedList.add(i, OAuthManagerModule.recursivelyDeconstructReadableArray(readableArray.getArray(i)));
+          break;
+        default:
+          throw new IllegalArgumentException("Could not convert object at index " + i + ".");
+      }
+    }
+    return deconstructedList;
   }
 }

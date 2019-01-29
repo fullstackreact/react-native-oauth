@@ -30,7 +30,12 @@
 - (void) cancelAuthentication
 {
   if (_account != nil) {
-    [_account cancelAuthentication];
+    @try {
+      [_account cancelAuthentication];
+    }
+    @catch (NSException *exception) {
+      NSLog(@"An exception occurred while cancelling authentication: %@", [exception reason]);
+    }
   }
 }
 
@@ -43,7 +48,9 @@
 
 - (void) clearPendingAccount
 {
-  _account = nil;
+    NSLog(@"called clearPendingAccount: %@", _account);
+    [_account cancelAuthentication];
+    _account = nil;
 }
 
 - (void (^)(DCTAuthResponse *response, NSError *error)) getHandler:(DCTAuthAccount *) account

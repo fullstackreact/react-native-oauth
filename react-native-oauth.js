@@ -13,7 +13,9 @@ const OAuthManagerBridge = NativeModules.OAuthManager;
 let configured = false;
 const STORAGE_KEY = 'ReactNativeOAuth';
 import promisify from './lib/promisify'
-import authProviders from './lib/authProviders';
+import defaultProviders from './lib/authProviders';
+
+let authProviders = defaultProviders;
 
 const identity = (props) => props;
 /**
@@ -25,6 +27,10 @@ export default class OAuthManager {
 
     this.appName = appName;
     this._options = opts;
+  }
+
+  addProvider(provider) {
+    authProviders = Object.assign({}, authProviders, provider);
   }
 
   configure(providerConfigs) {
@@ -45,7 +51,7 @@ export default class OAuthManager {
     // return promisify('getSavedAccounts')(options);
     const promises = this.providers()
                           .map(name => {
-                            return this.savedAccount(name, opts)
+                            return this.savedAccount(name)
                               .catch(err => ({provider: name, status: "error"}));
                           });
     return Promise.all(promises)
@@ -55,8 +61,8 @@ export default class OAuthManager {
       });
   }
 
-  savedAccount(provider, opts={}) {
-    const options = Object.assign({}, this._options, opts, {
+  savedAccount(provider) {
+    const options = Object.assign({}, this._options, {
       app_name: this.appName
     })
     return promisify('getSavedAccount')(provider, options);
@@ -66,6 +72,8 @@ export default class OAuthManager {
     const options = Object.assign({}, this._options, opts, {
       app_name: this.appName
     });
+
+    console.log('making request', provider, url, opts);
 
     return promisify('makeRequest')(provider, url, options)
       .then(response => {
@@ -97,11 +105,11 @@ export default class OAuthManager {
   // Private
   /**
    * Configure a single provider
-   * 
-   * 
+   *
+   *
    * @param {string} name of the provider
    * @param {object} additional configuration
-   * 
+   *
    **/
   configureProvider(name, props) {
     invariant(OAuthManager.isSupported(name), `The provider ${name} is not supported yet`);
@@ -116,13 +124,18 @@ export default class OAuthManager {
       callback_url
     }, providerCfg, props);
 
+    if (config.defaultParams) {
+      delete config.defaultParams;
+    }
+
     config = Object.keys(config)
       .reduce((sum, key) => ({
         ...sum,
         [key]: typeof config[key] === 'function' ? config[key](config) : config[key]
-      }), {})
+      }), {});
 
     validate(config);
+
     return promisify('configureProvider')(name, config);
   }
 

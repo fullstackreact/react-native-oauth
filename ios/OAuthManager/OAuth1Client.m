@@ -31,12 +31,16 @@ static NSString *TAG = @"OAuth1Client";
     
     __weak id client = self;
     [account authenticateWithHandler:^(NSArray *responses, NSError *error) {
-        [client clearPendingAccount];
-
         if (error != nil) {
-            onError(error);
+            NSString *response = ((DCTAuthResponse *)responses[0]).responseDescription;
+            NSError *err = [NSError errorWithDomain:error.domain
+                                               code:error.code
+                                           userInfo:@{@"response": response}];
+            onError(err);
             return;
         }
+        
+        [client clearPendingAccount];
         
         if (!account.authorized) {
             NSError *err = QUICK_ERROR(E_ACCOUNT_NOT_AUTHORIZED, @"account not authorized");

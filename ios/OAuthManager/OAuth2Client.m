@@ -34,13 +34,17 @@ static NSString *TAG = @"OAuth2Client";
     // authorizeWithClientID
     [account authenticateWithHandler:^(NSArray *responses, NSError *error) {
         NSLog(@"authenticateWithHandler: %@", responses);
-        [client clearPendingAccount];
         
         if (error != nil) {
-            NSLog(@"Some error: %@", error);
-            onError(error);
+            NSString *response = ((DCTAuthResponse *)responses[0]).responseDescription;
+            NSError *err = [NSError errorWithDomain:error.domain
+                                               code:error.code
+                                           userInfo:@{@"response": response}];
+            onError(err);
             return;
         }
+
+        [client clearPendingAccount];
         
         if (!account.authorized) {
             NSError *err = QUICK_ERROR(E_ACCOUNT_NOT_AUTHORIZED, @"account not authorized");
@@ -63,7 +67,10 @@ static NSString *TAG = @"OAuth2Client";
     [account reauthenticateWithHandler:^(DCTAuthResponse *response, NSError *error) {
         NSLog(@"Reauthenticating...");
         if (error != nil) {
-            onError(error);
+            NSError *err = [NSError errorWithDomain:error.domain
+                                               code:error.code
+                                           userInfo:@{@"response": response.responseDescription}];
+            onError(err);
             return;
         }
         
@@ -86,7 +93,12 @@ static NSString *TAG = @"OAuth2Client";
     // Required
     NSURL *authorize_url = [cfg objectForKey:@"authorize_url"];
     NSString *scopeStr = [cfg valueForKey:@"scopes"];
-    NSArray *scopes = [scopeStr componentsSeparatedByString:@","];
+    // NSArray *scopes = [scopeStr componentsSeparatedByString:@","];
+
+    NSString *sep = @", ";
+    NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:sep];
+    NSArray *scopes = [scopeStr componentsSeparatedByCharactersInSet:set];
+
     // Optional
     
     NSURL *access_token_url = [cfg objectForKey:@"access_token_url"];

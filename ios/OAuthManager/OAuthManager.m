@@ -6,6 +6,8 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <objc/runtime.h>
+#import <SafariServices/SafariServices.h>
 
 #import "OAuthManager.h"
 #import "DCTAuth.h"
@@ -14,10 +16,11 @@
 #import "OAuthClient.h"
 #import "OAuth1Client.h"
 #import "OAuth2Client.h"
+#import "XMLReader.h"
 
 @interface OAuthManager()
-  @property (nonatomic) NSArray *pendingClients;
-  @property BOOL pendingAuthentication;
+@property (nonatomic) NSArray *pendingClients;
+@property BOOL pendingAuthentication;
 @end
 
 @implementation OAuthManager
@@ -25,16 +28,28 @@
 @synthesize callbackUrls = _callbackUrls;
 
 static NSString *const AUTH_MANAGER_TAG = @"AUTH_MANAGER";
+static OAuthManager *manager;
+static dispatch_once_t onceToken;
+static SFSafariViewController *safariViewController = nil;
 
 RCT_EXPORT_MODULE(OAuthManager);
 
+// Run on a different thread
+- (dispatch_queue_t)methodQueue
+{
+    return dispatch_queue_create("io.fullstack.oauth", DISPATCH_QUEUE_SERIAL);
+}
+
 + (instancetype)sharedManager {
-    static OAuthManager *manager;
-    static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         manager = [self new];
     });
     return manager;
+}
+
++ (void) reset {
+    onceToken = nil;
+    manager = nil;
 }
 
 - (instancetype) init {
@@ -47,7 +62,7 @@ RCT_EXPORT_MODULE(OAuthManager);
                                                  selector:@selector(didBecomeActive:)
                                                      name:UIApplicationDidBecomeActiveNotification
                                                    object:nil];
-
+        
     }
     return self;
 }
@@ -59,10 +74,7 @@ RCT_EXPORT_MODULE(OAuthManager);
 
 - (void) didBecomeActive:(NSNotification *)notification
 {
-    NSLog(@"Application reopened: %@", @(self.pendingAuthentication));
-    for (OAuthClient *client in _pendingClients) {
-        [self removePending:client];
-    }
+    // TODO?
 }
 
 /*
@@ -74,8 +86,18 @@ RCT_EXPORT_MODULE(OAuthManager);
     DCTAuthPlatform *authPlatform = [DCTAuthPlatform sharedPlatform];
     
     [authPlatform setURLOpener: ^void(NSURL *URL, DCTAuthPlatformCompletion completion) {
-        [sharedManager setPendingAuthentication:YES];
-        [application openURL:URL];
+        // [sharedManager setPendingAuthentication:YES];
+        if ([SFSafariViewController class] != nil) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                safariViewController = [[SFSafariViewController alloc] initWithURL:URL];
+                UIViewController *viewController = application.keyWindow.rootViewController;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [viewController presentViewController:safariViewController animated:YES completion: nil];
+                });
+            });
+        } else {
+            [application openURL:URL];
+        }
         completion(YES);
     }];
     
@@ -100,15 +122,15 @@ RCT_EXPORT_MODULE(OAuthManager);
 {
     OAuthManager *manager = [OAuthManager sharedManager];
     NSString *strUrl = [manager stringHost:url];
-
-    NSLog(@"Handling handleOpenUrl: %@", strUrl);
     
     if ([manager.callbackUrls indexOfObject:strUrl] != NSNotFound) {
+        if(safariViewController != nil) {
+            [safariViewController dismissViewControllerAnimated:YES completion:nil];
+        }
         return [DCTAuth handleURL:url];
     }
     
-
-    [manager clearPending];
+    // [manager clearPending];
     
     return [RCTLinkingManager application:application openURL:url
                         sourceApplication:sourceApplication annotation:annotation];
@@ -128,23 +150,25 @@ RCT_EXPORT_MODULE(OAuthManager);
     NSMutableArray *arr = [_callbackUrls mutableCopy];
     NSString *callbackUrlStr = [config valueForKey:@"callback_url"];
     NSURL *callbackUrl = [NSURL URLWithString:callbackUrlStr];
-    NSString *saveCallbackUrl = [self stringHost:callbackUrl];
-    [arr addObject:saveCallbackUrl];
-    _callbackUrls = [arr copy];
+    NSString *saveCallbackUrl = [[self stringHost:callbackUrl] lowercaseString];
+    
+    if ([arr indexOfObject:saveCallbackUrl] == NSNotFound) {
+        [arr addObject:saveCallbackUrl];
+        _callbackUrls = [arr copy];
+        NSLog(@"Saved callback url: %@ in %@", saveCallbackUrl, _callbackUrls);
+    }
+    
     
     // Convert objects of url type
     for (NSString *name in [config allKeys]) {
         if ([name rangeOfString:@"_url"].location != NSNotFound) {
             // This is a URL representation
             NSString *urlStr = [config valueForKey:name];
-            NSURL *url = [NSURL URLWithString:[urlStr
-                                               stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+            NSURL *url = [NSURL URLWithString:urlStr];
             [objectProps setObject:url forKey:name];
         } else {
             NSString *str = [NSString stringWithString:[config valueForKey:name]];
-            NSString *escapedStr = [str
-                                    stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]];
-            [objectProps setValue:[escapedStr copy] forKey:name];
+            [objectProps setValue:str forKey:name];
         }
     }
     
@@ -187,18 +211,19 @@ RCT_EXPORT_METHOD(configureProvider:
 
 #pragma mark OAuth
 
+// TODO: Remove opts
 RCT_EXPORT_METHOD(getSavedAccounts:(NSDictionary *) opts
-  callback:(RCTResponseSenderBlock) callback)
+                  callback:(RCTResponseSenderBlock) callback)
 {
     OAuthManager *manager = [OAuthManager sharedManager];
-    DCTAuthAccountStore *store = [self accountStore];
+    DCTAuthAccountStore *store = [manager accountStore];
     
     NSSet *accounts = [store accounts];
     NSMutableArray *respAccounts = [[NSMutableArray alloc] init];
     for (DCTAuthAccount *account in [accounts allObjects]) {
         NSString *providerName = account.type;
         NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
-        NSMutableDictionary *acc = [[self getAccountResponse:account cfg:cfg] mutableCopy];
+        NSMutableDictionary *acc = [[manager getAccountResponse:account cfg:cfg] mutableCopy];
         [acc setValue:providerName forKey:@"provider"];
         [respAccounts addObject:acc];
     }
@@ -208,6 +233,7 @@ RCT_EXPORT_METHOD(getSavedAccounts:(NSDictionary *) opts
                    }]);
 }
 
+// TODO: Remove opts
 RCT_EXPORT_METHOD(getSavedAccount:(NSString *)providerName
                   opts:(NSDictionary *) opts
                   callback:(RCTResponseSenderBlock)callback)
@@ -215,17 +241,18 @@ RCT_EXPORT_METHOD(getSavedAccount:(NSString *)providerName
     OAuthManager *manager = [OAuthManager sharedManager];
     NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
     
-    DCTAuthAccount *existingAccount = [self accountForProvider:providerName];
+    DCTAuthAccount *existingAccount = [manager accountForProvider:providerName];
     if (existingAccount != nil) {
         if ([existingAccount isAuthorized]) {
             NSDictionary *accountResponse = [manager getAccountResponse:existingAccount cfg:cfg];
             callback(@[[NSNull null], @{
                            @"status": @"ok",
+                           @"provider": providerName,
                            @"response": accountResponse
                            }]);
             return;
         } else {
-            DCTAuthAccountStore *store = [self accountStore];
+            DCTAuthAccountStore *store = [manager accountStore];
             [store deleteAccount:existingAccount];
             NSDictionary *errResp = @{
                                       @"status": @"error",
@@ -250,14 +277,14 @@ RCT_EXPORT_METHOD(deauthorize:(NSString *) providerName
                   callback:(RCTResponseSenderBlock) callback)
 {
     OAuthManager *manager = [OAuthManager sharedManager];
-    DCTAuthAccountStore *store = [self accountStore];
+    DCTAuthAccountStore *store = [manager accountStore];
     
-    DCTAuthAccount *existingAccount = [self accountForProvider:providerName];
+    DCTAuthAccount *existingAccount = [manager accountForProvider:providerName];
     if (existingAccount != nil) {
         [store deleteAccount:existingAccount];
         callback(@[[NSNull null], @{
                        @"status": @"ok"
-                   }]);
+                       }]);
     } else {
         NSDictionary *resp = @{
                                @"status": @"error",
@@ -276,23 +303,28 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                   callback:(RCTResponseSenderBlock)callback)
 {
     OAuthManager *manager = [OAuthManager sharedManager];
+    [manager clearPending];
     NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
     
-    DCTAuthAccount *existingAccount = [self accountForProvider:providerName];
-    if (existingAccount != nil) {
+    DCTAuthAccount *existingAccount = [manager accountForProvider:providerName];
+    NSString *clientID = ([providerName isEqualToString:@"google"]) ? ((DCTOAuth2Credential *) existingAccount).clientID : (NSString *)nil;
+
+    if (([providerName isEqualToString:@"google"] && existingAccount && clientID != nil)
+        || (![providerName isEqualToString:@"google"] && existingAccount != nil)) {
         if ([existingAccount isAuthorized]) {
             NSDictionary *accountResponse = [manager getAccountResponse:existingAccount cfg:cfg];
             callback(@[[NSNull null], @{
                            @"status": @"ok",
+                           @"provider": providerName,
                            @"response": accountResponse
                            }]);
             return;
         } else {
-            DCTAuthAccountStore *store = [self accountStore];
+            DCTAuthAccountStore *store = [manager accountStore];
             [store deleteAccount:existingAccount];
         }
     }
-        
+    
     NSString *callbackUrl;
     NSURL *storedCallbackUrl = [cfg objectForKey:@"callback_url"];
     
@@ -317,30 +349,28 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
     } else if ([version isEqualToString:@"2.0"]) {
         client = (OAuthClient *)[[OAuth2Client alloc] init];
     } else {
-        NSLog(@"Provider number: %@", version);
         return callback(@[@{
                               @"status": @"error",
                               @"msg": @"Unknown provider"
                               }]);
     }
-
+    
     // Store pending client
     
-    [self addPending:client];
-      _pendingAuthentication = YES;
+    [manager addPending:client];
+    _pendingAuthentication = YES;
+    
+    NSLog(@"Calling authorizeWithUrl: %@ with callbackURL: %@\n %@", providerName, callbackUrl, cfg);
     
     [client authorizeWithUrl:providerName
                          url:callbackUrl
                          cfg:cfg
-     
                    onSuccess:^(DCTAuthAccount *account) {
-                    NSLog(@"authorizeWithUrl: %@", account);
+                       NSLog(@"on success called with account: %@", account);
                        NSDictionary *accountResponse = [manager getAccountResponse:account cfg:cfg];
                        _pendingAuthentication = NO;
                        [manager removePending:client];
-                       
-                       DCTAuthAccountStore *store = [self accountStore];
-                       [store saveAccount:account];
+                       [[manager accountStore] saveAccount:account]; // <~
                        
                        callback(@[[NSNull null], @{
                                       @"status": @"ok",
@@ -349,11 +379,12 @@ RCT_EXPORT_METHOD(authorize:(NSString *)providerName
                    } onError:^(NSError *error) {
                        NSLog(@"Error in authorizeWithUrl: %@", error);
                        _pendingAuthentication = NO;
-                       [manager removePending:client];
                        callback(@[@{
                                       @"status": @"error",
-                                      @"msg": [error localizedDescription]
+                                      @"msg": [error localizedDescription],
+                                      @"userInfo": error.userInfo
                                       }]);
+                       [manager removePending:client];
                    }];
 }
 
@@ -362,50 +393,81 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
                   opts:(NSDictionary *) opts
                   callback:(RCTResponseSenderBlock)callback)
 {
-  OAuthManager *manager = [OAuthManager sharedManager];
-  NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
+    OAuthManager *manager = [OAuthManager sharedManager];
+    NSMutableDictionary *cfg = [[manager getConfigForProvider:providerName] mutableCopy];
     
-    DCTAuthAccount *existingAccount = [self accountForProvider:providerName];
+    DCTAuthAccount *existingAccount = [manager accountForProvider:providerName];
     if (existingAccount == nil) {
         NSDictionary *errResp = @{
-                               @"status": @"error",
-                               @"msg": [NSString stringWithFormat:@"No account found for %@", providerName]
-                               };
+                                  @"status": @"error",
+                                  @"msg": [NSString stringWithFormat:@"No account found for %@", providerName]
+                                  };
         callback(@[errResp]);
         return;
     }
-  
-  // If we have the http in the string, use it as the URL, otherwise create one 
-  // with the configuration
-  NSURL *apiUrl;
-  if ([urlOrPath hasPrefix:@"http"]) {
-      apiUrl = [NSURL URLWithString:urlOrPath];
-  } else {
-      NSURL *apiHost = [cfg objectForKey:@"api_url"];
-      apiUrl  = [NSURL URLWithString:[[apiHost absoluteString] stringByAppendingString:urlOrPath]];
-  }
-
-  // If there are params
+    
+    NSDictionary *creds = [self credentialForAccount:providerName cfg:cfg];
+    
+    // If we have the http in the string, use it as the URL, otherwise create one
+    // with the configuration
+    NSURL *apiUrl;
+    if ([urlOrPath hasPrefix:@"http"]) {
+        apiUrl = [NSURL URLWithString:urlOrPath];
+    } else {
+        NSURL *apiHost = [cfg objectForKey:@"api_url"];
+        apiUrl  = [NSURL URLWithString:[[apiHost absoluteString] stringByAppendingString:urlOrPath]];
+    }
+    
+    // If there are params
     NSMutableArray *items = [NSMutableArray array];
     NSDictionary *params = [opts objectForKey:@"params"];
     if (params != nil) {
         for (NSString *key in params) {
-            NSURLQueryItem *item = [NSURLQueryItem queryItemWithName:key value:[params valueForKey:key]];
-            [items addObject:item];
+            
+            NSString *value = [params valueForKey:key];
+            
+            if ([value isEqualToString:@"access_token"]) {
+                value = [creds valueForKey:@"access_token"];
+            }
+            
+            NSURLQueryItem *item = [NSURLQueryItem queryItemWithName:key value:value];
+            
+            if (item != nil) {
+                [items addObject:item];
+            }
         }
     }
     
     NSString *methodStr = [opts valueForKey:@"method"];
     
-    DCTAuthRequestMethod method = [self getRequestMethodByString:methodStr];
+    DCTAuthRequestMethod method = [manager getRequestMethodByString:methodStr];
     
     DCTAuthRequest *request =
-        [[DCTAuthRequest alloc]
-         initWithRequestMethod:method
-         URL:apiUrl
-         items:items];
+    [[DCTAuthRequest alloc]
+     initWithRequestMethod:method
+     URL:apiUrl
+     items:items];
     
-    request.account = existingAccount;
+    // Allow json body in POST / PUT requests
+    NSDictionary *body = [opts objectForKey:@"body"];
+    if (body != nil) {
+        NSMutableArray *items = [NSMutableArray array];
+        
+        for (NSString *key in body) {
+            NSString *value = [body valueForKey:key];
+            
+            DCTAuthContentItem *item = [[DCTAuthContentItem alloc] initWithName:key value:value];
+            
+            if(item != nil) {
+                [items addObject: item];
+            }
+        }
+        
+        DCTAuthContent *content = [[DCTAuthContent alloc] initWithEncoding:NSUTF8StringEncoding
+                                                                      type:DCTAuthContentTypeJSON
+                                                                     items:items];
+        [request setContent:content];
+    }
     
     // If there are headers
     NSDictionary *headers = [opts objectForKey:@"headers"];
@@ -416,7 +478,9 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         }
         request.HTTPHeaders = existingHeaders;
     }
-
+    
+    request.account = existingAccount;
+    
     [request performRequestWithHandler:^(DCTAuthResponse *response, NSError *error) {
         if (error != nil) {
             NSDictionary *errorDict = @{
@@ -427,11 +491,26 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         } else {
             NSInteger statusCode = response.statusCode;
             NSData *rawData = response.data;
+            NSDictionary *headers = response.HTTPHeaders;
             
             NSError *err;
-            NSArray *data = [NSJSONSerialization JSONObjectWithData:rawData
-                                                            options:kNilOptions
-                                                              error:&err];
+            NSArray *data;
+
+            
+            
+            // Check if returned data is a valid JSON
+            // != nil returned if the rawdata is not a valid JSON
+            if ((data = [NSJSONSerialization JSONObjectWithData:rawData
+                                                        options:kNilOptions
+                                                          error:&err]) == nil) {
+                // Resetting err variable.
+                err = nil;
+                
+                // Parse XML
+                data = [XMLReader dictionaryForXMLData:rawData
+                                               options:XMLReaderOptionsProcessNamespaces
+                                                 error:&err];
+            }
             if (err != nil) {
                 NSDictionary *errResp = @{
                                           @"status": @"error",
@@ -439,9 +518,11 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
                                           };
                 callback(@[errResp]);
             } else {
+                
                 NSDictionary *resp = @{
                                        @"status": @(statusCode),
-                                       @"data": data
+                                       @"data": data != nil ? data : @[],
+                                       @"headers": headers,
                                        };
                 callback(@[[NSNull null], resp]);
             }
@@ -465,6 +546,46 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
             return [allAccounts lastObject];
         }
     }
+}
+
+- (NSDictionary *) credentialForAccount:(NSString *)providerName
+                                    cfg:(NSDictionary *)cfg
+{
+    DCTAuthAccount *account = [self accountForProvider:providerName];
+    if (!account) {
+        return nil;
+    }
+    
+    NSString *version = [cfg valueForKey:@"auth_version"];
+    NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
+    
+    if ([version isEqualToString:@"1.0"]) {
+        DCTOAuth1Credential *credentials = [account credential];
+        
+        if (credentials) {
+            if (credentials.oauthToken) {
+                NSString *token = credentials.oauthToken;
+                [dict setObject:token forKey:@"access_token"];
+            }
+            
+            if (credentials.oauthTokenSecret) {
+                NSString *secret = credentials.oauthTokenSecret;
+                [dict setObject:secret forKey:@"access_token_secret"];
+            }
+        }
+        
+    } else if ([version isEqualToString:@"2.0"]) {
+        DCTOAuth2Credential *credentials = [account credential];
+        
+        if (credentials) {
+            if (credentials.accessToken) {
+                NSString *token = credentials.accessToken;
+                [dict setObject:token forKey:@"access_token"];
+            }
+        }
+    }
+    
+    return dict;
 }
 
 - (DCTAuthRequestMethod) getRequestMethodByString:(NSString *) method
@@ -493,6 +614,7 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
 - (NSDictionary *) getAccountResponse:(DCTAuthAccount *) account
                                   cfg:(NSDictionary *)cfg
 {
+    NSArray *ignoredCredentialProperties = @[@"superclass", @"hash", @"description", @"debugDescription"];
     NSString *version = [cfg valueForKey:@"auth_version"];
     NSMutableDictionary *accountResponse = [@{
                                               @"authorized": @(account.authorized),
@@ -501,27 +623,65 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
     
     if ([version isEqualToString:@"1.0"]) {
         DCTOAuth1Credential *credential = account.credential;
-        NSDictionary *cred = @{
-                               @"oauth_token": credential.oauthToken,
-                               @"oauth_secret": credential.oauthTokenSecret
-                               };
-        [accountResponse setObject:cred forKey:@"credentials"];
+        if (credential != nil) {
+            NSDictionary *cred = @{
+                                   @"access_token": credential.oauthToken,
+                                   @"access_token_secret": credential.oauthTokenSecret
+                                   };
+            [accountResponse setObject:cred forKey:@"credentials"];
+        }
     } else if ([version isEqualToString:@"2.0"]) {
         DCTOAuth2Credential *credential = account.credential;
-        NSMutableDictionary *cred = [@{
-                                       @"access_token": credential.accessToken,
-                                       @"type": @(credential.type)
-                                       } mutableCopy];
-        if (credential.refreshToken != nil) {
-            [cred setValue:credential.refreshToken forKey:@"refresh_token"];
+        if (credential != nil) {
+            
+            NSMutableDictionary *cred = [self dictionaryForCredentialKeys: credential];
+            
+            DCTOAuth2Account *oauth2Account = (DCTOAuth2Account *) account;
+            if (oauth2Account.scopes) {
+                [cred setObject:oauth2Account.scopes forKey:@"scopes"];
+            }
+            
+            [accountResponse setObject:cred forKey:@"credentials"];
         }
-        [accountResponse setObject:cred forKey:@"credentials"];
     }
     [accountResponse setValue:[account identifier] forKey:@"identifier"];
     if (account.userInfo != nil) {
-      [accountResponse setObject:[account userInfo] forKey:@"user_info"];
-    }    
+        [accountResponse setObject:[account userInfo] forKey:@"user_info"];
+    }
+    
     return accountResponse;
+}
+
+- (NSDictionary *) dictionaryForCredentialKeys:(NSObject *) credential
+{
+    NSArray *ignoredCredentialProperties = @[@"superclass", @"hash", @"description", @"debugDescription"];
+    unsigned int count = 0;
+    NSMutableDictionary *cred = [NSMutableDictionary new];
+    objc_property_t *properties = class_copyPropertyList([credential class], &count);
+    
+    for (int i = 0; i < count; i++) {
+        
+        NSString *key = [NSString stringWithUTF8String:property_getName(properties[i])];
+        if ([ignoredCredentialProperties containsObject:key]) {
+            NSLog(@"Ignoring credentials key: %@", key);
+        } else {
+            id value = [credential valueForKey:key];
+            
+            if (value == nil) {
+                
+            } else if ([value isKindOfClass:[NSNumber class]]
+                       || [value isKindOfClass:[NSString class]]
+                       || [value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableArray class]]) {
+                // TODO: extend to other types
+                [cred setObject:value forKey:key];
+            } else if ([value isKindOfClass:[NSObject class]]) {
+                [cred setObject:[value dictionary] forKey:key];
+            } else {
+                NSLog(@"Invalid type for %@ (%@)", NSStringFromClass([self class]), key);
+            }
+        }
+    }
+    return cred;
 }
 
 - (void) clearPending
@@ -531,6 +691,7 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
         [manager removePending:client];
     }
     manager.pendingClients = [NSArray array];
+    _pendingAuthentication = NO;
 }
 
 - (void) addPending:(OAuthClient *) client
@@ -543,12 +704,12 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
 
 - (void) removePending:(OAuthClient *) client
 {
+    [client clearPendingAccount];
     OAuthManager *manager = [OAuthManager sharedManager];
     NSUInteger idx = [manager.pendingClients indexOfObject:client];
     if ([manager.pendingClients count] <= idx) {
         NSMutableArray *newPendingClients = [manager.pendingClients mutableCopy];
         [newPendingClients removeObjectAtIndex:idx];
-        [client cancelAuthentication];
         manager.pendingClients = newPendingClients;
     }
 }
@@ -576,3 +737,4 @@ RCT_EXPORT_METHOD(makeRequest:(NSString *)providerName
 }
 
 @end
+
