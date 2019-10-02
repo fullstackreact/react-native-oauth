@@ -470,6 +470,7 @@ class OAuthManagerModule extends ReactContextBaseJavaModule {
     Log.d(TAG, "Credential raw response: " + accessToken.getRawResponse());
     
     credentials.putString("accessToken", accessToken.getAccessToken());
+    credentials.putString("refreshToken", accessToken.getRefreshToken());
     String authHeader;
 
     String tokenType = accessToken.getTokenType();
